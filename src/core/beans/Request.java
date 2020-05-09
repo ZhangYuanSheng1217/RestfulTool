@@ -65,6 +65,7 @@ public class Request {
     }
 
     public void setPath(@NotNull String path) {
+        path = path.trim();
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
@@ -75,7 +76,11 @@ public class Request {
         if (this.method == null && parent.getMethod() != null) {
             this.setMethod(parent.getMethod());
         }
-        this.setPath(parent.getPath() + this.path);
+        String parentPath = parent.getPath();
+        if (parentPath != null && parentPath.endsWith("/")) {
+            parentPath = "";
+        }
+        this.setPath(parentPath + this.path);
     }
 
     @NotNull
