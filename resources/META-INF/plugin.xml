@@ -33,8 +33,6 @@
         <projectService serviceInterface="core.components.RestfulToolService"
                         serviceImplementation="core.components.impl.RestfulToolServiceImpl"/>
 
-        <themeProvider id="3bd24bd3-6cf2-4ec4-b889-2cecd6418dd0" path="/restful_tool.theme.json"/>
-
         <toolWindow id="RestfulTool" anchor="right"
                     factoryClass="core.view.RestfulToolWindow" order="last"
                     doNotActivateOnStart="true" icon="/icons/service.png"/>
