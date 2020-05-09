@@ -8,6 +8,7 @@
 > 4. 支持 Spring 体系 (Spring MVC / Spring Boot)
     
 #### TODO
+> + 符合条件才显示工具界面（IDEA扫描完毕）
 > + 解析yml文件下的键值对
 > + 优化ServerTree界面
     
