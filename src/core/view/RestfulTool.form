@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="core.view.RestfulTool">
+  <grid id="ea47c" binding="content" layout-manager="GridLayoutManager" row-count="4" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="0" left="0" bottom="0" right="0"/>
+    <constraints>
+      <xy x="33" y="17" width="419" height="484"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <grid id="7e281" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+        <margin top="0" left="0" bottom="0" right="0"/>
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <grid id="704cb" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="0" left="0" bottom="0" right="0"/>
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="1c09f" class="org.jdesktop.swingx.JXButton" binding="scanApi">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="扫描"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+          <scrollpane id="88ebd" class="com.intellij.ui.components.JBScrollPane">
+            <constraints>
+              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="7e932" class="javax.swing.JTree" binding="tree">
+                <constraints/>
+                <properties>
+                  <font name="Consolas"/>
+                  <maximumSize width="82" height="50"/>
+                  <rootVisible value="true"/>
+                  <showsRootHandles value="false"/>
+                </properties>
+              </component>
+            </children>
+          </scrollpane>
+        </children>
+      </grid>
+      <grid id="6d7fd" layout-manager="BorderLayout" hgap="0" vgap="0">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="998b4" class="javax.swing.JComboBox" binding="requestMethod">
+            <constraints border-constraint="West"/>
+            <properties/>
+          </component>
+          <component id="ce59e" class="com.intellij.ui.components.JBTextField" binding="requestUrl">
+            <constraints border-constraint="Center"/>
+            <properties>
+              <editable value="true"/>
+              <horizontalAlignment value="10"/>
+            </properties>
+          </component>
+          <component id="97d63" class="org.jdesktop.swingx.JXButton" binding="sendRequest">
+            <constraints border-constraint="East"/>
+            <properties>
+              <paintBorderInsets value="true"/>
+              <text value="发送"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <tabbedpane id="d3fe7" class="com.intellij.ui.components.JBTabbedPane" binding="tabbedPane">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="2" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <scrollpane id="e9e38" class="com.intellij.ui.components.JBScrollPane">
+            <constraints>
+              <tabbedpane title="Head"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <grid id="2670d" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="0" right="0"/>
+                <constraints/>
+                <properties>
+                  <enabled value="true"/>
+                </properties>
+                <border type="none"/>
+                <children>
+                  <component id="821cd" class="com.intellij.ui.components.JBTextArea" binding="requestHead">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties/>
+                  </component>
+                </children>
+              </grid>
+            </children>
+          </scrollpane>
+          <scrollpane id="cf339" class="com.intellij.ui.components.JBScrollPane">
+            <constraints>
+              <tabbedpane title="Body"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <grid id="2ef4c" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="0" right="0"/>
+                <constraints/>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="55fc" class="com.intellij.ui.components.JBTextArea" binding="requestBody">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties/>
+                  </component>
+                </children>
+              </grid>
+            </children>
+          </scrollpane>
+          <scrollpane id="90d49" class="com.intellij.ui.components.JBScrollPane">
+            <constraints>
+              <tabbedpane title="Response"/>
+            </constraints>
+            <properties>
+              <enabled value="true"/>
+              <font/>
+            </properties>
+            <border type="none"/>
+            <children>
+              <component id="ca97" class="javax.swing.JLabel" binding="responseView">
+                <constraints/>
+                <properties>
+                  <background color="-1"/>
+                  <text value=""/>
+                  <verticalAlignment value="1"/>
+                  <verticalTextPosition value="0"/>
+                </properties>
+              </component>
+            </children>
+          </scrollpane>
+        </children>
+      </tabbedpane>
+      <vspacer id="3485">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </vspacer>
+    </children>
+  </grid>
+</form>

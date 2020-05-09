@@ -1,0 +1,46 @@
+<idea-plugin>
+    <id>cn.cloud.auto.restful.tool</id>
+    <name>RestfulTool</name>
+    <version>1.0</version>
+    <vendor email="2862297923@qq.com" url="">ClionCo</vendor>
+
+    <!--suppress PluginXmlValidity -->
+    <description><![CDATA[
+      一套 RESTful 服务开发辅助工具集。<br>
+        1.提供了一个 Services tree 的显示窗口;<br>
+        2.点击 URL 直接跳转到对应的方法定义;<br>
+        3.一个简单的 http 请求工具;<br>
+        4.支持 Spring 体系 (Spring MVC / Spring Boot)<br>
+    ]]></description>
+
+    <!--suppress PluginXmlValidity -->
+    <change-notes><![CDATA[
+      <em>1.0-RELEASE: base</em>
+    ]]>
+    </change-notes>
+
+    <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+    <idea-version since-build="173.0"/>
+
+    <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
+    <depends>com.intellij.spring</depends>
+    <depends>com.intellij.properties</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceInterface="core.components.RestfulToolService"
+                        serviceImplementation="core.components.impl.RestfulToolServiceImpl"/>
+
+        <themeProvider id="3bd24bd3-6cf2-4ec4-b889-2cecd6418dd0" path="/restful_tool.theme.json"/>
+
+        <toolWindow id="RestfulTool" anchor="right"
+                    factoryClass="core.view.RestfulToolWindow" order="last"
+                    doNotActivateOnStart="true" icon="/icons/service.png"/>
+    </extensions>
+
+    <actions>
+    </actions>
+
+</idea-plugin>
