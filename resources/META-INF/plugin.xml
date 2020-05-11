@@ -1,8 +1,8 @@
 <idea-plugin>
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.0</version>
-    <vendor email="2862297923@qq.com" url="">ClionCo</vendor>
+    <version>1.0.1-RELEASE</version>
+    <vendor email="2862297923@qq.com" url="https://github.com/ZhangYuanSheng1217/RestfulTool">ClionCo</vendor>
 
     <!--suppress PluginXmlValidity -->
     <description><![CDATA[
@@ -20,7 +20,7 @@
     </change-notes>
 
     <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-    <idea-version since-build="173.0"/>
+    <idea-version since-build="201.0"/>
 
     <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
