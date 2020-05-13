@@ -10,20 +10,14 @@
  */
 package core.view;
 
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.components.JBTextField;
 import core.beans.Request;
 import core.beans.RequestMethod;
-import core.beans.SpringRequestMethodAnnotation;
 import core.utils.RestUtil;
 import org.jdesktop.swingx.JXButton;
 import org.jetbrains.annotations.NotNull;
@@ -35,9 +29,9 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -62,7 +56,7 @@ public class RestfulTool {
     public RestfulTool(@NotNull Project project) {
         System.out.println("RestfulTool:::RestfulTool");
 
-        init(project);
+        initView();
 
         initEvent(project);
 
@@ -81,43 +75,13 @@ public class RestfulTool {
     private void renderRequestTree(@NotNull Project project) {
         AtomicInteger controllerCount = new AtomicInteger();
         DefaultMutableTreeNode root = new DefaultMutableTreeNode(controllerCount.get());
-        Module[] modules = ModuleManager.getInstance(project).getModules();
-        for (Module module : modules) {
-            List<PsiClass> controllers = RestUtil.getAllControllerClass(project, module);
-            if (controllers.isEmpty()) {
-                continue;
-            }
 
-            DefaultMutableTreeNode item = new DefaultMutableTreeNode(module.getName());
-            for (PsiClass controllerClass : controllers) {
-                List<Request> parentRequests = new ArrayList<>(0);
-                List<Request> childrenRequests = new ArrayList<>();
-                PsiAnnotation psiAnnotation = controllerClass.getAnnotation(
-                        SpringRequestMethodAnnotation.REQUEST_MAPPING.getQualifiedName()
-                );
-                if (psiAnnotation != null) {
-                    parentRequests = RestUtil.getRequests(psiAnnotation, null);
-                }
-
-                PsiMethod[] psiMethods = controllerClass.getMethods();
-                for (PsiMethod psiMethod : psiMethods) {
-                    childrenRequests.addAll(RestUtil.getRequests(psiMethod));
-                }
-                if (parentRequests.isEmpty()) {
-                    childrenRequests.forEach(request -> {
-                        item.add(new DefaultMutableTreeNode(request));
-                        controllerCount.getAndIncrement();
-                    });
-                } else {
-                    parentRequests.forEach(parentRequest -> childrenRequests.forEach(childrenRequest -> {
-                        Request request = childrenRequest.copyWithParent(parentRequest);
-                        item.add(new DefaultMutableTreeNode(request));
-                        controllerCount.getAndIncrement();
-                    }));
-                }
-            }
+        Map<String, List<Request>> allRequest = RestUtil.getAllRequest(project);
+        allRequest.forEach((moduleName, requests) -> {
+            DefaultMutableTreeNode item = new DefaultMutableTreeNode(moduleName);
+            requests.forEach(request -> item.add(new DefaultMutableTreeNode(request)));
             root.add(item);
-        }
+        });
 
         root.setUserObject(controllerCount.get());
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
@@ -125,7 +89,7 @@ public class RestfulTool {
         expandAll(tree, new TreePath(tree.getModel().getRoot()), true);
     }
 
-    private void init(@NotNull Project project) {
+    private void initView() {
         requestMethod.addItem(RequestMethod.GET);
         requestMethod.addItem(RequestMethod.POST);
         requestMethod.addItem(RequestMethod.DELETE);

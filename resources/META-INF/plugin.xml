@@ -1,21 +1,30 @@
 <idea-plugin>
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.0.1-RELEASE</version>
-    <vendor email="2862297923@qq.com" url="https://github.com/ZhangYuanSheng1217/RestfulTool">ClionCo</vendor>
+    <version>1.0.2-RELEASE</version>
+    <vendor email="2862297923@qq.com" url="">ClionCo</vendor>
 
     <!--suppress PluginXmlValidity -->
     <description><![CDATA[
-      一套 RESTful 服务开发辅助工具集。<br>
+      A set of auxiliary tools for Restful service development.<br>
+        1.Provides a display window of Services tree;<br>
+        2.Click the URL to jump directly to the corresponding method definition;<br>
+        3.A simple http request tool;<br>
+        4.Support Spring system (Spring MVC / Spring Boot)<br>
+        5.Support `Navigate-> Request Service` search Mapping (Ctrl + Alt + /)<br>
+      <br>
+      一套 Restful 服务开发辅助工具集。<br>
         1.提供了一个 Services tree 的显示窗口;<br>
         2.点击 URL 直接跳转到对应的方法定义;<br>
         3.一个简单的 http 请求工具;<br>
-        4.支持 Spring 体系 (Spring MVC / Spring Boot)<br>
+        4.支持 Spring 体系 (Spring MVC / Spring Boot);<br>
+        5.支持 `Navigate -> Request Service` 搜索 Mapping (Ctrl + Alt + /)<br>
     ]]></description>
 
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
-      <em>1.0-RELEASE: base</em>
+      <em>1.0.2-RELEASE: fix issue, Increase search mapping</em>
+      <em>1.0.1-RELEASE: base</em>
     ]]>
     </change-notes>
 
@@ -33,12 +42,20 @@
         <projectService serviceInterface="core.components.RestfulToolService"
                         serviceImplementation="core.components.impl.RestfulToolServiceImpl"/>
 
+        <projectService serviceImplementation="core.view.search.GotoRequestConfiguration"/>
+
         <toolWindow id="RestfulTool" anchor="right"
                     factoryClass="core.view.RestfulToolWindow" order="last"
                     doNotActivateOnStart="true" icon="/icons/service.png"/>
     </extensions>
 
     <actions>
+        <action id="Tool.GotoRequestService" class="core.view.search.GotoRequestAction"
+                text="Request _Service" description="Goto request service"
+                icon="AllIcons.Actions.Search">
+            <add-to-group group-id="GoToTargetEx" anchor="first"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt SLASH"/>
+        </action>
     </actions>
 
 </idea-plugin>

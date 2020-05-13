@@ -17,6 +17,7 @@ import com.intellij.lang.jvm.annotation.*;
 import com.intellij.lang.properties.PropertiesFileType;
 import com.intellij.lang.properties.psi.PropertiesFile;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.java.stubs.index.JavaAnnotationIndex;
@@ -42,6 +43,231 @@ public class RestUtil {
 
     private static final int REQUEST_TIMEOUT = 1000 * 10;
 
+    private static final String PROPERTIES_KEY_CHECKBOX_STATE =
+            "RequestFilteringGotoByModel.OnlyCurrentModule";
+
+    /**
+     * 扫描服务端口
+     *
+     * @param project project
+     * @param scope   scope
+     * @return port
+     */
+    public static int scanListenerPort(@NotNull Project project, @NotNull GlobalSearchScope scope) {
+        // listener of default server port
+        int port = 8080;
+
+        try {
+            String value = getConfigurationValue(
+                    getScanConfigurationFile(project, scope),
+                    "server.port"
+            );
+            if (value == null || "".equals((value = value.trim()))) {
+                throw new NumberFormatException();
+            }
+            port = Integer.parseInt(value);
+        } catch (NumberFormatException ignore) {
+        }
+        return port;
+    }
+
+    /**
+     * 扫描服务协议
+     *
+     * @param project project
+     * @param scope   scope
+     * @return protocol
+     */
+    @NotNull
+    public static String scanListenerProtocol(@NotNull Project project, @NotNull GlobalSearchScope scope) {
+        // default protocol
+        String protocol = "http";
+
+        try {
+            String value = getConfigurationValue(getScanConfigurationFile(project, scope), "server.ssl.enabled");
+            if (value == null || "".equals((value = value.trim()))) {
+                throw new Exception();
+            }
+            if (Boolean.parseBoolean(value)) {
+                protocol = "https";
+            }
+        } catch (Exception ignore) {
+        }
+        return protocol;
+    }
+
+    /**
+     * 发送http请求
+     *
+     * @param method 请求方式
+     * @param url    地址
+     * @param head   请求头
+     * @param body   请求体
+     * @return 返回结果
+     */
+    public static String sendRequest(RequestMethod method, String url, String head, String body) {
+        String resp;
+        try {
+            HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url);
+
+            if (head != null && !"".equals(head.trim())) {
+                tempDataCoverToMap(head).forEach(request::header);
+            }
+            if (body != null && !"".equals(body.trim())) {
+                tempDataCoverToMap(body).forEach(request::form);
+            }
+
+            resp = request.timeout(REQUEST_TIMEOUT).execute().body();
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = e.getMessage();
+        }
+        return resp;
+    }
+
+    @NotNull
+    @Contract(pure = true)
+    public static Map<String, String> tempDataCoverToMap(String tempData) {
+        Map<String, String> map = new HashMap<>();
+
+        if (tempData != null && !"".equals((tempData = tempData.trim()))) {
+            String[] items = tempData.split("\n");
+            for (String item : items) {
+                String[] data = item.split(":");
+                if (data.length == 2) {
+                    map.put(data[0].trim(), data[1].trim());
+                }
+            }
+        }
+
+        System.out.println("map = " + map);
+        return map;
+    }
+
+    /**
+     * 获取所有的Request
+     *
+     * @param project project
+     * @return map-{key: moduleName, value: itemRequestList}
+     */
+    @NotNull
+    public static Map<String, List<Request>> getAllRequest(@NotNull Project project) {
+        return getAllRequest(project, false);
+    }
+
+    /**
+     * 获取所有的Request
+     *
+     * @param hasEmpty 是否生成包含空Request的moduleName
+     * @param project  project
+     * @return map-{key: moduleName, value: itemRequestList}
+     */
+    @NotNull
+    public static Map<String, List<Request>> getAllRequest(@NotNull Project project, boolean hasEmpty) {
+        Map<String, List<Request>> map = new HashMap<>();
+
+        Module[] modules = ModuleManager.getInstance(project).getModules();
+        for (Module module : modules) {
+            List<Request> requests = getAllRequestByModule(project, module);
+            if (requests.isEmpty() && !hasEmpty) {
+                continue;
+            }
+            map.put(module.getName(), requests);
+        }
+        return map;
+    }
+
+    /**
+     * 获取选中module的所有Request
+     *
+     * @param project project
+     * @param module  module
+     * @return list
+     */
+    @NotNull
+    public static List<Request> getAllRequestByModule(@NotNull Project project, @NotNull Module module) {
+        List<Request> moduleList = new ArrayList<>(0);
+
+        List<PsiClass> controllers = RestUtil.getAllControllerClass(project, module);
+        if (controllers.isEmpty()) {
+            return moduleList;
+        }
+
+        for (PsiClass controllerClass : controllers) {
+            List<Request> parentRequests = new ArrayList<>(0);
+            List<Request> childrenRequests = new ArrayList<>();
+            PsiAnnotation psiAnnotation = controllerClass.getAnnotation(
+                    SpringRequestMethodAnnotation.REQUEST_MAPPING.getQualifiedName()
+            );
+            if (psiAnnotation != null) {
+                parentRequests = RestUtil.getRequests(psiAnnotation, null);
+            }
+
+            PsiMethod[] psiMethods = controllerClass.getMethods();
+            for (PsiMethod psiMethod : psiMethods) {
+                childrenRequests.addAll(RestUtil.getRequests(psiMethod));
+            }
+            if (parentRequests.isEmpty()) {
+                moduleList.addAll(childrenRequests);
+            } else {
+                parentRequests.forEach(parentRequest -> childrenRequests.forEach(childrenRequest -> {
+                    Request request = childrenRequest.copyWithParent(parentRequest);
+                    moduleList.add(request);
+                }));
+            }
+        }
+        return moduleList;
+    }
+
+    /**
+     * 获取方法参数
+     *
+     * @param method method
+     */
+    @NotNull
+    public static String getRequestParamsTempData(@NotNull PsiMethod method) {
+        StringBuilder tempData = new StringBuilder();
+
+        PsiParameterList parameterList = method.getParameterList();
+        if (!parameterList.isEmpty()) {
+            for (PsiParameter parameter : parameterList.getParameters()) {
+                PsiAnnotation[] parameterAnnotations = parameter.getAnnotations();
+                String parameterName = parameter.getName();
+                PsiType parameterType = parameter.getType();
+
+                boolean flag = true;
+
+                for (PsiAnnotation parameterAnnotation : parameterAnnotations) {
+                    if (!SpringRequestMethodAnnotation.REQUEST_PARAM.getQualifiedName().equals(parameterAnnotation.getQualifiedName())) {
+                        continue;
+                    }
+                    List<JvmAnnotationAttribute> attributes = parameterAnnotation.getAttributes();
+                    for (JvmAnnotationAttribute attribute : attributes) {
+                        String name = attribute.getAttributeName();
+                        if (!("name".equals(name) || "value".equals(name))) {
+                            continue;
+                        }
+                        Object value = RestUtil.getAttrValue(attribute.getAttributeValue());
+                        if (value instanceof String) {
+                            parameterName = ((String) value);
+                            flag = !flag;
+                        }
+                    }
+                }
+
+                Object data = RestUtil.getTypeDefaultData(method, parameterType);
+
+                if (data != null) {
+                    if (flag) {
+                        tempData.append(parameterName).append(": ");
+                    }
+                    tempData.append(data).append("\n");
+                }
+            }
+        }
+        return tempData.toString();
+    }
+
     /**
      * 获取所有的控制器类
      *
@@ -50,7 +276,7 @@ public class RestUtil {
      * @return Collection<PsiClass>
      */
     @NotNull
-    public static List<PsiClass> getAllControllerClass(@NotNull Project project, @NotNull Module module) {
+    private static List<PsiClass> getAllControllerClass(@NotNull Project project, @NotNull Module module) {
         List<PsiClass> allControllerClass = new ArrayList<>();
 
         Collection<PsiAnnotation> pathList = JavaAnnotationIndex.getInstance().get(
@@ -85,7 +311,7 @@ public class RestUtil {
      * @see RestUtil#getRequests(PsiMethod)
      */
     @NotNull
-    public static List<Request> getRequests(@NotNull PsiAnnotation annotation, @Nullable PsiMethod psiMethod) {
+    private static List<Request> getRequests(@NotNull PsiAnnotation annotation, @Nullable PsiMethod psiMethod) {
         SpringRequestMethodAnnotation spring = SpringRequestMethodAnnotation.getByQualifiedName(
                 annotation.getQualifiedName()
         );
@@ -142,7 +368,7 @@ public class RestUtil {
      * @return list
      */
     @NotNull
-    public static List<Request> getRequests(@NotNull PsiMethod method) {
+    private static List<Request> getRequests(@NotNull PsiMethod method) {
         List<Request> requests = new ArrayList<>();
         PsiAnnotation[] annotations = method.getModifierList().getAnnotations();
         for (PsiAnnotation annotation : annotations) {
@@ -150,55 +376,6 @@ public class RestUtil {
         }
 
         return requests;
-    }
-
-    /**
-     * 获取方法参数
-     *
-     * @param method method
-     */
-    @NotNull
-    public static String getRequestParamsTempData(@NotNull PsiMethod method) {
-        StringBuilder tempData = new StringBuilder();
-
-        PsiParameterList parameterList = method.getParameterList();
-        if (!parameterList.isEmpty()) {
-            for (PsiParameter parameter : parameterList.getParameters()) {
-                PsiAnnotation[] parameterAnnotations = parameter.getAnnotations();
-                String parameterName = parameter.getName();
-                PsiType parameterType = parameter.getType();
-
-                boolean flag = true;
-
-                for (PsiAnnotation parameterAnnotation : parameterAnnotations) {
-                    if (!SpringRequestMethodAnnotation.REQUEST_PARAM.getQualifiedName().equals(parameterAnnotation.getQualifiedName())) {
-                        continue;
-                    }
-                    List<JvmAnnotationAttribute> attributes = parameterAnnotation.getAttributes();
-                    for (JvmAnnotationAttribute attribute : attributes) {
-                        String name = attribute.getAttributeName();
-                        if (!("name".equals(name) || "value".equals(name))) {
-                            continue;
-                        }
-                        Object value = RestUtil.getAttrValue(attribute.getAttributeValue());
-                        if (value instanceof String) {
-                            parameterName = ((String) value);
-                            flag = !flag;
-                        }
-                    }
-                }
-
-                Object data = getTypeDefaultData(method, parameterType);
-
-                if (data != null) {
-                    if (flag) {
-                        tempData.append(parameterName).append(": ");
-                    }
-                    tempData.append(data).append("\n");
-                }
-            }
-        }
-        return tempData.toString();
     }
 
     @Nullable
@@ -290,7 +467,7 @@ public class RestUtil {
      * @param attributeValue Psi属性
      * @return {Object | List}
      */
-    public static Object getAttrValue(JvmAnnotationAttributeValue attributeValue) {
+    private static Object getAttrValue(JvmAnnotationAttributeValue attributeValue) {
         if (attributeValue == null) {
             return null;
         }
@@ -346,56 +523,6 @@ public class RestUtil {
     }
 
     /**
-     * 扫描服务端口
-     *
-     * @param project project
-     * @param scope   scope
-     * @return port
-     */
-    public static int scanListenerPort(@NotNull Project project, @NotNull GlobalSearchScope scope) {
-        // listener of default server port
-        int port = 8080;
-
-        try {
-            String value = getConfigurationValue(
-                    getScanConfigurationFile(project, scope),
-                    "server.port"
-            );
-            if (value == null || "".equals((value = value.trim()))) {
-                throw new NumberFormatException();
-            }
-            port = Integer.parseInt(value);
-        } catch (NumberFormatException ignore) {
-        }
-        return port;
-    }
-
-    /**
-     * 扫描服务协议
-     *
-     * @param project project
-     * @param scope   scope
-     * @return protocol
-     */
-    @NotNull
-    public static String scanListenerProtocol(@NotNull Project project, @NotNull GlobalSearchScope scope) {
-        // default protocol
-        String protocol = "http";
-
-        try {
-            String value = getConfigurationValue(getScanConfigurationFile(project, scope), "server.ssl.enabled");
-            if (value == null || "".equals((value = value.trim()))) {
-                throw new Exception();
-            }
-            if (Boolean.parseBoolean(value)) {
-                protocol = "https";
-            }
-        } catch (Exception ignore) {
-        }
-        return protocol;
-    }
-
-    /**
      * 获取properties或yaml文件的kv值
      *
      * @param conf PsiFile
@@ -403,7 +530,7 @@ public class RestUtil {
      * @return {value | null}
      */
     @Nullable
-    public static String getConfigurationValue(@Nullable PsiFile conf, @NotNull String key) {
+    private static String getConfigurationValue(@Nullable PsiFile conf, @NotNull String key) {
         if (conf == null) {
             return null;
         }
@@ -417,45 +544,6 @@ public class RestUtil {
             // TODO 解析yml文件下的键值对
         }
         return null;
-    }
-
-    public static String sendRequest(RequestMethod method, String url, String head, String body) {
-        String resp;
-        try {
-            HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url);
-
-            if (head != null && !"".equals(head.trim())) {
-                tempDataCoverToMap(head).forEach(request::header);
-            }
-            if (body != null && !"".equals(body.trim())) {
-                tempDataCoverToMap(body).forEach(request::form);
-            }
-
-            resp = request.timeout(REQUEST_TIMEOUT).execute().body();
-        } catch (Exception e) {
-            e.printStackTrace();
-            resp = e.getMessage();
-        }
-        return resp;
-    }
-
-    @NotNull
-    @Contract(pure = true)
-    public static Map<String, String> tempDataCoverToMap(String tempData) {
-        Map<String, String> map = new HashMap<>();
-
-        if (tempData != null && !"".equals((tempData = tempData.trim()))) {
-            String[] items = tempData.split("\n");
-            for (String item : items) {
-                String[] data = item.split(":");
-                if (data.length == 2) {
-                    map.put(data[0].trim(), data[1].trim());
-                }
-            }
-        }
-
-        System.out.println("map = " + map);
-        return map;
     }
 
     enum Control {
