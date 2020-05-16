@@ -43,9 +43,6 @@ public class RestUtil {
 
     private static final int REQUEST_TIMEOUT = 1000 * 10;
 
-    private static final String PROPERTIES_KEY_CHECKBOX_STATE =
-            "RequestFilteringGotoByModel.OnlyCurrentModule";
-
     /**
      * 扫描服务端口
      *
@@ -526,18 +523,18 @@ public class RestUtil {
      * 获取properties或yaml文件的kv值
      *
      * @param conf PsiFile
-     * @param key  key
+     * @param name  name
      * @return {value | null}
      */
     @Nullable
-    private static String getConfigurationValue(@Nullable PsiFile conf, @NotNull String key) {
+    private static String getConfigurationValue(@Nullable PsiFile conf, @NotNull String name) {
         if (conf == null) {
             return null;
         }
         if (conf instanceof PropertiesFile) {
             // application.properties
             PropertiesFile propertiesFile = (PropertiesFile) conf;
-            return propertiesFile.getNamesMap().get(key);
+            return propertiesFile.getNamesMap().get(name);
         } else if (conf instanceof YAMLFile) {
             // application.yml
             YAMLFile yamlFile = (YAMLFile) conf;
