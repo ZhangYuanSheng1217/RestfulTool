@@ -31,7 +31,9 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.YAMLFileType;
+import org.jetbrains.yaml.YAMLUtil;
 import org.jetbrains.yaml.psi.YAMLFile;
+import org.jetbrains.yaml.psi.YAMLKeyValue;
 
 import java.util.*;
 
@@ -523,7 +525,7 @@ public class RestUtil {
      * 获取properties或yaml文件的kv值
      *
      * @param conf PsiFile
-     * @param name  name
+     * @param name name
      * @return {value | null}
      */
     @Nullable
@@ -538,7 +540,24 @@ public class RestUtil {
         } else if (conf instanceof YAMLFile) {
             // application.yml
             YAMLFile yamlFile = (YAMLFile) conf;
-            // TODO 解析yml文件下的键值对
+
+            YAMLKeyValue server = YAMLUtil.getQualifiedKeyInFile(
+                    yamlFile,
+                    "server"
+            );
+            if (server != null) {
+                PsiElement mapping = server.getValue();
+                if (mapping != null) {
+                    for (PsiElement mappingElement : mapping.getChildren()) {
+                        if (mappingElement instanceof YAMLKeyValue) {
+                            YAMLKeyValue keyValue = (YAMLKeyValue) mappingElement;
+                            if ("port".equals(keyValue.getKeyText())) {
+                                return keyValue.getValueText();
+                            }
+                        }
+                    }
+                }
+            }
         }
         return null;
     }
