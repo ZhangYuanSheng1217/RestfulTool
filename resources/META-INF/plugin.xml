@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.0.2-RELEASE</version>
+    <version>1.0.3-RELEASE</version>
     <vendor email="2862297923@qq.com" url="">ClionCo</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -23,6 +23,7 @@
 
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
+      <em>1.0.3-RELEASE: add yaml configuration file support.</em>
       <em>1.0.2-RELEASE: fix issue, Increase search mapping</em>
       <em>1.0.1-RELEASE: base</em>
     ]]>
