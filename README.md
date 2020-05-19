@@ -6,10 +6,9 @@
 > 2. 点击 URL 直接跳转到对应的方法定义;
 > 3. 一个简单的 http 请求工具;
 > 4. 支持 Spring 体系 (Spring MVC / Spring Boot)
-    
+> 5. 支持 `Navigate -> Request Service` 搜索 Mapping `Ctrl + Alt + /`
 #### TODO
 > + 符合条件才显示工具界面（IDEA扫描完毕）
-> + 优化ServerTree界面
     
 #### 参考
 > + 插件地址 - [RESTFullToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit/)

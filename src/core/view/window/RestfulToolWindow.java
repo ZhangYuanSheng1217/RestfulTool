@@ -8,12 +8,12 @@
   <author>          <time>          <version>          <desc>
   作者姓名            修改时间           版本号              描述
  */
-package core.view;
+package core.view.window;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
-import core.components.RestfulToolService;
+import core.service.RestfulToolService;
 import org.jetbrains.annotations.NotNull;
 
 /**

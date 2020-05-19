@@ -268,6 +268,28 @@ public class RestUtil {
     }
 
     /**
+     * 获取url
+     *
+     * @param protocol 协议
+     * @param port     端口
+     * @param path     路径
+     * @return url
+     */
+    @NotNull
+    public static String getRequestUrl(@NotNull String protocol, @Nullable Integer port, String path) {
+        StringBuilder url = new StringBuilder(protocol + "://");
+        url.append("localhost");
+        if (port != null) {
+            url.append(":").append(port);
+        }
+        if (!path.startsWith("/")) {
+            url.append("/");
+        }
+        url.append(path);
+        return url.toString();
+    }
+
+    /**
      * 获取所有的控制器类
      *
      * @param project project

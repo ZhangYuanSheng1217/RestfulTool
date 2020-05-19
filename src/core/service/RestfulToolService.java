@@ -1,4 +1,4 @@
-package core.components;
+package core.service;
 
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;

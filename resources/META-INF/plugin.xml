@@ -23,7 +23,7 @@
 
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
-      <em>1.0.3-RELEASE: add yaml configuration file support.</em>
+      <em>1.0.3-RELEASE: add yaml configuration file support and fix some issue.</em>
       <em>1.0.2-RELEASE: fix issue, Increase search mapping</em>
       <em>1.0.1-RELEASE: base</em>
     ]]>
@@ -40,13 +40,13 @@
     <depends>com.intellij.properties</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceInterface="core.components.RestfulToolService"
-                        serviceImplementation="core.components.impl.RestfulToolServiceImpl"/>
+        <projectService serviceInterface="core.service.RestfulToolService"
+                        serviceImplementation="core.service.impl.RestfulToolServiceImpl"/>
 
         <projectService serviceImplementation="core.view.search.GotoRequestConfiguration"/>
 
         <toolWindow id="RestfulTool" anchor="right"
-                    factoryClass="core.view.RestfulToolWindow" order="last"
+                    factoryClass="core.view.window.RestfulToolWindow" order="last"
                     doNotActivateOnStart="true" icon="/icons/service.png"/>
     </extensions>
 

@@ -8,11 +8,12 @@
   <author>          <time>          <version>          <desc>
   作者姓名            修改时间           版本号              描述
  */
-package core.view;
+package core.view.window;
 
 import com.intellij.ui.ColoredTreeCellRenderer;
 import com.intellij.ui.SimpleTextAttributes;
 import core.beans.Request;
+import core.view.Icons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
