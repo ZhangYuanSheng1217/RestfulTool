@@ -339,16 +339,24 @@ public class RestUtil {
         if (spring == null) {
             return Collections.emptyList();
         }
-        RequestMethod method = spring.getMethod();
+        Set<String> methods = new HashSet<>();
+        methods.add(spring.getMethod() == null ? "ALL" : spring.getMethod().name());
         List<String> paths = new ArrayList<>();
 
         List<JvmAnnotationAttribute> attributes = annotation.getAttributes();
         for (JvmAnnotationAttribute attribute : attributes) {
             String name = attribute.getAttributeName();
 
-            if (method == null && "method".equals(name)) {
+            if (methods.contains("ALL") && "method".equals(name)) {
+                // method可能为数组
                 Object value = getAttrValue(attribute.getAttributeValue());
-                method = RequestMethod.valueOf((String) value);
+                if (value instanceof String) {
+                    methods.add((String) value);
+                } else if (value instanceof List) {
+                    //noinspection unchecked,rawtypes
+                    List<String> list = (List) value;
+                    methods.addAll(list);
+                }
             }
 
             boolean flag = false;
@@ -373,12 +381,23 @@ public class RestUtil {
 
         List<Request> requests = new ArrayList<>(paths.size());
 
-        RequestMethod finalMethod = method;
-        paths.forEach(path -> requests.add(new Request(
-                finalMethod,
-                path,
-                psiMethod
-        )));
+        paths.forEach(path -> {
+            for (String method : methods) {
+                RequestMethod rm = null;
+                if ("ALL".equals(method)) {
+                    if (methods.size() > 1) {
+                        continue;
+                    }
+                } else {
+                    rm = RequestMethod.valueOf(method);
+                }
+                requests.add(new Request(
+                        rm,
+                        path,
+                        psiMethod
+                ));
+            }
+        });
         return requests;
     }
 
