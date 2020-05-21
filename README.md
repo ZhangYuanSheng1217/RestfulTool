@@ -1,16 +1,48 @@
 # RestfulTool
-    > Intellij IDEA 2020.1
 
-#### 一套 Restful 服务开发辅助工具集。
-> 1. 提供了一个 Services tree 的显示窗口;
-> 2. 点击 URL 直接跳转到对应的方法定义;
-> 3. 一个简单的 http 请求工具;
-> 4. 支持 Spring 体系 (Spring MVC / Spring Boot)
-> 5. 支持 `Navigate -> Request Service` 搜索 Mapping `Ctrl + Alt + /`
+> - `min-version`: `201`
+>   * Please move to [RESTFulToolkit] (https://plugins.jetbrains.com/plugin/10292-restfultoolkit) to install and use that low version
+> - `plugin-path`: [`RestfulTool`](https://plugins.jetbrains.com/plugin/14280-restfultool)
+
+> + [Github](https://github.com/ZhangYuanSheng1217/RestfulTool)
+> + [Gitee](https://gitee.com/zys981029/RestfulTool)
+
+#### Preface
+    Since the original author of the RESTFulToolkit plug-in is not updated, IDEA.201 and above versions are no longer adapted, so this plug-in was made with reference to the plug-in project of the original author.
+    Everyone is welcome to submit an issue | pr
+
+#### Info
+> A set of auxiliary tools for Restful service development.
+>> 1. Provides a display window of Services tree;
+>> 2. Click the URL to jump directly to the corresponding method definition;
+>> 3. A simple http request tool;
+>> 4. Support Spring system (Spring MVC / Spring Boot);
+>> 5. Support `Navigate-> Request Service` search Mapping` Ctrl + Alt + / `;
+
+#### Install
+> 1. IDEA plugin Search for `RestfulTool` installation (recommended)
+> 2. Download the installation package from the [Jetbrains Plugins](https://plugins.jetbrains.com/plugin/14280-restfultool/versions) repository
+> 3. Download `Restful Tool.zip` in the root directory of the project and install it locally
+
+#### Use
+> * search
+>   - `navigation` > `Request Service`
+>   - hotKey
+>       - default: `Ctrl + Alt + /`
+>       - change: `Setting` > `keymap` > `Plug-ins` > `RestfulTool`
+> * view
+>   - `right tool window` > `RestfulTool`
+
+****
+#### Fork
+> - If something goes wrong, please add the following lib to Platform SDK
+>   - `.\plugins\Spring\lib\spring.jar`
+>   - `.\plugins\properties\lib\properties.jar`
+>   - `.\plugins\yaml\lib\yaml.jar`
+
 #### TODO
-> + 符合条件才显示工具界面（IDEA扫描完毕）
-    
-#### 参考
-> + 插件地址 - [RESTFullToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit/)
+> + The tool interface is displayed only when the conditions are met (IDEA scanning is completed)
+
+#### Reference
+> + Plugin address - [RESTFullToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit/)
 > + Github - [RESTFullToolkit](https://github.com/mrmanzhaow/RestfulToolkit)
-   
