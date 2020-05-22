@@ -18,6 +18,7 @@ import com.intellij.lang.properties.PropertiesFileType;
 import com.intellij.lang.properties.psi.PropertiesFile;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.java.stubs.index.JavaAnnotationIndex;
@@ -553,18 +554,25 @@ public class RestUtil {
                 configurationPrefix + "." + YAMLFileType.DEFAULT_EXTENSION,
         };
 
-        for (String configurationFileName : configurationFileNames) {
-            PsiFile[] files = FilenameIndex.getFilesByName(project, configurationFileName, scope);
+        try {
+            for (String configurationFileName : configurationFileNames) {
+                PsiFile[] files = FilenameIndex.getFilesByName(project, configurationFileName, scope);
 
-            for (PsiFile file : files) {
-                if (file instanceof PropertiesFile) {
-                    // application.properties
-                    return file;
-                } else if (file instanceof YAMLFile) {
-                    // application.yml
-                    return file;
+                for (PsiFile file : files) {
+                    if (file instanceof PropertiesFile) {
+                        // application.properties
+                        return file;
+                    } else if (file instanceof YAMLFile) {
+                        // application.yml
+                        return file;
+                    }
                 }
             }
+        } catch (NoClassDefFoundError e) {
+            DumbService.getInstance(project).showDumbModeNotification(String.format(
+                    "IDE is missing the corresponding package file: %s",
+                    e.getMessage()
+            ));
         }
         return null;
     }
