@@ -23,7 +23,11 @@
 
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
-      fix issue: 项目中有多模块时，每个模块的API数量没有显示出来，只有所有模块的API总数显示
+      fix issue: <br>
+      <ul>
+        <li> 项目中有多模块时，每个模块的API数量没有显示出来，只有所有模块的API总数显示 </li>
+        <li> API统计缺失(@PostMapping如果后面没有参数统计不到，@PostMapping("/path1")这样才能统计到) </li>
+      </ul>
     ]]>
     </change-notes>
 
