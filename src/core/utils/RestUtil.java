@@ -139,7 +139,6 @@ public class RestUtil {
             }
         }
 
-        System.out.println("map = " + map);
         return map;
     }
 

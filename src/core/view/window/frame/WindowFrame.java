@@ -1,20 +1,14 @@
 package core.view.window.frame;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.ComboBox;
-import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.components.JBTabbedPane;
-import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
 import core.beans.Request;
-import core.beans.RequestMethod;
 import core.utils.RestUtil;
 import core.view.window.RestfulTreeCellRenderer;
 import org.jdesktop.swingx.JXButton;
-import org.jdesktop.swingx.JXEditorPane;
 import org.jdesktop.swingx.JXTree;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,51 +34,23 @@ public class WindowFrame extends JPanel {
      * 项目对象
      */
     private final Project project;
+    private final RestDetail restDetail;
 
     /**
      * 按钮 - 扫描service
      */
-    private JXButton scanApi;
+    private JButton scanApi;
     /**
      * 树 - service列表
      */
-    private JXTree tree;
-
-    /**
-     * 下拉框 - 选择选择请求方法
-     */
-    private ComboBox<RequestMethod> requestMethod;
-    /**
-     * 输入框 - url地址
-     */
-    private JBTextField requestUrl;
-    /**
-     * 按钮 - 发送请求
-     */
-    private JXButton sendRequest;
-
-    /**
-     * 选项卡面板 - 请求信息
-     */
-    private JBTabbedPane tabbedPane;
-    /**
-     * 文本域 - 请求头
-     */
-    private JXEditorPane requestHead;
-    /**
-     * 文本域 - 请求体
-     */
-    private JXEditorPane requestBody;
-    /**
-     * 标签 - 显示返回结果
-     */
-    private JBLabel responseView;
+    private JTree tree;
 
     /**
      * Create the panel.
      */
     public WindowFrame(@NotNull Project project) {
         this.project = project;
+        this.restDetail = new RestDetail(project);
 
         GridBagLayout gridBagLayout = new GridBagLayout();
         gridBagLayout.columnWidths = new int[]{0, 0};
@@ -105,21 +71,12 @@ public class WindowFrame extends JPanel {
 
         initView(headPanel);
 
-        JPanel bodyPanel = new JPanel();
         GridBagConstraints gbcBodyPanel = new GridBagConstraints();
         gbcBodyPanel.weighty = 1.0;
         gbcBodyPanel.fill = GridBagConstraints.BOTH;
         gbcBodyPanel.gridx = 0;
         gbcBodyPanel.gridy = 1;
-        add(bodyPanel, gbcBodyPanel);
-        bodyPanel.setLayout(new BorderLayout(0, 0));
-
-        JPanel panelInput = new JPanel();
-        bodyPanel.add(panelInput, BorderLayout.NORTH);
-        panelInput.setLayout(new BorderLayout(0, 0));
-
-        initViewOfRequest(panelInput);
-        initViewOfResponse(bodyPanel);
+        add(restDetail, gbcBodyPanel);
 
         initEvent();
 
@@ -127,8 +84,18 @@ public class WindowFrame extends JPanel {
     }
 
     private void initView(@NotNull JPanel headPanel) {
-        scanApi = new JXButton("扫描");
-        headPanel.add(scanApi, BorderLayout.NORTH);
+        JPanel toolPanel = new JPanel();
+        headPanel.add(toolPanel, BorderLayout.NORTH);
+        toolPanel.setLayout(new BorderLayout(0, 0));
+
+        scanApi = new JXButton(AllIcons.Actions.Refresh);
+        Dimension scanApiSize = new Dimension(24, 24);
+        scanApi.setPreferredSize(scanApiSize);
+        // 按钮设置为透明，这样就不会挡着后面的背景
+        scanApi.setContentAreaFilled(true);
+        // 去掉按钮的边框
+        scanApi.setBorderPainted(false);
+        toolPanel.add(scanApi, BorderLayout.WEST);
 
         JScrollPane scrollPaneTree = new JBScrollPane();
         scrollPaneTree.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -141,45 +108,6 @@ public class WindowFrame extends JPanel {
         tree.setRootVisible(true);
         tree.setShowsRootHandles(false);
         scrollPaneTree.setViewportView(tree);
-    }
-
-    private void initViewOfRequest(@NotNull JPanel panelInput) {
-        requestMethod = new ComboBox<>(RequestMethod.values());
-        panelInput.add(requestMethod, BorderLayout.WEST);
-
-        requestUrl = new JBTextField();
-        panelInput.add(requestUrl);
-        requestUrl.setColumns(45);
-
-        sendRequest = new JXButton("send");
-        panelInput.add(sendRequest, BorderLayout.EAST);
-    }
-
-    private void initViewOfResponse(@NotNull JPanel bodyPanel) {
-        tabbedPane = new JBTabbedPane(JTabbedPane.TOP);
-        bodyPanel.add(tabbedPane, BorderLayout.CENTER);
-
-        JScrollPane scrollPaneHead = new JBScrollPane();
-        scrollPaneHead.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        tabbedPane.addTab("head", null, scrollPaneHead, null);
-
-        requestHead = new JXEditorPane();
-        scrollPaneHead.setViewportView(requestHead);
-
-        JScrollPane scrollPaneBody = new JBScrollPane();
-        scrollPaneBody.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        tabbedPane.addTab("body", null, scrollPaneBody, null);
-
-        requestBody = new JXEditorPane();
-        scrollPaneBody.setViewportView(requestBody);
-
-        JScrollPane scrollPane = new JBScrollPane();
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        tabbedPane.addTab("response", null, scrollPane, null);
-
-        responseView = new JBLabel();
-        responseView.setVerticalAlignment(SwingConstants.TOP);
-        scrollPane.setViewportView(responseView);
     }
 
     /**
@@ -195,7 +123,7 @@ public class WindowFrame extends JPanel {
             if (node == null) {
                 return;
             }
-            setRequest(node);
+            restDetail.setRequest(node);
         });
 
         // RequestTree子项双击监听
@@ -207,26 +135,6 @@ public class WindowFrame extends JPanel {
                     node.navigate(true);
                 }
             }
-        });
-
-        // 发送请求按钮监听
-        sendRequest.addActionListener(e -> {
-            // 选择Response页面
-            tabbedPane.setSelectedIndex(2);
-
-            RequestMethod method = (RequestMethod) requestMethod.getSelectedItem();
-            String url = requestUrl.getText();
-
-            if (url == null || "".equals(url.trim())) {
-                responseView.setText("request path must be not empty!");
-                return;
-            }
-
-            String head = requestHead.getText();
-            String body = requestBody.getText();
-
-            String resp = RestUtil.sendRequest(method, url, head, body);
-            responseView.setText(resp);
         });
     }
 
@@ -258,7 +166,11 @@ public class WindowFrame extends JPanel {
 
         Map<String, List<Request>> allRequest = RestUtil.getAllRequest(project);
         allRequest.forEach((moduleName, requests) -> {
-            DefaultMutableTreeNode item = new DefaultMutableTreeNode(moduleName);
+            DefaultMutableTreeNode item = new DefaultMutableTreeNode(String.format(
+                    "[%d]%s",
+                    requests.size(),
+                    moduleName
+            ));
             requests.forEach(request -> {
                 item.add(new DefaultMutableTreeNode(request));
                 controllerCount.incrementAndGet();
@@ -301,31 +213,5 @@ public class WindowFrame extends JPanel {
         } else {
             tree.collapsePath(parent);
         }
-    }
-
-    public void setRequest(Request request) {
-        RequestMethod selItem = RequestMethod.GET;
-        String reqUrl = "";
-        String reqBody = "";
-
-        if (request != null) {
-            // 选择Body页面
-            tabbedPane.setSelectedIndex(1);
-
-            selItem = request.getMethod() == null ? RequestMethod.GET : request.getMethod();
-
-            GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
-            reqUrl = RestUtil.getRequestUrl(
-                    RestUtil.scanListenerProtocol(project, scope),
-                    RestUtil.scanListenerPort(project, scope),
-                    request.getPath()
-            );
-
-            reqBody = RestUtil.getRequestParamsTempData(request.getPsiMethod());
-        }
-
-        requestMethod.setSelectedItem(selItem);
-        requestUrl.setText(reqUrl);
-        requestBody.setText(reqBody);
     }
 }

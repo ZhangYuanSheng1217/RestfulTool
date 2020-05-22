@@ -42,7 +42,7 @@ public class RestfulTreeCellRenderer extends ColoredTreeCellRenderer {
             append((String) obj, SimpleTextAttributes.GRAYED_BOLD_ATTRIBUTES);
         } else if (obj instanceof Integer) {
             setIcon(Icons.SERVICE);
-            append(String.format("共找到%s个服务接口", obj));
+            append(String.format("Find %s services", obj));
         }
     }
 
