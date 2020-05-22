@@ -12,6 +12,7 @@ package core.view.window.frame;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
@@ -64,6 +65,8 @@ public class RestDetail extends JPanel {
      * 标签 - 显示返回结果
      */
     private JLabel responseView;
+
+    private DetailHandle callback;
 
     public RestDetail(@NotNull Project project) {
         this.project = project;
@@ -143,24 +146,46 @@ public class RestDetail extends JPanel {
         String reqUrl = "";
         String reqBody = "";
 
-        if (request != null) {
-            // 选择Body页面
-            tabbedPane.setSelectedIndex(1);
+        try {
+            if (request != null) {
+                GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
+                reqUrl = RestUtil.getRequestUrl(
+                        RestUtil.scanListenerProtocol(project, scope),
+                        RestUtil.scanListenerPort(project, scope),
+                        request.getPath()
+                );
 
-            selItem = request.getMethod() == null ? RequestMethod.GET : request.getMethod();
+                // 选择Body页面
+                tabbedPane.setSelectedIndex(1);
 
-            GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
-            reqUrl = RestUtil.getRequestUrl(
-                    RestUtil.scanListenerProtocol(project, scope),
-                    RestUtil.scanListenerPort(project, scope),
-                    request.getPath()
-            );
+                selItem = request.getMethod() == null ? RequestMethod.GET : request.getMethod();
 
-            reqBody = RestUtil.getRequestParamsTempData(request.getPsiMethod());
+                reqBody = RestUtil.getRequestParamsTempData(request.getPsiMethod());
+            }
+        } catch (PsiInvalidElementAccessException e) {
+            /*
+            @Throws Code: request.getPsiMethod().getResolveScope()
+            @Throws Message: 无效访问，通常代表指向方法已被删除
+             */
+            if (callback != null) {
+                callback.handle();
+            }
         }
 
         requestMethod.setSelectedItem(selItem);
         requestUrl.setText(reqUrl);
         requestBody.setText(reqBody);
+    }
+
+    public void setCallback(DetailHandle callback) {
+        this.callback = callback;
+    }
+
+    public interface DetailHandle {
+
+        /**
+         * 处理逻辑
+         */
+        void handle();
     }
 }

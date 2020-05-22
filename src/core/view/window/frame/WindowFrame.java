@@ -51,6 +51,7 @@ public class WindowFrame extends JPanel {
     public WindowFrame(@NotNull Project project) {
         this.project = project;
         this.restDetail = new RestDetail(project);
+        this.restDetail.setCallback(this::renderRequestTree);
 
         GridBagLayout gridBagLayout = new GridBagLayout();
         gridBagLayout.columnWidths = new int[]{0, 0};
