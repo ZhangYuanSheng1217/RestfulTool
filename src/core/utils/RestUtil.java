@@ -342,6 +342,8 @@ public class RestUtil {
         methods.add(spring.getMethod() == null ? "ALL" : spring.getMethod().name());
         List<String> paths = new ArrayList<>();
 
+        // 是否为隐式的path（未定义value或者path）
+        boolean hasImplicitPath = true;
         List<JvmAnnotationAttribute> attributes = annotation.getAttributes();
         for (JvmAnnotationAttribute attribute : attributes) {
             String name = attribute.getAttributeName();
@@ -366,7 +368,7 @@ public class RestUtil {
                 }
             }
             if (!flag) {
-                break;
+                continue;
             }
             Object value = getAttrValue(attribute.getAttributeValue());
             if (value instanceof String) {
@@ -375,6 +377,12 @@ public class RestUtil {
                 //noinspection unchecked,rawtypes
                 List<Object> list = (List) value;
                 list.forEach(item -> paths.add((String) item));
+            }
+            hasImplicitPath = false;
+        }
+        if (hasImplicitPath) {
+            if (psiMethod != null) {
+                paths.add(psiMethod.getName());
             }
         }
 
