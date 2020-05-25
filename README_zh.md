@@ -36,7 +36,6 @@
 ****
 #### Fork
 > - 如果运行出现问题，请在Platform SDK中增加以下lib
->   - `.\plugins\Spring\lib\spring.jar`
 >   - `.\plugins\properties\lib\properties.jar`
 >   - `.\plugins\yaml\lib\yaml.jar`
 

@@ -36,7 +36,6 @@
 ****
 #### Fork
 > - If something goes wrong, please add the following lib to Platform SDK
->   - `.\plugins\Spring\lib\spring.jar`
 >   - `.\plugins\properties\lib\properties.jar`
 >   - `.\plugins\yaml\lib\yaml.jar`
 
