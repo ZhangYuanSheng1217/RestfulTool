@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.1.3-RELEASE</version>
+    <version>1.1.4-RELEASE</version>
     <vendor email="2862297923@qq.com" url="">ClionCo</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -25,7 +25,8 @@
     <change-notes><![CDATA[
       fix issue: <br>
       <ul>
-        <li> `server.servlet.context-path` 不在请求地址中 </li>
+        <li> ServiceTree增加快速搜索 </li>
+        <li> ServiceItem增加右键复制功能 </li>
       </ul>
     ]]>
     </change-notes>

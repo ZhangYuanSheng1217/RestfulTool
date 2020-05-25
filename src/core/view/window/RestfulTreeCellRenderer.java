@@ -50,7 +50,7 @@ public class RestfulTreeCellRenderer extends ColoredTreeCellRenderer {
         if (node == null) {
             return;
         }
-        setIcon(Icons.getMethodIcon(node.getMethod()));
+        setIcon(node.getIcon());
         append(node.getPath());
     }
 }

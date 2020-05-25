@@ -3,10 +3,14 @@ package core.view.window.frame;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.JBPopupMenu;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.ui.TreeSpeedSearch;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.JBUI;
 import core.beans.Request;
 import core.utils.RestUtil;
+import core.utils.SystemUtil;
 import core.view.window.RestfulTreeCellRenderer;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXTree;
@@ -18,8 +22,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +112,9 @@ public class WindowFrame extends JPanel {
         tree.setRootVisible(true);
         tree.setShowsRootHandles(false);
         scrollPaneTree.setViewportView(tree);
+
+        // 快速搜索
+        new TreeSpeedSearch(tree);
     }
 
     /**
@@ -131,9 +137,46 @@ public class WindowFrame extends JPanel {
         tree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Request node = getTreeNodeRequest(tree);
-                if (node != null && e.getClickCount() == 2) {
-                    node.navigate(true);
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    final int doubleClick = 2;
+                    Request node = getTreeNodeRequest(tree);
+                    if (node != null && e.getClickCount() == doubleClick) {
+                        node.navigate(true);
+                    }
+                }
+            }
+
+            /**
+             * 右键菜单
+             */
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+                    tree.setSelectionPath(path);
+
+                    Request request = getTreeNodeRequest(tree);
+                    if (request == null) {
+                        return;
+                    }
+
+                    Rectangle pathBounds = tree.getUI().getPathBounds(tree, path);
+                    if (pathBounds != null && pathBounds.contains(e.getX(), e.getY())) {
+                        popupMenu(tree, request, e.getX(), pathBounds.y + pathBounds.height);
+                    }
+                }
+            }
+        });
+        // 按回车键跳转到对应方法
+        tree.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                super.keyPressed(e);
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    Request request = getTreeNodeRequest(tree);
+                    if (request != null) {
+                        request.navigate(true);
+                    }
                 }
             }
         });
@@ -214,5 +257,53 @@ public class WindowFrame extends JPanel {
         } else {
             tree.collapsePath(parent);
         }
+    }
+
+    /**
+     * 显示右键菜单
+     *
+     * @param tree    tree
+     * @param request request
+     * @param x       横坐标
+     * @param y       纵坐标
+     */
+    private void popupMenu(@NotNull JTree tree, @NotNull Request request, int x, int y) {
+        JBPopupMenu menu = new JBPopupMenu();
+        ActionListener actionListener = actionEvent -> {
+            String copy;
+            GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
+            String contextPath = RestUtil.scanContextPath(project, scope);
+            switch (((JMenuItem) actionEvent.getSource()).getMnemonic()) {
+                case 0:
+                    copy = RestUtil.getRequestUrl(
+                            RestUtil.scanListenerProtocol(project, scope),
+                            RestUtil.scanListenerPort(project, scope),
+                            contextPath,
+                            request.getPath()
+                    );
+                    break;
+                case 1:
+                    copy = (contextPath == null || "null".equals(contextPath) ? "" : contextPath) +
+                            request.getPath();
+                    break;
+                default:
+                    return;
+            }
+            SystemUtil.setClipboardString(copy);
+        };
+
+        // Copy full url
+        JMenuItem copyFullUrl = new JMenuItem("Copy full url", AllIcons.Actions.Copy);
+        copyFullUrl.setMnemonic(0);
+        copyFullUrl.addActionListener(actionListener);
+        menu.add(copyFullUrl);
+
+        // Copy api path
+        JMenuItem copyApiPath = new JMenuItem("Copy api path", AllIcons.Actions.Copy);
+        copyApiPath.setMnemonic(1);
+        copyApiPath.addActionListener(actionListener);
+        menu.add(copyApiPath);
+
+        menu.show(tree, x, y);
     }
 }
