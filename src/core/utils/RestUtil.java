@@ -97,6 +97,26 @@ public class RestUtil {
     }
 
     /**
+     * 扫描请求路径前缀
+     *
+     * @param project project
+     * @param scope   scope
+     * @return path
+     */
+    @Nullable
+    public static String scanContextPath(@NotNull Project project, @NotNull GlobalSearchScope scope) {
+        // server.servlet.context-path
+        try {
+            return getConfigurationValue(
+                    getScanConfigurationFile(project, scope),
+                    "server.servlet.context-path"
+            );
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
+
+    /**
      * 发送http请求
      *
      * @param method 请求方式
@@ -270,17 +290,21 @@ public class RestUtil {
     /**
      * 获取url
      *
-     * @param protocol 协议
-     * @param port     端口
-     * @param path     路径
+     * @param protocol    协议
+     * @param port        端口
+     * @param contextPath 访问根目录名
+     * @param path        路径
      * @return url
      */
     @NotNull
-    public static String getRequestUrl(@NotNull String protocol, @Nullable Integer port, String path) {
+    public static String getRequestUrl(@NotNull String protocol, @Nullable Integer port, @Nullable String contextPath, String path) {
         StringBuilder url = new StringBuilder(protocol + "://");
         url.append("localhost");
         if (port != null) {
             url.append(":").append(port);
+        }
+        if (contextPath != null && !"null".equals(contextPath) && contextPath.startsWith("/")) {
+            url.append(contextPath);
         }
         if (!path.startsWith("/")) {
             url.append("/");
@@ -383,7 +407,8 @@ public class RestUtil {
         }
         if (hasImplicitPath) {
             if (psiMethod != null) {
-                paths.add(psiMethod.getName());
+                // paths.add(psiMethod.getName());
+                paths.add("/");
             }
         }
 
@@ -599,20 +624,10 @@ public class RestUtil {
 
             YAMLKeyValue server = YAMLUtil.getQualifiedKeyInFile(
                     yamlFile,
-                    "server"
+                    name.split("\\.")
             );
             if (server != null) {
-                PsiElement mapping = server.getValue();
-                if (mapping != null) {
-                    for (PsiElement mappingElement : mapping.getChildren()) {
-                        if (mappingElement instanceof YAMLKeyValue) {
-                            YAMLKeyValue keyValue = (YAMLKeyValue) mappingElement;
-                            if ("port".equals(keyValue.getKeyText())) {
-                                return keyValue.getValueText();
-                            }
-                        }
-                    }
-                }
+                return server.getValueText();
             }
         }
         return null;

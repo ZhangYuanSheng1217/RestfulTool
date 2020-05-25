@@ -152,6 +152,7 @@ public class RestDetail extends JPanel {
                 reqUrl = RestUtil.getRequestUrl(
                         RestUtil.scanListenerProtocol(project, scope),
                         RestUtil.scanListenerPort(project, scope),
+                        RestUtil.scanContextPath(project, scope),
                         request.getPath()
                 );
 
