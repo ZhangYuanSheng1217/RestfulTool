@@ -37,7 +37,7 @@ public class RestfulTreeCellRenderer extends ColoredTreeCellRenderer {
         if (obj instanceof Request) {
             Request node = (Request) obj;
 
-            setMethodTypeAndPath(node);
+            setMethodTypeAndPath(node, selected);
         } else if (obj instanceof String) {
             append((String) obj, SimpleTextAttributes.GRAYED_BOLD_ATTRIBUTES);
         } else if (obj instanceof Integer) {
@@ -46,11 +46,15 @@ public class RestfulTreeCellRenderer extends ColoredTreeCellRenderer {
         }
     }
 
-    private void setMethodTypeAndPath(@Nullable Request node) {
+    private void setMethodTypeAndPath(@Nullable Request node, boolean selected) {
         if (node == null) {
             return;
         }
-        setIcon(node.getIcon());
+        if (selected) {
+            setIcon(node.getSelectIcon());
+        } else {
+            setIcon(node.getIcon());
+        }
         append(node.getPath());
     }
 }

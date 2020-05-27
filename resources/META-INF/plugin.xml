@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.1.4-RELEASE</version>
+    <version>1.1.5-RELEASE</version>
     <vendor email="2862297923@qq.com" url="">ClionCo</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -23,10 +23,10 @@
 
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
-      fix issue: <br>
       <ul>
-        <li> ServiceTree增加快速搜索 </li>
-        <li> ServiceItem增加右键复制功能 </li>
+        <li> 增加全局配置入口 </li>
+        <li> 重绘所有Request请求图标（可在`设置 > tools > Restful Tool`中设置使用原来的图标） </li>
+        <li> 优化已知的部分问题 </li>
       </ul>
     ]]>
     </change-notes>
@@ -42,14 +42,21 @@
     <depends>org.jetbrains.plugins.yaml</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="core.configuration.AppSettingsState"/>
+
+        <applicationConfigurable parentId="tools"
+                                 instance="core.configuration.AppSettingsConfigurable"
+                                 id="core.configuration.AppSettingsConfigurable"
+                                 displayName="Restful Tool"/>
+
         <projectService serviceInterface="core.service.RestfulToolService"
                         serviceImplementation="core.service.impl.RestfulToolServiceImpl"/>
 
         <projectService serviceImplementation="core.view.search.GotoRequestConfiguration"/>
 
         <toolWindow id="RestfulTool" anchor="right"
-                    factoryClass="core.view.window.RestfulToolWindow" order="last"
-                    doNotActivateOnStart="true" icon="/icons/service.png"/>
+                    factoryClass="core.view.window.RestfulToolWindowFactory" order="last"
+                    doNotActivateOnStart="false" icon="/icons/service.png"/>
     </extensions>
 
     <actions>

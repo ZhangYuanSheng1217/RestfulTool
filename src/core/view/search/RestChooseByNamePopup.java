@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-class RestChooseByNamePopup extends ChooseByNamePopup {
+public class RestChooseByNamePopup extends ChooseByNamePopup {
 
     public static final Key<RestChooseByNamePopup> CHOOSE_BY_NAME_POPUP_IN_PROJECT_KEY = new Key<>("ChooseByNamePopup");
 

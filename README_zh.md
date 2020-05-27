@@ -39,9 +39,6 @@
 >   - `.\plugins\properties\lib\properties.jar`
 >   - `.\plugins\yaml\lib\yaml.jar`
 
-#### TODO
-> + 符合条件才显示工具界面（IDEA扫描完毕）
-
 #### 参考
 > + 插件地址 - [RESTFullToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit/)
 > + Github - [RESTFullToolkit](https://github.com/mrmanzhaow/RestfulToolkit)

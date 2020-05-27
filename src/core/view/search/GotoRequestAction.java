@@ -21,7 +21,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
-import com.intellij.openapi.ide.CopyPasteManager;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
@@ -32,7 +31,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.awt.datatransfer.DataFlavor;
 import java.util.Arrays;
 import java.util.List;
 
@@ -101,31 +99,11 @@ public class GotoRequestAction extends GotoActionBase implements DumbAware {
         boolean mayRequestOpenInCurrentWindow = model.willOpenEditor() &&
                 FileEditorManagerEx.getInstanceEx(project).hasSplitOrUndockedWindows();
         Pair<String, Integer> start = getInitialText(useSelectionFromEditor, e);
-        String predefinedText = start.first == null ? tryFindCopiedUrl() : start.first;
         showNavigationPopup(callback, findUsagesTitle,
-                            RestChooseByNamePopup.createPopup(project, model, itemProvider, predefinedText,
+                            RestChooseByNamePopup.createPopup(project, model, itemProvider, start.first,
                                                               mayRequestOpenInCurrentWindow,
                                                               start.second),
                             allowMultipleSelection);
-    }
-
-    @Nullable
-    private String tryFindCopiedUrl() {
-        String contents = CopyPasteManager.getInstance().getContents(DataFlavor.stringFlavor);
-        if (contents == null) {
-            return null;
-        }
-
-        contents = contents.trim();
-        if (contents.startsWith("http")) {
-            if (contents.length() <= 120) {
-                return contents;
-            } else {
-                return contents.substring(0, 120);
-            }
-        }
-
-        return null;
     }
 
     protected static class GotoRequestMappingFilter extends ChooseByNameFilter<RequestMethod> {

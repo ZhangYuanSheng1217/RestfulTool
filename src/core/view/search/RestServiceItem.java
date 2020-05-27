@@ -160,11 +160,13 @@ public class RestServiceItem implements NavigationItem {
         if (this.psiMethod != null) {
             Project project = this.psiMethod.getProject();
             GlobalSearchScope scope = this.psiMethod.getResolveScope();
-            String protocol = RestUtil.scanListenerProtocol(project, scope);
-            int port = RestUtil.scanListenerPort(project, scope);
-            System.out.println("protocol = " + protocol);
-            System.out.println("port = " + port);
-            return protocol + "://localhost:" + port + getUrl();
+
+            return RestUtil.getRequestUrl(
+                    RestUtil.scanListenerProtocol(project, scope),
+                    RestUtil.scanListenerPort(project, scope),
+                    RestUtil.scanContextPath(project, scope),
+                    getUrl()
+            );
         }
 
         return getUrl();

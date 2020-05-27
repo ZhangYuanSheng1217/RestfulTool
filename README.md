@@ -39,9 +39,6 @@
 >   - `.\plugins\properties\lib\properties.jar`
 >   - `.\plugins\yaml\lib\yaml.jar`
 
-#### TODO
-> + The tool interface is displayed only when the conditions are met (IDEA scanning is completed)
-
 #### Reference
 > + Plugin address - [RESTFullToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit/)
 > + Github - [RESTFullToolkit](https://github.com/mrmanzhaow/RestfulToolkit)

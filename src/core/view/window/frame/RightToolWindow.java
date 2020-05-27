@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author ZhangYuanSheng
  */
-public class WindowFrame extends JPanel {
+public class RightToolWindow extends JPanel {
 
     /**
      * 项目对象
@@ -51,7 +51,7 @@ public class WindowFrame extends JPanel {
     /**
      * Create the panel.
      */
-    public WindowFrame(@NotNull Project project) {
+    public RightToolWindow(@NotNull Project project) {
         this.project = project;
         this.restDetail = new RestDetail(project);
         this.restDetail.setCallback(this::renderRequestTree);
@@ -84,7 +84,7 @@ public class WindowFrame extends JPanel {
 
         initEvent();
 
-        firstLoad();
+        DumbService.getInstance(project).smartInvokeLater(this::firstLoad);
     }
 
     private void initView(@NotNull JPanel headPanel) {
@@ -183,28 +183,13 @@ public class WindowFrame extends JPanel {
     }
 
     private void firstLoad() {
-        try {
-            /*
-            TODO Cannot use JavaAnnotationIndex to scan Spring annotations when the project is not IDE index
-             项目未被 IDE index时，无法使用JavaAnnotationIndex扫描Spring注解
-             solution:
-              1. Tool Window is dynamically registered when the project index is completed.
-                 待项目index完毕时才动态注册ToolWindow窗口
-              2. If the project is not indexed, stop scanning service, add callback when index is completed, scan and render service tree.
-                 项目未被index则停止扫描service，增加index完毕回调，扫描渲染serviceTree
-             */
-            renderRequestTree();
-        } catch (Exception e) {
-            DumbService.getInstance(project).showDumbModeNotification(
-                    "The project has not been loaded yet. Please wait until the project is loaded and try again."
-            );
-        }
+        renderRequestTree();
     }
 
     /**
      * 渲染Restful请求列表
      */
-    private void renderRequestTree() {
+    public void renderRequestTree() {
         AtomicInteger controllerCount = new AtomicInteger();
         DefaultMutableTreeNode root = new DefaultMutableTreeNode(controllerCount.get());
 
@@ -241,6 +226,13 @@ public class WindowFrame extends JPanel {
         return (Request) object;
     }
 
+    /**
+     * 展开tree视图
+     *
+     * @param tree   JTree
+     * @param parent treePath
+     * @param expand 是否展开
+     */
     private void expandAll(JTree tree, @NotNull TreePath parent, boolean expand) {
         javax.swing.tree.TreeNode node = (javax.swing.tree.TreeNode) parent.getLastPathComponent();
         if (node.getChildCount() >= 0) {
