@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.1.5-RELEASE</version>
+    <version>1.1.6-RELEASE</version>
     <vendor email="2862297923@qq.com" url="">ClionCo</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -24,10 +24,14 @@
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
       <ul>
-        <li> 增加全局配置入口 </li>
-        <li> 重绘所有Request请求图标（可在`设置 > tools > Restful Tool`中设置使用原来的图标） </li>
-        <li> 优化已知的部分问题 </li>
+        <li> 支持JAX-RS </li>
+        <li> 支持扫描lib中的Service(慎用：多lib情况下可能会影响性能) </li>
       </ul>
+      <ul>
+        <li> Support JAX-RS </li>
+        <li> Support scanning Service in lib (use with caution: performance may be affected in case of multiple libs) </li>
+      </ul>
+      issue: 暂时无法找到web.xml文件，所以只能显示类上标注了@Path的Service
     ]]>
     </change-notes>
 

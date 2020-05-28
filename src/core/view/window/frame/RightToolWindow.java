@@ -6,9 +6,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.TreeSpeedSearch;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.JBUI;
+import core.beans.PropertiesKey;
 import core.beans.Request;
+import core.service.RestTopic;
 import core.utils.RestUtil;
 import core.utils.SystemUtil;
 import core.view.window.RestfulTreeCellRenderer;
@@ -101,6 +104,14 @@ public class RightToolWindow extends JPanel {
         scanApi.setBorderPainted(false);
         toolPanel.add(scanApi, BorderLayout.WEST);
 
+        JBCheckBox scanWithLibrary = new JBCheckBox("scan with library");
+        scanWithLibrary.setSelected(PropertiesKey.scanServiceWithLibrary(project));
+        toolPanel.add(scanWithLibrary, BorderLayout.EAST);
+        scanWithLibrary.addActionListener(e -> {
+            PropertiesKey.scanServiceWithLibrary(project, scanWithLibrary.isSelected());
+            renderRequestTree();
+        });
+
         JScrollPane scrollPaneTree = new JBScrollPane();
         scrollPaneTree.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         headPanel.add(scrollPaneTree, BorderLayout.CENTER);
@@ -123,6 +134,13 @@ public class RightToolWindow extends JPanel {
     private void initEvent() {
         // 控制器扫描监听
         scanApi.addActionListener(e -> renderRequestTree());
+
+        project.getMessageBus().connect().subscribe(RestTopic.ACTION_SCAN_SERVICE, data -> {
+            if (data instanceof Map) {
+                //noinspection unchecked
+                renderRequestTree((Map<String, List<Request>>) data);
+            }
+        });
 
         // RequestTree子项点击监听
         tree.addTreeSelectionListener(e -> {
@@ -186,14 +204,18 @@ public class RightToolWindow extends JPanel {
         renderRequestTree();
     }
 
+    public void renderRequestTree() {
+        RestTopic restTopic = project.getMessageBus().syncPublisher(RestTopic.ACTION_SCAN_SERVICE);
+        DumbService.getInstance(project).runWhenSmart(() -> restTopic.afterAction(RestUtil.getAllRequest(project)));
+    }
+
     /**
      * 渲染Restful请求列表
      */
-    public void renderRequestTree() {
+    public void renderRequestTree(@NotNull Map<String, List<Request>> allRequest) {
         AtomicInteger controllerCount = new AtomicInteger();
         DefaultMutableTreeNode root = new DefaultMutableTreeNode(controllerCount.get());
 
-        Map<String, List<Request>> allRequest = RestUtil.getAllRequest(project);
         allRequest.forEach((moduleName, requests) -> {
             DefaultMutableTreeNode item = new DefaultMutableTreeNode(String.format(
                     "[%d]%s",

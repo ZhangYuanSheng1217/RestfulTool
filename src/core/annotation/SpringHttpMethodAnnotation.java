@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * @author ZhangYuanSheng
  */
-public enum SpringRequestMethodAnnotation {
+public enum SpringHttpMethodAnnotation {
 
     /**
      * RequestMapping
@@ -47,14 +47,14 @@ public enum SpringRequestMethodAnnotation {
     private final String qualifiedName;
     private final HttpMethod method;
 
-    SpringRequestMethodAnnotation(String qualifiedName, HttpMethod method) {
+    SpringHttpMethodAnnotation(String qualifiedName, HttpMethod method) {
         this.qualifiedName = qualifiedName;
         this.method = method;
     }
 
     @Nullable
-    public static SpringRequestMethodAnnotation getByQualifiedName(String qualifiedName) {
-        for (SpringRequestMethodAnnotation springRequestAnnotation : SpringRequestMethodAnnotation.values()) {
+    public static SpringHttpMethodAnnotation getByQualifiedName(String qualifiedName) {
+        for (SpringHttpMethodAnnotation springRequestAnnotation : SpringHttpMethodAnnotation.values()) {
             if (springRequestAnnotation.getQualifiedName().equals(qualifiedName)) {
                 return springRequestAnnotation;
             }
@@ -63,8 +63,8 @@ public enum SpringRequestMethodAnnotation {
     }
 
     @Nullable
-    public static SpringRequestMethodAnnotation getByShortName(String requestMapping) {
-        for (SpringRequestMethodAnnotation springRequestAnnotation : SpringRequestMethodAnnotation.values()) {
+    public static SpringHttpMethodAnnotation getByShortName(String requestMapping) {
+        for (SpringHttpMethodAnnotation springRequestAnnotation : SpringHttpMethodAnnotation.values()) {
             if (springRequestAnnotation.getQualifiedName().endsWith(requestMapping)) {
                 return springRequestAnnotation;
             }
