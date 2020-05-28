@@ -19,7 +19,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextField;
 import core.beans.Request;
-import core.beans.RequestMethod;
+import core.beans.HttpMethod;
 import core.utils.RestUtil;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXEditorPane;
@@ -39,7 +39,7 @@ public class RestDetail extends JPanel {
     /**
      * 下拉框 - 选择选择请求方法
      */
-    private JComboBox<RequestMethod> requestMethod;
+    private JComboBox<HttpMethod> requestMethod;
     /**
      * 输入框 - url地址
      */
@@ -83,7 +83,7 @@ public class RestDetail extends JPanel {
         add(panelInput, BorderLayout.NORTH);
         panelInput.setLayout(new BorderLayout(0, 0));
 
-        requestMethod = new ComboBox<>(RequestMethod.values());
+        requestMethod = new ComboBox<>(HttpMethod.values());
         panelInput.add(requestMethod, BorderLayout.WEST);
 
         requestUrl = new JBTextField();
@@ -125,7 +125,7 @@ public class RestDetail extends JPanel {
             // 选择Response页面
             tabbedPane.setSelectedIndex(2);
 
-            RequestMethod method = (RequestMethod) requestMethod.getSelectedItem();
+            HttpMethod method = (HttpMethod) requestMethod.getSelectedItem();
             String url = requestUrl.getText();
 
             if (url == null || "".equals(url.trim())) {
@@ -142,7 +142,7 @@ public class RestDetail extends JPanel {
     }
 
     public void setRequest(Request request) {
-        RequestMethod selItem = RequestMethod.GET;
+        HttpMethod selItem = HttpMethod.GET;
         String reqUrl = "";
         String reqBody = "";
 
@@ -159,7 +159,7 @@ public class RestDetail extends JPanel {
                 // 选择Body页面
                 tabbedPane.setSelectedIndex(1);
 
-                selItem = request.getMethod() == null ? RequestMethod.GET : request.getMethod();
+                selItem = request.getMethod() == null ? HttpMethod.GET : request.getMethod();
 
                 reqBody = RestUtil.getRequestParamsTempData(request.getPsiMethod());
             }

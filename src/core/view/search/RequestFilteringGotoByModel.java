@@ -18,7 +18,7 @@ import com.intellij.navigation.ChooseByNameContributor;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
-import core.beans.RequestMethod;
+import core.beans.HttpMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
  * @version 1.0
  */
 public class RequestFilteringGotoByModel
-        extends FilteringGotoByModel<RequestMethod>
+        extends FilteringGotoByModel<HttpMethod>
         implements DumbAware, CustomMatcherModel {
 
     private static final String PROPERTIES_KEY_CHECKBOX_STATE =
@@ -40,7 +40,7 @@ public class RequestFilteringGotoByModel
 
     @Nullable
     @Override
-    protected RequestMethod filterValueFor(NavigationItem item) {
+    protected HttpMethod filterValueFor(NavigationItem item) {
         if (item instanceof RestServiceItem) {
             return ((RestServiceItem) item).getMethod();
         }

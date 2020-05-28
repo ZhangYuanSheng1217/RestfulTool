@@ -12,7 +12,7 @@ package core.view;
 
 import com.intellij.ui.IconManager;
 import com.intellij.ui.components.JBLabel;
-import core.beans.RequestMethod;
+import core.beans.HttpMethod;
 import core.configuration.AppSettingsState;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -52,6 +52,10 @@ public class Icons {
     public static final Icon METHOD_PATCH_SELECT = load("/icons/method/PATCH_select.svg");
     public static final Icon METHOD_PATCH_OLD = load("/icons/method/old/PATCH.png");
 
+    public static final Icon METHOD_HEAD = load("/icons/method/HEAD.svg");
+    public static final Icon METHOD_HEAD_SELECT = load("/icons/method/HEAD_select.svg");
+    public static final Icon METHOD_HEAD_OLD = load("/icons/method/old/HEAD.png");
+
     @NotNull
     public static Icon load(@NotNull String path) {
         return IconManager.getInstance().getIcon(path, Icons.class);
@@ -64,18 +68,18 @@ public class Icons {
      * @return icon
      */
     @NotNull
-    public static Icon getMethodIcon(RequestMethod method) {
+    public static Icon getMethodIcon(HttpMethod method) {
         return getMethodIcon(method, false);
     }
 
-    public static Icon getSelectIcon(RequestMethod method) {
+    public static Icon getSelectIcon(HttpMethod method) {
         if (AppSettingsState.getInstance().getAppSetting().useOldIcons) {
             return getMethodIcon(method);
         }
         return getMethodIcon(method, true);
     }
 
-    public static Icon getMethodIcon(RequestMethod method, boolean selected) {
+    public static Icon getMethodIcon(HttpMethod method, boolean selected) {
         boolean useOldIcons = AppSettingsState.getInstance().getAppSetting().useOldIcons;
 
         if (method == null) {
@@ -110,6 +114,11 @@ public class Icons {
                     return Icons.METHOD_PATCH_OLD;
                 }
                 return selected ? Icons.METHOD_PATCH_SELECT : Icons.METHOD_PATCH;
+            case HEAD:
+                if (useOldIcons) {
+                    return Icons.METHOD_HEAD_OLD;
+                }
+                return selected ? Icons.METHOD_HEAD_SELECT : Icons.METHOD_HEAD;
             default:
                 if (useOldIcons) {
                     return Icons.METHOD_ALL_OLD;
@@ -128,6 +137,7 @@ public class Icons {
                 new PreviewIcon("Delete", withOld ? METHOD_DELETE_OLD : Icons.METHOD_DELETE),
                 new PreviewIcon("Put", withOld ? METHOD_PUT_OLD : Icons.METHOD_PUT),
                 new PreviewIcon("Patch", withOld ? METHOD_PATCH_OLD : Icons.METHOD_PATCH),
+                new PreviewIcon("Head", withOld ? METHOD_HEAD_OLD : Icons.METHOD_HEAD),
         };
     }
 
@@ -143,6 +153,7 @@ public class Icons {
                 new PreviewIcon("Delete", METHOD_DELETE_SELECT),
                 new PreviewIcon("Put", METHOD_PUT_SELECT),
                 new PreviewIcon("Patch", METHOD_PATCH_SELECT),
+                new PreviewIcon("Head", METHOD_HEAD_SELECT),
         };
     }
 

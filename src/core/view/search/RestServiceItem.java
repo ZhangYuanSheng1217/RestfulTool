@@ -11,7 +11,7 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.codeStyle.MinusculeMatcher;
 import com.intellij.psi.codeStyle.NameUtil;
 import com.intellij.psi.search.GlobalSearchScope;
-import core.beans.RequestMethod;
+import core.beans.HttpMethod;
 import core.utils.RestUtil;
 import core.view.Icons;
 import org.jetbrains.annotations.Contract;
@@ -29,17 +29,17 @@ public class RestServiceItem implements NavigationItem {
 
     private PsiMethod psiMethod;
     private Module module;
-    private RequestMethod method;
+    private HttpMethod method;
 
     private String url;
 
     private Navigatable navigationElement;
 
     public RestServiceItem(PsiElement psiElement, String requestMethod, String urlPath) {
-        this(psiElement, RequestMethod.valueOf(requestMethod), urlPath);
+        this(psiElement, HttpMethod.valueOf(requestMethod), urlPath);
     }
 
-    public RestServiceItem(PsiElement psiElement, RequestMethod method, String urlPath) {
+    public RestServiceItem(PsiElement psiElement, HttpMethod method, String urlPath) {
         this.psiElement = psiElement;
         if (psiElement instanceof PsiMethod) {
             this.psiMethod = (PsiMethod) psiElement;
@@ -140,11 +140,11 @@ public class RestServiceItem implements NavigationItem {
         this.psiMethod = psiMethod;
     }
 
-    public RequestMethod getMethod() {
+    public HttpMethod getMethod() {
         return method;
     }
 
-    public void setMethod(RequestMethod method) {
+    public void setMethod(HttpMethod method) {
         this.method = method;
     }
 

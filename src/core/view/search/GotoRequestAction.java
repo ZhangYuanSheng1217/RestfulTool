@@ -24,7 +24,7 @@ import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
-import core.beans.RequestMethod;
+import core.beans.HttpMethod;
 import core.view.Icons;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -56,12 +56,12 @@ public class GotoRequestAction extends GotoActionBase implements DumbAware {
 
         RequestFilteringGotoByModel model = new RequestFilteringGotoByModel(project, contributors);
 
-        GotoActionCallback<RequestMethod> callback = new GotoActionCallback<RequestMethod>() {
+        GotoActionCallback<HttpMethod> callback = new GotoActionCallback<HttpMethod>() {
 
             @NotNull
             @Contract("_ -> new")
             @Override
-            protected ChooseByNameFilter<RequestMethod> createFilter(@NotNull ChooseByNamePopup popup) {
+            protected ChooseByNameFilter<HttpMethod> createFilter(@NotNull ChooseByNamePopup popup) {
                 return new GotoRequestMappingFilter(popup, model, project);
             }
 
@@ -106,7 +106,7 @@ public class GotoRequestAction extends GotoActionBase implements DumbAware {
                             allowMultipleSelection);
     }
 
-    protected static class GotoRequestMappingFilter extends ChooseByNameFilter<RequestMethod> {
+    protected static class GotoRequestMappingFilter extends ChooseByNameFilter<HttpMethod> {
 
         GotoRequestMappingFilter(final ChooseByNamePopup popup,
                                  RequestFilteringGotoByModel model, final Project project) {
@@ -115,17 +115,17 @@ public class GotoRequestAction extends GotoActionBase implements DumbAware {
 
         @Override
         @NotNull
-        protected List<RequestMethod> getAllFilterValues() {
-            return Arrays.asList(RequestMethod.values());
+        protected List<HttpMethod> getAllFilterValues() {
+            return Arrays.asList(HttpMethod.values());
         }
 
         @Override
-        protected String textForFilterValue(@NotNull RequestMethod value) {
+        protected String textForFilterValue(@NotNull HttpMethod value) {
             return value.name();
         }
 
         @Override
-        protected Icon iconForFilterValue(@NotNull RequestMethod value) {
+        protected Icon iconForFilterValue(@NotNull HttpMethod value) {
             return Icons.getMethodIcon(value);
         }
     }

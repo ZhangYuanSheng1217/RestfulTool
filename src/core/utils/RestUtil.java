@@ -26,8 +26,8 @@ import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import core.beans.Request;
-import core.beans.RequestMethod;
-import core.beans.SpringRequestMethodAnnotation;
+import core.beans.HttpMethod;
+import core.annotation.SpringRequestMethodAnnotation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -125,7 +125,7 @@ public class RestUtil {
      * @param body   请求体
      * @return 返回结果
      */
-    public static String sendRequest(RequestMethod method, String url, String head, String body) {
+    public static String sendRequest(HttpMethod method, String url, String head, String body) {
         String resp;
         try {
             HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url);
@@ -416,13 +416,13 @@ public class RestUtil {
 
         paths.forEach(path -> {
             for (String method : methods) {
-                RequestMethod rm = null;
+                HttpMethod rm = null;
                 if ("ALL".equals(method)) {
                     if (methods.size() > 1) {
                         continue;
                     }
                 } else {
-                    rm = RequestMethod.valueOf(method);
+                    rm = HttpMethod.valueOf(method);
                 }
                 requests.add(new Request(
                         rm,

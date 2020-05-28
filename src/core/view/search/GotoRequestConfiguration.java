@@ -6,7 +6,7 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.project.Project;
-import core.beans.RequestMethod;
+import core.beans.HttpMethod;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  * @author ZhangYuanSheng
  */
 @State(name = "GotoRequestConfiguration", storages = @Storage(StoragePathMacros.WORKSPACE_FILE))
-public class GotoRequestConfiguration extends ChooseByNameFilterConfiguration<RequestMethod> {
+public class GotoRequestConfiguration extends ChooseByNameFilterConfiguration<HttpMethod> {
 
     /**
      * Get configuration instance
@@ -28,7 +28,7 @@ public class GotoRequestConfiguration extends ChooseByNameFilterConfiguration<Re
     }
 
     @Override
-    protected String nameForElement(@NotNull RequestMethod type) {
+    protected String nameForElement(@NotNull HttpMethod type) {
         return type.name();
     }
 }

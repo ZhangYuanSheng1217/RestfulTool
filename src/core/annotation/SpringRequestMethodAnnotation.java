@@ -1,5 +1,6 @@
-package core.beans;
+package core.annotation;
 
+import core.beans.HttpMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,27 +17,27 @@ public enum SpringRequestMethodAnnotation {
     /**
      * GetMapping
      */
-    GET_MAPPING("org.springframework.web.bind.annotation.GetMapping", RequestMethod.GET),
+    GET_MAPPING("org.springframework.web.bind.annotation.GetMapping", HttpMethod.GET),
 
     /**
      * PostMapping
      */
-    POST_MAPPING("org.springframework.web.bind.annotation.PostMapping", RequestMethod.POST),
+    POST_MAPPING("org.springframework.web.bind.annotation.PostMapping", HttpMethod.POST),
 
     /**
      * PutMapping
      */
-    PUT_MAPPING("org.springframework.web.bind.annotation.PutMapping", RequestMethod.PUT),
+    PUT_MAPPING("org.springframework.web.bind.annotation.PutMapping", HttpMethod.PUT),
 
     /**
      * DeleteMapping
      */
-    DELETE_MAPPING("org.springframework.web.bind.annotation.DeleteMapping", RequestMethod.DELETE),
+    DELETE_MAPPING("org.springframework.web.bind.annotation.DeleteMapping", HttpMethod.DELETE),
 
     /**
      * PatchMapping
      */
-    PATCH_MAPPING("org.springframework.web.bind.annotation.PatchMapping", RequestMethod.PATCH),
+    PATCH_MAPPING("org.springframework.web.bind.annotation.PatchMapping", HttpMethod.PATCH),
 
     /**
      * RequestParam
@@ -44,9 +45,9 @@ public enum SpringRequestMethodAnnotation {
     REQUEST_PARAM("org.springframework.web.bind.annotation.RequestParam", null);
 
     private final String qualifiedName;
-    private final RequestMethod method;
+    private final HttpMethod method;
 
-    SpringRequestMethodAnnotation(String qualifiedName, RequestMethod method) {
+    SpringRequestMethodAnnotation(String qualifiedName, HttpMethod method) {
         this.qualifiedName = qualifiedName;
         this.method = method;
     }
@@ -71,7 +72,7 @@ public enum SpringRequestMethodAnnotation {
         return null;
     }
 
-    public RequestMethod getMethod() {
+    public HttpMethod getMethod() {
         return this.method;
     }
 

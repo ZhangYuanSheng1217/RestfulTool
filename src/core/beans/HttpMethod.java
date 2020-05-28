@@ -14,7 +14,7 @@ package core.beans;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public enum RequestMethod {
+public enum HttpMethod {
 
     /**
      * GET
@@ -39,5 +39,10 @@ public enum RequestMethod {
     /**
      * PATCH
      */
-    PATCH
+    PATCH,
+
+    /**
+     * HEAD
+     */
+    HEAD
 }

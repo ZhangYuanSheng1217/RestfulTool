@@ -23,13 +23,13 @@ import javax.swing.*;
  */
 public class Request {
 
-    private RequestMethod method;
+    private HttpMethod method;
     private String path;
     private Icon icon;
 
     private final PsiMethod psiMethod;
 
-    public Request(RequestMethod method, @Nullable String path, @Nullable PsiMethod psiMethod) {
+    public Request(HttpMethod method, @Nullable String path, @Nullable PsiMethod psiMethod) {
         this.setMethod(method);
         if (path != null) {
             this.setPath(path);
@@ -47,11 +47,11 @@ public class Request {
         }
     }
 
-    public RequestMethod getMethod() {
+    public HttpMethod getMethod() {
         return method;
     }
 
-    public void setMethod(RequestMethod method) {
+    public void setMethod(HttpMethod method) {
         this.method = method;
         this.icon = Icons.getMethodIcon(method);
     }
