@@ -11,7 +11,7 @@
 package core.beans;
 
 import com.intellij.psi.PsiMethod;
-import core.view.Icons;
+import core.view.icon.Icons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,7 +61,7 @@ public class Request {
     }
 
     public Icon getSelectIcon() {
-        return Icons.getSelectIcon(this.method);
+        return Icons.getMethodIcon(this.method, true);
     }
 
     public String getPath() {

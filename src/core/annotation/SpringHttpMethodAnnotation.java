@@ -12,7 +12,7 @@ public enum SpringHttpMethodAnnotation {
     /**
      * RequestMapping
      */
-    REQUEST_MAPPING("org.springframework.web.bind.annotation.RequestMapping", null),
+    REQUEST_MAPPING("org.springframework.web.bind.annotation.RequestMapping", HttpMethod.REQUEST),
 
     /**
      * GetMapping

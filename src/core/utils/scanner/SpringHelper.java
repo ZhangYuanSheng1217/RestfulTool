@@ -117,8 +117,8 @@ public class SpringHelper {
         if (spring == null) {
             return Collections.emptyList();
         }
-        Set<String> methods = new HashSet<>();
-        methods.add(spring.getMethod() == null ? "ALL" : spring.getMethod().name());
+        Set<HttpMethod> methods = new HashSet<>();
+        methods.add(spring.getMethod());
         List<String> paths = new ArrayList<>();
 
         // 是否为隐式的path（未定义value或者path）
@@ -127,18 +127,18 @@ public class SpringHelper {
         for (JvmAnnotationAttribute attribute : attributes) {
             String name = attribute.getAttributeName();
 
-            if (methods.contains("ALL") && "method".equals(name)) {
+            if (methods.contains(HttpMethod.REQUEST) && "method".equals(name)) {
                 // method可能为数组
                 Object value = RestUtil.getAttributeValue(attribute.getAttributeValue());
                 if (value instanceof String) {
-                    methods.add((String) value);
+                    methods.add(HttpMethod.valueOf((String) value));
                 } else if (value instanceof List) {
                     //noinspection unchecked,rawtypes
                     List<String> list = (List) value;
                     for (String item : list) {
                         if (item != null) {
                             item = item.substring(item.lastIndexOf(".") + 1);
-                            methods.add(item);
+                            methods.add(HttpMethod.valueOf(item));
                         }
                     }
                 }
@@ -173,19 +173,12 @@ public class SpringHelper {
         List<Request> requests = new ArrayList<>(paths.size());
 
         paths.forEach(path -> {
-            for (String method : methods) {
-                HttpMethod rm = null;
-                if ("ALL".equals(method)) {
-                    if (methods.size() > 1) {
-                        continue;
-                    }
-                } else {
-                    if (method != null) {
-                        rm = HttpMethod.valueOf(method);
-                    }
+            for (HttpMethod method : methods) {
+                if (method.equals(HttpMethod.REQUEST) && methods.size() > 1) {
+                    continue;
                 }
                 requests.add(new Request(
-                        rm,
+                        method,
                         path,
                         psiMethod
                 ));

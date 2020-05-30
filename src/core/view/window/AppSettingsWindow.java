@@ -10,16 +10,17 @@
  */
 package core.view.window;
 
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBUI;
 import core.beans.AppSetting;
-import core.view.Icons;
+import core.view.icon.IconType;
+import core.view.icon.IconTypeManager;
+import core.view.icon.PreviewIconType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,17 +33,18 @@ public class AppSettingsWindow {
 
     private final JPanel content;
 
-    private final JBCheckBox useOldIcons;
+    private final JBCheckBox globalScanServiceWithLib;
 
-    private final JBTextField userNameText;
+    private final ComboBox<IconType> selectIconType;
 
     public AppSettingsWindow() {
-        useOldIcons = new JBCheckBox("Use old Icons(使用旧版图标组件)");
+        globalScanServiceWithLib = new JBCheckBox("Scan service with library on application default (全局配置)");
 
-        userNameText = new JBTextField();
+        selectIconType = new ComboBox<>(IconTypeManager.getIconTypes());
 
         content = FormBuilder.createFormBuilder()
-                .addComponent(useOldIcons, 1)
+                .addComponent(globalScanServiceWithLib, 0)
+                .addLabeledComponent(new JBLabel("Select your icon: "), selectIconType, 5, false)
                 .addComponent(getIconsPreview(), 0)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
@@ -50,59 +52,14 @@ public class AppSettingsWindow {
 
     @NotNull
     private JPanel getIconsPreview() {
-        JPanel iconsPreview = new JPanel(new GridLayout(1, 3));
+        JPanel iconsPreview = new JPanel(new GridLayout(IconTypeManager.getIconTypes().length, 1));
 
-        // 新版图标
-        {
-            JBLabel title = new JBLabel("默认");
-
-            JPanel allIconsPanel = new JPanel();
-            for (Icons.PreviewIcon previewIcon : Icons.getAllIcons(false)) {
-                allIconsPanel.add(previewIcon);
-            }
-            JPanel allSelectIconsPanel = new JPanel();
-            for (Icons.PreviewIcon previewIcon : Icons.getAllSelectIcons(false)) {
-                allSelectIconsPanel.add(previewIcon);
-            }
-
-            iconsPreview.add(getIconsPreview(title, allIconsPanel, allSelectIconsPanel));
+        for (IconType iconType : IconTypeManager.getIconTypes()) {
+            iconsPreview.add(new PreviewIconType(iconType));
         }
 
-        // 旧版图标
-        {
-            JBLabel title = new JBLabel("旧版");
-
-            JPanel allOldIconsPanel = new JPanel();
-            for (Icons.PreviewIcon previewIcon : Icons.getAllIcons(true)) {
-                allOldIconsPanel.add(previewIcon);
-            }
-
-            iconsPreview.add(getIconsPreview(title, allOldIconsPanel, null));
-        }
-
-        return iconsPreview;
-    }
-
-    @NotNull
-    private JComponent getIconsPreview(@NotNull JComponent title, @NotNull JComponent icons,
-                                       @Nullable JComponent selectIcons) {
-
-        final Color itemColor = JBColor.decode("0xe9e9e9");
-        final Color bgColor = JBColor.decode("0xe9e9e9");
-
-        JPanel iconsPreview = new JPanel(new GridLayout(3, 1));
-        iconsPreview.setBackground(bgColor);
-        iconsPreview.setBorder(
-                JBUI.Borders.empty(0, 5)
-        );
-        title.setBackground(itemColor);
-        iconsPreview.add(title);
-        icons.setBackground(itemColor);
-        iconsPreview.add(icons);
-        if (selectIcons != null) {
-            selectIcons.setBackground(itemColor);
-            iconsPreview.add(selectIcons);
-        }
+        iconsPreview.setBorder(JBUI.Borders.emptyLeft(10));
+        iconsPreview.setBackground(JBColor.decode("0xe9e9e9"));
         return iconsPreview;
     }
 
@@ -111,13 +68,15 @@ public class AppSettingsWindow {
     }
 
     public JComponent getPreferredFocusedComponent() {
-        return userNameText;
+        return globalScanServiceWithLib;
     }
 
     @NotNull
     public AppSetting getAppSetting() {
         AppSetting setting = new AppSetting();
-        setting.useOldIcons = useOldIcons.isSelected();
+        setting.scanServicesWithLibraryDefault = globalScanServiceWithLib.isSelected();
+        //noinspection ConstantConditions
+        setting.iconTypeClass = IconTypeManager.formatClass(((IconType) selectIconType.getSelectedItem()).getClass());
         return setting;
     }
 
@@ -125,6 +84,7 @@ public class AppSettingsWindow {
         if (setting == null) {
             return;
         }
-        useOldIcons.setSelected(setting.useOldIcons);
+        globalScanServiceWithLib.setSelected(setting.scanServicesWithLibraryDefault);
+        selectIconType.setSelectedItem(IconTypeManager.getInstance(IconTypeManager.formatName(setting.iconTypeClass)));
     }
 }

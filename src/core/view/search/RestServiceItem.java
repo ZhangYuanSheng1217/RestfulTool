@@ -13,7 +13,7 @@ import com.intellij.psi.codeStyle.NameUtil;
 import com.intellij.psi.search.GlobalSearchScope;
 import core.beans.HttpMethod;
 import core.utils.RestUtil;
-import core.view.Icons;
+import core.view.icon.Icons;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

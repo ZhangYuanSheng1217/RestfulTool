@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.1.7-RELEASE</version>
+    <version>1.1.8-RELEASE</version>
     <vendor email="2862297923@qq.com" url="">ClionCo</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -24,9 +24,7 @@
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
       <ul>
-        <li> 优化JAX-RS扫描 </li>
-        <li> fix issue: 只能显示类上标注了@Path的Service </li>
-        <li> 支持applicationContext.xml中配置的`<jaxrs:server address="?" serviceClass="?">`标签扫描 </li>
+        <li> 优化项目结构，为后续增加图标主题节省精力 </li>
       </ul>
     ]]>
     </change-notes>

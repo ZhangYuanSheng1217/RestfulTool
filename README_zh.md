@@ -10,6 +10,7 @@
 #### 前言
     由于RESTFulToolkit插件原作者不更新了，IDEA.201及以上版本不再适配，所以参照原作者的插件项目制作了此插件。
     欢迎各位提交 issue | pr
+    如果您觉得还不错，麻烦帮我点个start吧(*￣︶￣)
 
 #### 介绍
 > 一套 Restful 服务开发辅助工具集。
@@ -38,6 +39,12 @@
 > - 如果运行出现问题，请在Platform SDK中增加以下lib
 >   - `.\plugins\properties\lib\properties.jar`
 >   - `.\plugins\yaml\lib\yaml.jar`
+
+### 舔砖Java
+> - 增加适配图标
+>   - 将16x16的svg图标文件放入`/icons/method/{图标主题名}`
+>   - 仿照`DefaultIcon`类写一个实现`IconType`接口的图标主题类(可以直接复制更改)
+>   - 在`IconTypeManager#getIconTypes`中根据示例加入新建的图标主题类
 
 #### 参考
 > + 插件地址 - [RESTFullToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit/)

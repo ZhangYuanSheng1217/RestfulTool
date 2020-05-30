@@ -17,6 +17,11 @@ package core.beans;
 public enum HttpMethod {
 
     /**
+     * Request
+     */
+    REQUEST,
+
+    /**
      * GET
      */
     GET,

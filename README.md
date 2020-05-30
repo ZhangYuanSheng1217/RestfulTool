@@ -10,6 +10,7 @@
 #### Preface
     Since the original author of the RESTFulToolkit plug-in is not updated, IDEA.201 and above versions are no longer adapted, so this plug-in was made with reference to the plug-in project of the original author.
     Everyone is welcome to submit an issue | pr
+    If you think it ’s not bad, please help me to tap start(*￣︶￣)thanks~
 
 #### Info
 > A set of auxiliary tools for Restful service development.
@@ -38,6 +39,12 @@
 > - If something goes wrong, please add the following lib to Platform SDK
 >   - `.\plugins\properties\lib\properties.jar`
 >   - `.\plugins\yaml\lib\yaml.jar`
+
+### Perfect
+> - Add adapter icon
+>   - Put the 16x16 svg icon file in`/icons/method/{IconThemeName}`
+>   - Write an icon theme class that implements the Icon Type interface, imitating the `DefaultIcon` class
+>   - Add a new icon theme class according to the example in `IconTypeManager#getIconTypes`
 
 #### Reference
 > + Plugin address - [RESTFullToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit/)

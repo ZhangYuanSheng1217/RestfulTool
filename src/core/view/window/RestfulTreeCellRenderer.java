@@ -13,7 +13,7 @@ package core.view.window;
 import com.intellij.ui.ColoredTreeCellRenderer;
 import com.intellij.ui.SimpleTextAttributes;
 import core.beans.Request;
-import core.view.Icons;
+import core.view.icon.Icons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
