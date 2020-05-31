@@ -25,6 +25,7 @@
     <change-notes><![CDATA[
       <ul>
         <li> 优化项目结构，为后续增加图标主题节省精力 </li>
+        <li> ServiceTree界面增加方法筛选 </li>
       </ul>
     ]]>
     </change-notes>

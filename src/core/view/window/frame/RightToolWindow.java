@@ -5,10 +5,13 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.ui.JBColor;
+import com.intellij.ui.SeparatorComponent;
 import com.intellij.ui.TreeSpeedSearch;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.JBUI;
+import core.beans.HttpMethod;
 import core.beans.PropertiesKey;
 import core.beans.Request;
 import core.service.RestTopic;
@@ -26,9 +29,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -36,16 +38,34 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class RightToolWindow extends JPanel {
 
+    private static final Map<HttpMethod, Boolean> METHOD_CHOOSE_MAP;
+
+    static {
+        HttpMethod[] values = HttpMethod.values();
+        METHOD_CHOOSE_MAP = new HashMap<>(values.length);
+        for (HttpMethod value : values) {
+            METHOD_CHOOSE_MAP.put(value, true);
+        }
+    }
+
     /**
      * 项目对象
      */
     private final Project project;
     private final RestDetail restDetail;
-
+    private final Dimension toolBarDimension = new Dimension(24, 24);
     /**
      * 按钮 - 扫描service
      */
     private JButton scanApi;
+    /**
+     * 按钮 - 扫描service的过滤器
+     */
+    private JButton scanApiFilter;
+    /**
+     * 单选框 - 扫描service时是否包含lib
+     */
+    private JCheckBox scanWithLibrary;
     /**
      * 树 - service列表
      */
@@ -91,26 +111,37 @@ public class RightToolWindow extends JPanel {
     }
 
     private void initView(@NotNull JPanel headPanel) {
-        JPanel toolPanel = new JPanel();
-        headPanel.add(toolPanel, BorderLayout.NORTH);
-        toolPanel.setLayout(new BorderLayout(0, 0));
+        final Color bgColor = JBColor.decode("0xeeeeee");
+
+        JToolBar toolBar = new JToolBar("Restful Tool");
+        toolBar.setFloatable(false);
+        toolBar.setBorderPainted(false);
+        toolBar.setBackground(bgColor);
+        headPanel.add(toolBar, BorderLayout.NORTH);
 
         scanApi = new JXButton(AllIcons.Actions.Refresh);
-        Dimension scanApiSize = new Dimension(24, 24);
-        scanApi.setPreferredSize(scanApiSize);
         // 按钮设置为透明，这样就不会挡着后面的背景
         scanApi.setContentAreaFilled(true);
         // 去掉按钮的边框
         scanApi.setBorderPainted(false);
-        toolPanel.add(scanApi, BorderLayout.WEST);
+        scanApi.setBackground(bgColor);
+        toolBar.add(scanApi);
 
-        JBCheckBox scanWithLibrary = new JBCheckBox("scan with library");
+        toolBar.addSeparator();
+
+        scanApiFilter = new JXButton(AllIcons.General.Filter);
+        scanApiFilter.setContentAreaFilled(true);
+        scanApiFilter.setBorderPainted(false);
+        toolBar.add(scanApiFilter);
+
+        toolBar.add(new SeparatorComponent());
+
+        scanWithLibrary = new JBCheckBox("scan with library");
         scanWithLibrary.setSelected(PropertiesKey.scanServiceWithLibrary(project));
-        toolPanel.add(scanWithLibrary, BorderLayout.EAST);
-        scanWithLibrary.addActionListener(e -> {
-            PropertiesKey.scanServiceWithLibrary(project, scanWithLibrary.isSelected());
-            renderRequestTree();
-        });
+        scanWithLibrary.setBackground(bgColor);
+        toolBar.add(scanWithLibrary);
+
+        setComponentDimension(toolBarDimension, toolBar, scanApi, scanApiFilter);
 
         JScrollPane scrollPaneTree = new JBScrollPane();
         scrollPaneTree.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -134,6 +165,24 @@ public class RightToolWindow extends JPanel {
     private void initEvent() {
         // 控制器扫描监听
         scanApi.addActionListener(e -> renderRequestTree());
+
+        scanWithLibrary.addActionListener(e -> {
+            PropertiesKey.scanServiceWithLibrary(project, scanWithLibrary.isSelected());
+            renderRequestTree();
+        });
+
+        HttpMethodFilterPopup<HttpMethod> filterPopup = new HttpMethodFilterPopup<>(HttpMethod.values());
+        filterPopup.setChangeCallback((checkBox, method) -> DumbService.getInstance(project).runWhenSmart(() -> {
+            METHOD_CHOOSE_MAP.put(method, checkBox.isSelected());
+            scanApi.doClick();
+        }));
+        filterPopup.setChangeAllCallback((ts, selected) -> DumbService.getInstance(project).runWhenSmart(() -> {
+            for (HttpMethod method : ts) {
+                METHOD_CHOOSE_MAP.put(method, selected);
+            }
+            scanApi.doClick();
+        }));
+        scanApiFilter.addActionListener(e -> filterPopup.show(this, 0, toolBarDimension.height));
 
         project.getMessageBus().connect().subscribe(RestTopic.ACTION_SCAN_SERVICE, data -> {
             if (data instanceof Map) {
@@ -204,9 +253,18 @@ public class RightToolWindow extends JPanel {
         renderRequestTree();
     }
 
+    @NotNull
+    private Map<String, List<Request>> getRequests() {
+        Map<String, List<Request>> allRequest = RestUtil.getAllRequest(project);
+
+        allRequest.forEach((moduleName, requests) -> requests.removeIf(next -> !METHOD_CHOOSE_MAP.get(next.getMethod())));
+
+        return allRequest;
+    }
+
     public void renderRequestTree() {
         RestTopic restTopic = project.getMessageBus().syncPublisher(RestTopic.ACTION_SCAN_SERVICE);
-        DumbService.getInstance(project).runWhenSmart(() -> restTopic.afterAction(RestUtil.getAllRequest(project)));
+        DumbService.getInstance(project).runWhenSmart(() -> restTopic.afterAction(getRequests()));
     }
 
     /**
@@ -319,5 +377,15 @@ public class RightToolWindow extends JPanel {
         menu.add(copyApiPath);
 
         menu.show(tree, x, y);
+    }
+
+    private void setComponentDimension(@NotNull Dimension dimension, @NotNull JComponent... components) {
+        for (JComponent component : components) {
+            if (component != null) {
+                component.setPreferredSize(dimension);
+                component.setMaximumSize(dimension);
+                component.setMinimumSize(dimension);
+            }
+        }
     }
 }
