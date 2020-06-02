@@ -31,5 +31,10 @@ public enum PropertiesKey {
 
     public static void scanServiceWithLibrary(@NotNull Project project, boolean flag) {
         PropertiesComponent.getInstance(project).setValue(SCAN_SERVICE_WITH_LIB.value, flag);
+        topicNotice(project);
+    }
+
+    private static void topicNotice(@NotNull Project project) {
+
     }
 }

@@ -11,7 +11,7 @@
 package core.configuration;
 
 import com.intellij.openapi.options.Configurable;
-import core.view.window.AppSettingsWindow;
+import core.view.window.options.AppSettingsWindow;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 

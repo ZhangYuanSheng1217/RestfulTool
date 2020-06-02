@@ -35,10 +35,6 @@ public class RestServiceItem implements NavigationItem {
 
     private Navigatable navigationElement;
 
-    public RestServiceItem(PsiElement psiElement, String requestMethod, String urlPath) {
-        this(psiElement, HttpMethod.valueOf(requestMethod), urlPath);
-    }
-
     public RestServiceItem(PsiElement psiElement, HttpMethod method, String urlPath) {
         this.psiElement = psiElement;
         if (psiElement instanceof PsiMethod) {
@@ -80,11 +76,13 @@ public class RestServiceItem implements NavigationItem {
                     PsiClass psiClass = psiMethod.getContainingClass();
                     if (psiClass != null) {
                         location = psiClass.getName();
+                        location += "#" + psiMethod.getName();
+                        location = "(" + location + ") in ";
+                        location += psiMethod.getResolveScope().getDisplayName();
                     }
-                    location += "#" + psiMethod.getName();
                 }
 
-                return "(" + location + ")";
+                return location;
             }
 
             @NotNull

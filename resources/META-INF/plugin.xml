@@ -26,6 +26,8 @@
       <ul>
         <li> 优化项目结构，为后续增加图标主题节省精力 </li>
         <li> ServiceTree界面增加方法筛选 </li>
+        <li> 优化设置视图结构 </li>
+        <li> 修复已知bug </li>
       </ul>
     ]]>
     </change-notes>

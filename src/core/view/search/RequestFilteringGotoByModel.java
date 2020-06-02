@@ -11,7 +11,6 @@
 package core.view.search;
 
 import com.intellij.ide.IdeBundle;
-import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.ide.util.gotoByName.CustomMatcherModel;
 import com.intellij.ide.util.gotoByName.FilteringGotoByModel;
 import com.intellij.navigation.ChooseByNameContributor;
@@ -29,9 +28,6 @@ import org.jetbrains.annotations.Nullable;
 public class RequestFilteringGotoByModel
         extends FilteringGotoByModel<HttpMethod>
         implements DumbAware, CustomMatcherModel {
-
-    private static final String PROPERTIES_KEY_CHECKBOX_STATE =
-            "RequestFilteringGotoByModel.OnlyCurrentModule";
 
     protected RequestFilteringGotoByModel(
             @NotNull Project project, @NotNull ChooseByNameContributor[] contributors) {
@@ -72,17 +68,11 @@ public class RequestFilteringGotoByModel
 
     @Override
     public boolean loadInitialCheckBoxState() {
-        if (getCheckBoxName() != null) {
-            return PropertiesComponent.getInstance(myProject).getBoolean(PROPERTIES_KEY_CHECKBOX_STATE);
-        }
         return false;
     }
 
     @Override
     public void saveInitialCheckBoxState(boolean state) {
-        if (getCheckBoxName() != null) {
-            PropertiesComponent.getInstance(myProject).setValue(PROPERTIES_KEY_CHECKBOX_STATE, state);
-        }
     }
 
     @NotNull

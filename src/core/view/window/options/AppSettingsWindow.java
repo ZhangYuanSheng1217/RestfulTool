@@ -8,14 +8,11 @@
   <author>          <time>          <version>          <desc>
   作者姓名            修改时间           版本号              描述
  */
-package core.view.window;
+package core.view.window.options;
 
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBCheckBox;
-import com.intellij.ui.components.JBLabel;
 import com.intellij.util.ui.FormBuilder;
-import com.intellij.util.ui.JBUI;
 import core.beans.AppSetting;
 import core.view.icon.IconType;
 import core.view.icon.IconTypeManager;
@@ -31,6 +28,8 @@ import java.awt.*;
  */
 public class AppSettingsWindow {
 
+    public static final int VERTICAL_CLEARANCE = 30;
+
     private final JPanel content;
 
     private final JBCheckBox globalScanServiceWithLib;
@@ -43,24 +42,11 @@ public class AppSettingsWindow {
         selectIconType = new ComboBox<>(IconTypeManager.getIconTypes());
 
         content = FormBuilder.createFormBuilder()
-                .addComponent(globalScanServiceWithLib, 0)
-                .addLabeledComponent(new JBLabel("Select your icon: "), selectIconType, 5, false)
-                .addComponent(getIconsPreview(), 0)
-                .addComponentFillVertically(new JPanel(), 0)
+                .addComponent(new SystemOptions().getContent())
+                .addComponent(new IconOptions().getContent(), VERTICAL_CLEARANCE)
+                .addComponent(new OptionForm("Test Ignore").getContent(), VERTICAL_CLEARANCE)
+                .addComponentFillVertically(new JPanel(), VERTICAL_CLEARANCE)
                 .getPanel();
-    }
-
-    @NotNull
-    private JPanel getIconsPreview() {
-        JPanel iconsPreview = new JPanel(new GridLayout(IconTypeManager.getIconTypes().length, 1));
-
-        for (IconType iconType : IconTypeManager.getIconTypes()) {
-            iconsPreview.add(new PreviewIconType(iconType));
-        }
-
-        iconsPreview.setBorder(JBUI.Borders.emptyLeft(10));
-        iconsPreview.setBackground(JBColor.decode("0xe9e9e9"));
-        return iconsPreview;
     }
 
     public JPanel getContent() {
@@ -86,5 +72,35 @@ public class AppSettingsWindow {
         }
         globalScanServiceWithLib.setSelected(setting.scanServicesWithLibraryDefault);
         selectIconType.setSelectedItem(IconTypeManager.getInstance(IconTypeManager.formatName(setting.iconTypeClass)));
+    }
+
+    private class SystemOptions extends OptionForm {
+
+        public SystemOptions() {
+            super("System");
+
+            this.addOptionItem(globalScanServiceWithLib);
+        }
+    }
+
+    private class IconOptions extends OptionForm {
+
+        public IconOptions() {
+            super("Icons");
+
+            this.addLabeledOptionItem("Select Icon: ", selectIconType);
+            this.addOptionItem(addIconsPreview());
+        }
+
+        @NotNull
+        private JPanel addIconsPreview() {
+            JPanel iconsPreview = new JPanel(new GridLayout(IconTypeManager.getIconTypes().length, 1));
+
+            for (IconType iconType : IconTypeManager.getIconTypes()) {
+                iconsPreview.add(new PreviewIconType(iconType));
+            }
+
+            return iconsPreview;
+        }
     }
 }

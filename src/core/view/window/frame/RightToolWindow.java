@@ -9,12 +9,13 @@ import com.intellij.ui.JBColor;
 import com.intellij.ui.SeparatorComponent;
 import com.intellij.ui.TreeSpeedSearch;
 import com.intellij.ui.components.JBCheckBox;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.JBUI;
 import core.beans.HttpMethod;
 import core.beans.PropertiesKey;
 import core.beans.Request;
-import core.service.RestTopic;
+import core.service.topic.ServiceTreeTopic;
 import core.utils.RestUtil;
 import core.utils.SystemUtil;
 import core.view.window.RestfulTreeCellRenderer;
@@ -29,8 +30,10 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -120,6 +123,7 @@ public class RightToolWindow extends JPanel {
         headPanel.add(toolBar, BorderLayout.NORTH);
 
         scanApi = new JXButton(AllIcons.Actions.Refresh);
+        scanApi.setToolTipText("Refresh");
         // 按钮设置为透明，这样就不会挡着后面的背景
         scanApi.setContentAreaFilled(true);
         // 去掉按钮的边框
@@ -127,16 +131,18 @@ public class RightToolWindow extends JPanel {
         scanApi.setBackground(bgColor);
         toolBar.add(scanApi);
 
-        toolBar.addSeparator();
+        toolBar.add(new JBLabel("|"));
 
         scanApiFilter = new JXButton(AllIcons.General.Filter);
+        scanApiFilter.setToolTipText("Method filter");
         scanApiFilter.setContentAreaFilled(true);
         scanApiFilter.setBorderPainted(false);
         toolBar.add(scanApiFilter);
 
         toolBar.add(new SeparatorComponent());
 
-        scanWithLibrary = new JBCheckBox("scan with library");
+        scanWithLibrary = new JBCheckBox("withLibrary");
+        scanWithLibrary.setToolTipText("Scan service with library");
         scanWithLibrary.setSelected(PropertiesKey.scanServiceWithLibrary(project));
         scanWithLibrary.setBackground(bgColor);
         toolBar.add(scanWithLibrary);
@@ -184,12 +190,7 @@ public class RightToolWindow extends JPanel {
         }));
         scanApiFilter.addActionListener(e -> filterPopup.show(this, 0, toolBarDimension.height));
 
-        project.getMessageBus().connect().subscribe(RestTopic.ACTION_SCAN_SERVICE, data -> {
-            if (data instanceof Map) {
-                //noinspection unchecked
-                renderRequestTree((Map<String, List<Request>>) data);
-            }
-        });
+        project.getMessageBus().connect().subscribe(ServiceTreeTopic.ACTION_SCAN_SERVICE, this::renderRequestTree);
 
         // RequestTree子项点击监听
         tree.addTreeSelectionListener(e -> {
@@ -263,8 +264,8 @@ public class RightToolWindow extends JPanel {
     }
 
     public void renderRequestTree() {
-        RestTopic restTopic = project.getMessageBus().syncPublisher(RestTopic.ACTION_SCAN_SERVICE);
-        DumbService.getInstance(project).runWhenSmart(() -> restTopic.afterAction(getRequests()));
+        ServiceTreeTopic restTopic = project.getMessageBus().syncPublisher(ServiceTreeTopic.ACTION_SCAN_SERVICE);
+        DumbService.getInstance(project).runWhenSmart(() -> restTopic.action(getRequests()));
     }
 
     /**

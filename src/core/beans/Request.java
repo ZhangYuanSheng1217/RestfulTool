@@ -23,11 +23,10 @@ import javax.swing.*;
  */
 public class Request {
 
+    private final PsiMethod psiMethod;
     private HttpMethod method;
     private String path;
     private Icon icon;
-
-    private final PsiMethod psiMethod;
 
     public Request(HttpMethod method, @Nullable String path, @Nullable PsiMethod psiMethod) {
         this.setMethod(method);
@@ -73,6 +72,7 @@ public class Request {
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
+        path = path.replaceAll("//", "/");
         this.path = path;
     }
 
