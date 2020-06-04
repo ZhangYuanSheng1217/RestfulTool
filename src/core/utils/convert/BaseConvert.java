@@ -24,6 +24,16 @@ public abstract class BaseConvert<V> {
 
     private PsiMethod psiMethod;
 
+    /**
+     * 是否是基本数据类型
+     */
+    private boolean isBasicDataTypes;
+
+    /**
+     * 是基本数据类型时的参数名
+     */
+    private String basicDataParamName;
+
     public BaseConvert() {
     }
 
@@ -48,12 +58,56 @@ public abstract class BaseConvert<V> {
                 // 参数标注的注解
                 String qualifiedName = annotation.getQualifiedName();
                 if (SpringHttpMethodAnnotation.REQUEST_BODY.getQualifiedName().equals(qualifiedName)) {
+                    PsiType parameterType = parameter.getType();
+                    this.isBasicDataTypes = isBasicDataTypes(parameterType.getCanonicalText());
+                    if (this.isBasicDataTypes) {
+                        basicDataParamName = parameter.getName();
+                    }
                     return true;
                 }
             }
         }
 
         return false;
+    }
+
+    private boolean isBasicDataTypes(String type) {
+        if (type == null) {
+            return false;
+        }
+        final String[] classes = new String[]{
+                String.class.getName(),
+                Boolean.class.getName(),
+                Byte.class.getName(),
+                Character.class.getName(),
+                Double.class.getName(),
+                Float.class.getName(),
+                Integer.class.getName(),
+                Long.class.getName(),
+                Short.class.getName(),
+                "boolean",
+                "byte",
+                "char",
+                "double",
+                "float",
+                "int",
+                "long",
+                "short",
+        };
+        for (String clazz : classes) {
+            if (clazz.equals(type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isBasicDataTypes() {
+        return isBasicDataTypes;
+    }
+
+    public String getBasicDataParamName() {
+        return basicDataParamName;
     }
 
     /**

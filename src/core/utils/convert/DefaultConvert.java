@@ -42,7 +42,7 @@ public class DefaultConvert extends BaseConvert<Object> {
         Map<String, Object> map = new HashMap<>();
 
         for (String line : paramsStr.split("\n")) {
-            String[] items = line.split(": ");
+            String[] items = line.split(":");
             if (items.length == 2) {
                 map.put(items[0].trim(), items[1].trim());
             }

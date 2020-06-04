@@ -34,6 +34,9 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author ZhangYuanSheng
@@ -44,6 +47,7 @@ public class RestDetail extends JPanel {
     private static final int REQUEST_TIMEOUT = 1000 * 10;
 
     private final Project project;
+    private final ThreadPoolExecutor poolExecutor;
     private final BaseConvert<?> convert;
 
     /**
@@ -79,6 +83,14 @@ public class RestDetail extends JPanel {
 
     public RestDetail(@NotNull Project project) {
         this.project = project;
+        poolExecutor = new ThreadPoolExecutor(
+                1,
+                1,
+                1000,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(8),
+                new ThreadPoolExecutor.DiscardOldestPolicy()
+        );
         this.convert = new DefaultConvert();
 
         initView();
@@ -131,11 +143,14 @@ public class RestDetail extends JPanel {
      */
     private void initEvent() {
         // 发送请求按钮监听
-        sendRequest.addActionListener(e -> {
+        sendRequest.addActionListener(event -> {
             // 选择Response页面
             tabbedPane.setSelectedIndex(2);
 
             HttpMethod method = (HttpMethod) requestMethod.getSelectedItem();
+            if (method == null) {
+                method = HttpMethod.GET;
+            }
             String url = requestUrl.getText();
 
             if (url == null || "".equals(url.trim())) {
@@ -146,8 +161,19 @@ public class RestDetail extends JPanel {
             String head = requestHead.getText();
             String body = requestBody.getText();
 
-            String resp = sendRequest(method, url, head, body);
-            responseView.setText(resp);
+            HttpRequest httpRequest = getHttpRequest(method, url, head, body);
+
+            responseView.setText(" -> request thread is running");
+            poolExecutor.execute(() -> {
+                String resp;
+                try {
+                    resp = httpRequest.execute().body();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    resp = e.getMessage();
+                }
+                responseView.setText(resp);
+            });
         });
     }
 
@@ -194,29 +220,26 @@ public class RestDetail extends JPanel {
         this.callback = callback;
     }
 
-    public String sendRequest(HttpMethod method, String url, String head, String body) {
-        String resp;
-        try {
-            HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url);
-
-            if (head != null && !"".equals(head.trim())) {
-                convert.formatMap(head).forEach((s, o) -> request.header(s, (String) o));
-            }
-            if (body != null && !"".equals(body.trim())) {
-                Map<String, ?> formatMap = convert.formatMap(body);
-                if (!convert.isRaw()) {
-                    formatMap.forEach(request::form);
-                } else {
-                    request.body(new JSONObject(formatMap).toString(), "application/json");
-                }
-            }
-
-            resp = request.timeout(REQUEST_TIMEOUT).execute().body();
-        } catch (Exception e) {
-            e.printStackTrace();
-            resp = e.getMessage();
+    private HttpRequest getHttpRequest(@NotNull HttpMethod method, @NotNull String url, String head, String body) {
+        HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url);
+        if (head != null && !"".equals(head.trim())) {
+            convert.formatMap(head).forEach((s, o) -> request.header(s, (String) o));
         }
-        return resp;
+        if (body != null && !"".equals(body.trim())) {
+            Map<String, ?> formatMap = convert.formatMap(body);
+            if (!convert.isRaw()) {
+                formatMap.forEach(request::form);
+            } else {
+                String requestBody;
+                if (convert.isBasicDataTypes()) {
+                    requestBody = (String) formatMap.get(convert.getBasicDataParamName());
+                } else {
+                    requestBody = new JSONObject(formatMap).toString();
+                }
+                request.body(requestBody, "application/json");
+            }
+        }
+        return request.timeout(REQUEST_TIMEOUT);
     }
 
     public interface DetailHandle {
