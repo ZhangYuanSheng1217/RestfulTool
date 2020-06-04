@@ -10,6 +10,10 @@
  */
 package core.beans;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
+
 /**
  * @author ZhangYuanSheng
  * @version 1.0
@@ -49,5 +53,10 @@ public enum HttpMethod {
     /**
      * HEAD
      */
-    HEAD
+    HEAD;
+
+    @NotNull
+    public static HttpMethod[] getValues() {
+        return Arrays.stream(HttpMethod.values()).filter(method -> !method.equals(HttpMethod.REQUEST)).toArray(HttpMethod[]::new);
+    }
 }

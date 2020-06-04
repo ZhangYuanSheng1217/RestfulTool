@@ -66,6 +66,10 @@ public class RightToolWindow extends JPanel {
      */
     private JButton scanApiFilter;
     /**
+     * 单选框 - 是否显示Rest发送工具栏
+     */
+    private JBCheckBox showRestDetail;
+    /**
      * 单选框 - 扫描service时是否包含lib
      */
     private JCheckBox scanWithLibrary;
@@ -86,7 +90,7 @@ public class RightToolWindow extends JPanel {
         gridBagLayout.columnWidths = new int[]{0, 0};
         gridBagLayout.rowHeights = new int[]{0, 0, 0};
         gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-        gridBagLayout.rowWeights = new double[]{1.0, 1.0, Double.MIN_VALUE};
+        gridBagLayout.rowWeights = new double[]{1.0, Double.MIN_VALUE};
         setLayout(gridBagLayout);
 
         JPanel headPanel = new JPanel();
@@ -139,6 +143,14 @@ public class RightToolWindow extends JPanel {
         scanApiFilter.setBorderPainted(false);
         toolBar.add(scanApiFilter);
 
+        toolBar.add(new JBLabel("|"));
+
+        showRestDetail = new JBCheckBox("RequestView");
+        showRestDetail.setToolTipText("Show send request detail view");
+        showRestDetail.setSelected(true);
+        showRestDetail.setBackground(bgColor);
+        toolBar.add(showRestDetail);
+
         toolBar.add(new SeparatorComponent());
 
         scanWithLibrary = new JBCheckBox("withLibrary");
@@ -171,6 +183,11 @@ public class RightToolWindow extends JPanel {
     private void initEvent() {
         // 控制器扫描监听
         scanApi.addActionListener(e -> renderRequestTree());
+
+        showRestDetail.addActionListener(e -> {
+            JCheckBox checkBox = (JCheckBox) e.getSource();
+            restDetail.setVisible(checkBox.isSelected());
+        });
 
         scanWithLibrary.addActionListener(e -> {
             PropertiesKey.scanServiceWithLibrary(project, scanWithLibrary.isSelected());

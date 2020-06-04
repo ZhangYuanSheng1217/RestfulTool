@@ -10,9 +10,6 @@
  */
 package core.utils;
 
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.http.Method;
 import com.intellij.lang.jvm.annotation.*;
 import com.intellij.lang.properties.PropertiesFileType;
 import com.intellij.lang.properties.psi.PropertiesFile;
@@ -20,17 +17,14 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
-import com.intellij.psi.impl.source.PsiClassReferenceType;
+import com.intellij.psi.PsiExpression;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
-import core.annotation.SpringHttpMethodAnnotation;
-import core.beans.HttpMethod;
 import core.beans.PropertiesKey;
 import core.beans.Request;
 import core.utils.scanner.JaxrsHelper;
 import core.utils.scanner.SpringHelper;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.YAMLFileType;
@@ -46,8 +40,6 @@ import java.util.*;
  * @version 1.0
  */
 public class RestUtil {
-
-    private static final int REQUEST_TIMEOUT = 1000 * 10;
 
     /**
      * 扫描服务端口
@@ -120,53 +112,6 @@ public class RestUtil {
     }
 
     /**
-     * 发送http请求
-     *
-     * @param method 请求方式
-     * @param url    地址
-     * @param head   请求头
-     * @param body   请求体
-     * @return 返回结果
-     */
-    public static String sendRequest(HttpMethod method, String url, String head, String body) {
-        String resp;
-        try {
-            HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url);
-
-            if (head != null && !"".equals(head.trim())) {
-                tempDataCoverToMap(head).forEach(request::header);
-            }
-            if (body != null && !"".equals(body.trim())) {
-                tempDataCoverToMap(body).forEach(request::form);
-            }
-
-            resp = request.timeout(REQUEST_TIMEOUT).execute().body();
-        } catch (Exception e) {
-            e.printStackTrace();
-            resp = e.getMessage();
-        }
-        return resp;
-    }
-
-    @NotNull
-    @Contract(pure = true)
-    public static Map<String, String> tempDataCoverToMap(String tempData) {
-        Map<String, String> map = new HashMap<>();
-
-        if (tempData != null && !"".equals((tempData = tempData.trim()))) {
-            String[] items = tempData.split("\n");
-            for (String item : items) {
-                String[] data = item.split(":");
-                if (data.length == 2) {
-                    map.put(data[0].trim(), data[1].trim());
-                }
-            }
-        }
-
-        return map;
-    }
-
-    /**
      * 获取所有的Request
      *
      * @param project project
@@ -223,55 +168,6 @@ public class RestUtil {
     }
 
     /**
-     * 获取方法参数
-     *
-     * @param method method
-     */
-    @NotNull
-    public static String getRequestParamsTempData(@NotNull PsiMethod method) {
-        StringBuilder tempData = new StringBuilder();
-
-        PsiParameterList parameterList = method.getParameterList();
-        if (!parameterList.isEmpty()) {
-            for (PsiParameter parameter : parameterList.getParameters()) {
-                PsiAnnotation[] parameterAnnotations = parameter.getAnnotations();
-                String parameterName = parameter.getName();
-                PsiType parameterType = parameter.getType();
-
-                boolean flag = true;
-
-                for (PsiAnnotation parameterAnnotation : parameterAnnotations) {
-                    if (!SpringHttpMethodAnnotation.REQUEST_PARAM.getQualifiedName().equals(parameterAnnotation.getQualifiedName())) {
-                        continue;
-                    }
-                    List<JvmAnnotationAttribute> attributes = parameterAnnotation.getAttributes();
-                    for (JvmAnnotationAttribute attribute : attributes) {
-                        String name = attribute.getAttributeName();
-                        if (!("name".equals(name) || "value".equals(name))) {
-                            continue;
-                        }
-                        Object value = RestUtil.getAttributeValue(attribute.getAttributeValue());
-                        if (value instanceof String) {
-                            parameterName = ((String) value);
-                            flag = !flag;
-                        }
-                    }
-                }
-
-                Object data = RestUtil.getTypeDefaultData(method, parameterType);
-
-                if (data != null) {
-                    if (flag) {
-                        tempData.append(parameterName).append(": ");
-                    }
-                    tempData.append(data).append("\n");
-                }
-            }
-        }
-        return tempData.toString();
-    }
-
-    /**
      * 获取url
      *
      * @param protocol    协议
@@ -307,89 +203,6 @@ public class RestUtil {
         } else {
             return module.getModuleScope();
         }
-    }
-
-    @Nullable
-    private static Object getTypeDefaultData(@NotNull PsiMethod method, PsiType parameterType) {
-        Object data = null;
-        if (parameterType instanceof PsiArrayType) {
-            data = "[]";
-        } else if (parameterType instanceof PsiClassReferenceType) {
-            // Object | String | Integer | List<?> | Map<K, V>
-            PsiClassReferenceType type = (PsiClassReferenceType) parameterType;
-
-            GlobalSearchScope resolveScope = type.getResolveScope();
-            PsiFile[] psiFiles = FilenameIndex.getFilesByName(
-                    method.getProject(),
-                    type.getName() + ".java",
-                    resolveScope
-            );
-            if (psiFiles.length > 0) {
-                for (PsiFile psiFile : psiFiles) {
-                    if (psiFile instanceof PsiJavaFile) {
-                        PsiClass[] fileClasses = ((PsiJavaFile) psiFile).getClasses();
-                        StringBuilder item = new StringBuilder();
-                        for (PsiClass psiClass : fileClasses) {
-                            if (type.getReference().getQualifiedName().equals(psiClass.getQualifiedName())) {
-                                PsiField[] fields = psiClass.getFields();
-                                for (PsiField field : fields) {
-                                    String fieldName = field.getName();
-                                    Object defaultData = getTypeDefaultData(method, field.getType());
-                                    item.append(fieldName).append(": ").append(defaultData).append("\n");
-                                }
-                                break;
-                            }
-                        }
-                        data = item.toString();
-                        break;
-                    }
-                }
-            } else {
-                data = getDefaultData(type.getName());
-            }
-        } else if (parameterType instanceof PsiPrimitiveType) {
-            // int | char | boolean
-            PsiPrimitiveType type = (PsiPrimitiveType) parameterType;
-            data = getDefaultData(type.getName());
-        }
-        return data;
-    }
-
-    @Contract(pure = true)
-    private static Object getDefaultData(@NotNull String classType) {
-        Object data = null;
-        switch (classType) {
-            case "String":
-                data = "demoData";
-                break;
-            case "char":
-            case "Char":
-                data = 'A';
-                break;
-            case "byte":
-            case "short":
-            case "int":
-            case "long":
-            case "Byte":
-            case "Short":
-            case "Integer":
-            case "Long":
-                data = 0;
-                break;
-            case "float":
-            case "double":
-            case "Float":
-            case "Double":
-                data = 0.0;
-                break;
-            case "boolean":
-            case "Boolean":
-                data = true;
-                break;
-            default:
-                break;
-        }
-        return data;
     }
 
     /**

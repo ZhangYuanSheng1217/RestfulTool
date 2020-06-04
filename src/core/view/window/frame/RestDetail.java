@@ -10,6 +10,9 @@
  */
 package core.view.window.frame;
 
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.http.Method;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.psi.PsiInvalidElementAccessException;
@@ -18,9 +21,11 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextField;
-import core.beans.Request;
 import core.beans.HttpMethod;
+import core.beans.Request;
 import core.utils.RestUtil;
+import core.utils.convert.BaseConvert;
+import core.utils.convert.DefaultConvert;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXEditorPane;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +39,10 @@ import java.awt.*;
  */
 public class RestDetail extends JPanel {
 
+    private static final int REQUEST_TIMEOUT = 1000 * 10;
+
     private final Project project;
+    private final BaseConvert<?> convert;
 
     /**
      * 下拉框 - 选择选择请求方法
@@ -48,7 +56,6 @@ public class RestDetail extends JPanel {
      * 按钮 - 发送请求
      */
     private JButton sendRequest;
-
     /**
      * 选项卡面板 - 请求信息
      */
@@ -70,6 +77,7 @@ public class RestDetail extends JPanel {
 
     public RestDetail(@NotNull Project project) {
         this.project = project;
+        this.convert = new DefaultConvert();
 
         initView();
 
@@ -83,7 +91,7 @@ public class RestDetail extends JPanel {
         add(panelInput, BorderLayout.NORTH);
         panelInput.setLayout(new BorderLayout(0, 0));
 
-        requestMethod = new ComboBox<>(HttpMethod.values());
+        requestMethod = new ComboBox<>(HttpMethod.getValues());
         panelInput.add(requestMethod, BorderLayout.WEST);
 
         requestUrl = new JBTextField();
@@ -136,7 +144,7 @@ public class RestDetail extends JPanel {
             String head = requestHead.getText();
             String body = requestBody.getText();
 
-            String resp = RestUtil.sendRequest(method, url, head, body);
+            String resp = sendRequest(method, url, head, body);
             responseView.setText(resp);
         });
     }
@@ -159,9 +167,11 @@ public class RestDetail extends JPanel {
                 // 选择Body页面
                 tabbedPane.setSelectedIndex(1);
 
-                selItem = request.getMethod() == null ? HttpMethod.GET : request.getMethod();
+                selItem = request.getMethod() == null || request.getMethod() == HttpMethod.REQUEST ?
+                        HttpMethod.GET : request.getMethod();
 
-                reqBody = RestUtil.getRequestParamsTempData(request.getPsiMethod());
+                convert.setPsiMethod(request.getPsiMethod());
+                reqBody = convert.formatString();
             }
         } catch (PsiInvalidElementAccessException e) {
             /*
@@ -180,6 +190,26 @@ public class RestDetail extends JPanel {
 
     public void setCallback(DetailHandle callback) {
         this.callback = callback;
+    }
+
+    public String sendRequest(HttpMethod method, String url, String head, String body) {
+        String resp;
+        try {
+            HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url);
+
+            if (head != null && !"".equals(head.trim())) {
+                convert.formatMap(head).forEach((s, o) -> request.header(s, (String) o));
+            }
+            if (body != null && !"".equals(body.trim())) {
+                convert.formatMap(body).forEach(request::form);
+            }
+
+            resp = request.timeout(REQUEST_TIMEOUT).execute().body();
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = e.getMessage();
+        }
+        return resp;
     }
 
     public interface DetailHandle {
