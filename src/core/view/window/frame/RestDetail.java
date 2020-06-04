@@ -13,6 +13,7 @@ package core.view.window.frame;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.http.Method;
+import cn.hutool.json.JSONObject;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.psi.PsiInvalidElementAccessException;
@@ -32,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Map;
 
 /**
  * @author ZhangYuanSheng
@@ -201,7 +203,12 @@ public class RestDetail extends JPanel {
                 convert.formatMap(head).forEach((s, o) -> request.header(s, (String) o));
             }
             if (body != null && !"".equals(body.trim())) {
-                convert.formatMap(body).forEach(request::form);
+                Map<String, ?> formatMap = convert.formatMap(body);
+                if (!convert.isRaw()) {
+                    formatMap.forEach(request::form);
+                } else {
+                    request.body(new JSONObject(formatMap).toString(), "application/json");
+                }
             }
 
             resp = request.timeout(REQUEST_TIMEOUT).execute().body();

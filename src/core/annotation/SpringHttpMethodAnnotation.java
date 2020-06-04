@@ -42,7 +42,12 @@ public enum SpringHttpMethodAnnotation {
     /**
      * RequestParam
      */
-    REQUEST_PARAM("org.springframework.web.bind.annotation.RequestParam", null);
+    REQUEST_PARAM("org.springframework.web.bind.annotation.RequestParam", null),
+
+    /**
+     * RequestBody
+     */
+    REQUEST_BODY("org.springframework.web.bind.annotation.RequestBody", null);
 
     private final String qualifiedName;
     private final HttpMethod method;

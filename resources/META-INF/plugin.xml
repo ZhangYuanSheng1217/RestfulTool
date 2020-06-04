@@ -29,6 +29,7 @@
         <li> 优化设置视图结构 </li>
         <li> 增加rest工具窗口关闭选项 </li>
         <li> 修复已知bug </li>
+        <li> fix not support @RequestBody annotation </li>
       </ul>
     ]]>
     </change-notes>

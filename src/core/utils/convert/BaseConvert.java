@@ -36,6 +36,27 @@ public abstract class BaseConvert<V> {
     }
 
     /**
+     * 标注了@RequestBody注解则使用application/json格式
+     */
+    public boolean isRaw() {
+        if (psiMethod == null) {
+            return false;
+        }
+
+        for (PsiParameter parameter : psiMethod.getParameterList().getParameters()) {
+            for (PsiAnnotation annotation : parameter.getAnnotations()) {
+                // 参数标注的注解
+                String qualifiedName = annotation.getQualifiedName();
+                if (SpringHttpMethodAnnotation.REQUEST_BODY.getQualifiedName().equals(qualifiedName)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * parse method param
      *
      * @return map
