@@ -26,7 +26,7 @@ import core.beans.HttpMethod;
 import core.beans.Request;
 import core.utils.RestUtil;
 import core.utils.convert.BaseConvert;
-import core.utils.convert.DefaultConvert;
+import core.utils.convert.JsonConvert;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXEditorPane;
 import org.jetbrains.annotations.NotNull;
@@ -91,7 +91,8 @@ public class RestDetail extends JPanel {
                 new LinkedBlockingQueue<>(8),
                 new ThreadPoolExecutor.DiscardOldestPolicy()
         );
-        this.convert = new DefaultConvert();
+        // this.convert = new DefaultConvert();
+        this.convert = new JsonConvert();
 
         initView();
 
@@ -120,19 +121,19 @@ public class RestDetail extends JPanel {
 
         JScrollPane scrollPaneHead = new JBScrollPane();
         scrollPaneHead.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        tabbedPane.addTab("head", null, scrollPaneHead, null);
+        tabbedPane.addTab("head", scrollPaneHead);
         requestHead = new JXEditorPane();
         scrollPaneHead.setViewportView(requestHead);
 
         JScrollPane scrollPaneBody = new JBScrollPane();
         scrollPaneBody.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        tabbedPane.addTab("body", null, scrollPaneBody, null);
+        tabbedPane.addTab("body", scrollPaneBody);
         requestBody = new JXEditorPane();
         scrollPaneBody.setViewportView(requestBody);
 
         JScrollPane scrollPane = new JBScrollPane();
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        tabbedPane.addTab("response", null, scrollPane, null);
+        tabbedPane.addTab("response",  scrollPane);
         responseView = new JBLabel();
         responseView.setVerticalAlignment(SwingConstants.TOP);
         scrollPane.setViewportView(responseView);

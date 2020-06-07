@@ -15,6 +15,7 @@ import com.intellij.util.ui.JBUI;
 import core.beans.HttpMethod;
 import core.beans.PropertiesKey;
 import core.beans.Request;
+import core.service.Notify;
 import core.service.topic.ServiceTreeTopic;
 import core.utils.RestUtil;
 import core.utils.SystemUtil;
@@ -380,6 +381,7 @@ public class RightToolWindow extends JPanel {
                     return;
             }
             SystemUtil.setClipboardString(copy);
+            Notify.getInstance(project).info("Copy path success.");
         };
 
         // Copy full url

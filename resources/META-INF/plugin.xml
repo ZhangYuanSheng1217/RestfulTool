@@ -1,7 +1,7 @@
-<idea-plugin>
+<idea-plugin url="https://www.jetbrains.com/idea">
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.1.8-RELEASE</version>
+    <version>1.1.9-RELEASE</version>
     <vendor email="2862297923@qq.com" url="">ClionCo</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -24,12 +24,8 @@
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
       <ul>
-        <li> 优化项目结构，为后续增加图标主题节省精力 </li>
-        <li> ServiceTree界面增加方法筛选 </li>
-        <li> 优化设置视图结构 </li>
-        <li> 增加rest工具窗口关闭选项 </li>
+        <li> Add notification tips </li>
         <li> 修复已知bug </li>
-        <li> fix not support @RequestBody annotation </li>
       </ul>
     ]]>
     </change-notes>
@@ -60,6 +56,9 @@
         <toolWindow id="RestfulTool" anchor="right"
                     factoryClass="core.view.window.RestfulToolWindowFactory" order="last"
                     doNotActivateOnStart="false" icon="/icons/service.png"/>
+
+        <projectService serviceInterface="core.service.Notify"
+                        serviceImplementation="core.service.impl.NotificationImpl"/>
     </extensions>
 
     <actions>
