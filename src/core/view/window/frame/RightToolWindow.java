@@ -5,8 +5,6 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.ui.JBColor;
-import com.intellij.ui.SeparatorComponent;
 import com.intellij.ui.TreeSpeedSearch;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
@@ -40,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author ZhangYuanSheng
  */
-public class RightToolWindow extends JPanel {
+public class RightToolWindow extends JSplitPane {
 
     private static final Map<HttpMethod, Boolean> METHOD_CHOOSE_MAP;
 
@@ -58,6 +56,7 @@ public class RightToolWindow extends JPanel {
     private final Project project;
     private final RestDetail restDetail;
     private final Dimension toolBarDimension = new Dimension(24, 24);
+    private static final double WINDOW_WEIGHT = 0.55D;
     /**
      * 按钮 - 扫描service
      */
@@ -66,10 +65,6 @@ public class RightToolWindow extends JPanel {
      * 按钮 - 扫描service的过滤器
      */
     private JButton scanApiFilter;
-    /**
-     * 单选框 - 是否显示Rest发送工具栏
-     */
-    private JBCheckBox showRestDetail;
     /**
      * 单选框 - 扫描service时是否包含lib
      */
@@ -83,35 +78,22 @@ public class RightToolWindow extends JPanel {
      * Create the panel.
      */
     public RightToolWindow(@NotNull Project project) {
+        super(VERTICAL_SPLIT);
+
         this.project = project;
         this.restDetail = new RestDetail(project);
         this.restDetail.setCallback(this::renderRequestTree);
 
-        GridBagLayout gridBagLayout = new GridBagLayout();
-        gridBagLayout.columnWidths = new int[]{0, 0};
-        gridBagLayout.rowHeights = new int[]{0, 0, 0};
-        gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-        gridBagLayout.rowWeights = new double[]{1.0, Double.MIN_VALUE};
-        setLayout(gridBagLayout);
+        setContinuousLayout(true);
+        setResizeWeight(WINDOW_WEIGHT);
+        setDividerSize(2);
+        setBorder(JBUI.Borders.empty());
 
-        JPanel headPanel = new JPanel();
-        GridBagConstraints gbcHeadPanel = new GridBagConstraints();
-        gbcHeadPanel.weighty = 2.5;
-        gbcHeadPanel.insets = JBUI.insetsBottom(5);
-        gbcHeadPanel.fill = GridBagConstraints.BOTH;
-        gbcHeadPanel.gridx = 0;
-        gbcHeadPanel.gridy = 0;
-        add(headPanel, gbcHeadPanel);
-        headPanel.setLayout(new BorderLayout(0, 0));
-
+        JPanel headPanel = new JPanel(new BorderLayout());
         initView(headPanel);
+        setTopComponent(headPanel);
 
-        GridBagConstraints gbcBodyPanel = new GridBagConstraints();
-        gbcBodyPanel.weighty = 1.0;
-        gbcBodyPanel.fill = GridBagConstraints.BOTH;
-        gbcBodyPanel.gridx = 0;
-        gbcBodyPanel.gridy = 1;
-        add(restDetail, gbcBodyPanel);
+        setBottomComponent(restDetail);
 
         initEvent();
 
@@ -119,12 +101,9 @@ public class RightToolWindow extends JPanel {
     }
 
     private void initView(@NotNull JPanel headPanel) {
-        final Color bgColor = JBColor.decode("0xeeeeee");
-
         JToolBar toolBar = new JToolBar("Restful Tool");
         toolBar.setFloatable(false);
         toolBar.setBorderPainted(false);
-        toolBar.setBackground(bgColor);
         headPanel.add(toolBar, BorderLayout.NORTH);
 
         scanApi = new JXButton(AllIcons.Actions.Refresh);
@@ -133,7 +112,6 @@ public class RightToolWindow extends JPanel {
         scanApi.setContentAreaFilled(true);
         // 去掉按钮的边框
         scanApi.setBorderPainted(false);
-        scanApi.setBackground(bgColor);
         toolBar.add(scanApi);
 
         toolBar.add(new JBLabel("|"));
@@ -146,18 +124,9 @@ public class RightToolWindow extends JPanel {
 
         toolBar.add(new JBLabel("|"));
 
-        showRestDetail = new JBCheckBox("RequestView");
-        showRestDetail.setToolTipText("Show send request detail view");
-        showRestDetail.setSelected(true);
-        showRestDetail.setBackground(bgColor);
-        toolBar.add(showRestDetail);
-
-        toolBar.add(new SeparatorComponent());
-
         scanWithLibrary = new JBCheckBox("withLibrary");
         scanWithLibrary.setToolTipText("Scan service with library");
         scanWithLibrary.setSelected(PropertiesKey.scanServiceWithLibrary(project));
-        scanWithLibrary.setBackground(bgColor);
         toolBar.add(scanWithLibrary);
 
         setComponentDimension(toolBarDimension, toolBar, scanApi, scanApiFilter);
@@ -184,11 +153,6 @@ public class RightToolWindow extends JPanel {
     private void initEvent() {
         // 控制器扫描监听
         scanApi.addActionListener(e -> renderRequestTree());
-
-        showRestDetail.addActionListener(e -> {
-            JCheckBox checkBox = (JCheckBox) e.getSource();
-            restDetail.setVisible(checkBox.isSelected());
-        });
 
         scanWithLibrary.addActionListener(e -> {
             PropertiesKey.scanServiceWithLibrary(project, scanWithLibrary.isSelected());
