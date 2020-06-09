@@ -1,11 +1,15 @@
 # RestfulTool
 
+<em style="color: red">这不是原插件[~~RestfulToolkit~~]()</u></em>
+
 > - `最小版本`: `201`
->   * 低版本请移步[RESTFulToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit) 安装使用
+>   * 低版本请移步[`RESTFulToolkit`](https://plugins.jetbrains.com/plugin/10292-restfultoolkit) 安装使用
 > - `插件地址`: [`RestfulTool`](https://plugins.jetbrains.com/plugin/14280-restfultool)
 
 > + [Github](https://github.com/ZhangYuanSheng1217/RestfulTool)
 > + [Gitee](https://gitee.com/zys981029/RestfulTool)
+
+> - [English](./README.md)
 
 #### 前言
     由于RESTFulToolkit插件原作者不更新了，IDEA.201及以上版本不再适配，所以参照原作者的插件项目制作了此插件。
