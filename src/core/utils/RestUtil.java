@@ -17,8 +17,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiFile;
+import com.intellij.psi.*;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import core.beans.PropertiesKey;
@@ -247,6 +246,53 @@ public class RestUtil {
             return ((JvmAnnotationClassValue) attributeValue).getQualifiedName();
         }
         return null;
+    }
+
+    /**
+     * 查找类上的指定注解（包括超类和接口）
+     *
+     * @param psiClass      PsiClass
+     * @param qualifiedName 注解全限定名
+     * @return annotation
+     */
+    @Nullable
+    public static PsiAnnotation getClassAnnotation(@NotNull PsiClass psiClass, @NotNull String qualifiedName) {
+        PsiAnnotation annotation = psiClass.getAnnotation(qualifiedName);
+        if (annotation != null) {
+            return annotation;
+        }
+        List<PsiClass> classes = new ArrayList<>();
+        classes.add(psiClass.getSuperClass());
+        classes.addAll(Arrays.asList(psiClass.getInterfaces()));
+        for (PsiClass superPsiClass : classes) {
+            if (superPsiClass == null) {
+                continue;
+            }
+            PsiAnnotation classAnnotation = getClassAnnotation(superPsiClass, qualifiedName);
+            if (classAnnotation != null) {
+                return classAnnotation;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 获取方法的所有注解（包括父类）
+     *
+     * @param psiMethod psiMethod
+     * @return annotations
+     */
+    @NotNull
+    public static List<PsiAnnotation> getMethodAnnotations(@NotNull PsiMethod psiMethod) {
+        List<PsiAnnotation> annotations = new ArrayList<>(Arrays.asList(psiMethod.getModifierList().getAnnotations()));
+        for (PsiMethod superMethod : psiMethod.findSuperMethods()) {
+            getMethodAnnotations(superMethod)
+                    .stream()
+                    // 筛选：子类中方法定义了父类中方法存在的注解时只保留最上层的注解（即实现类的方法注解
+                    .filter(annotation -> !annotations.contains(annotation))
+                    .forEach(annotations::add);
+        }
+        return annotations;
     }
 
     /**

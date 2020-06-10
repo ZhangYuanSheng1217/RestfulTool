@@ -43,7 +43,8 @@ public class SpringHelper {
         for (PsiClass controllerClass : controllers) {
             List<Request> parentRequests = new ArrayList<>(0);
             List<Request> childrenRequests = new ArrayList<>();
-            PsiAnnotation psiAnnotation = controllerClass.getAnnotation(
+            PsiAnnotation psiAnnotation = RestUtil.getClassAnnotation(
+                    controllerClass,
                     SpringHttpMethodAnnotation.REQUEST_MAPPING.getQualifiedName()
             );
             if (psiAnnotation != null) {
@@ -196,8 +197,7 @@ public class SpringHelper {
     @NotNull
     private static List<Request> getRequests(@NotNull PsiMethod method) {
         List<Request> requests = new ArrayList<>();
-        PsiAnnotation[] annotations = method.getModifierList().getAnnotations();
-        for (PsiAnnotation annotation : annotations) {
+        for (PsiAnnotation annotation : RestUtil.getMethodAnnotations(method)) {
             requests.addAll(getRequests(annotation, method));
         }
 

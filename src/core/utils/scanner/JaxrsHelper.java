@@ -47,7 +47,7 @@ public class JaxrsHelper {
     private static List<PsiClassBean> scanHasPathFiles(@NotNull Project project, @NotNull Module module) {
         Set<PsiClassBean> classSets = new HashSet<>();
 
-        XmlFile applicationContext = findConfigXmlFile(project, module, "applicationContext.xml");
+        XmlFile applicationContext = findConfigXmlFile(project, module);
         if (applicationContext != null) {
             classSets.addAll(parseApplicationContextXml(project, module, applicationContext));
         }
@@ -83,7 +83,7 @@ public class JaxrsHelper {
             String path = "/";
             List<HttpMethod> methods = new ArrayList<>();
 
-            PsiAnnotation[] annotations = psiMethod.getModifierList().getAnnotations();
+            PsiAnnotation[] annotations = RestUtil.getMethodAnnotations(psiMethod).toArray(new PsiAnnotation[0]);
             for (PsiAnnotation annotation : annotations) {
                 Control controlPath = Control.getPathByQualifiedName(annotation.getQualifiedName());
                 if (controlPath != null) {
@@ -123,7 +123,8 @@ public class JaxrsHelper {
 
     @Nullable
     private static String getRootPathOfClass(@NotNull PsiClass psiClass) {
-        PsiAnnotation psiAnnotation = psiClass.getAnnotation(
+        PsiAnnotation psiAnnotation = RestUtil.getClassAnnotation(
+                psiClass,
                 Control.Path.getQualifiedName()
         );
         if (psiAnnotation != null) {
@@ -140,8 +141,8 @@ public class JaxrsHelper {
      * @return xmlFile
      */
     @Nullable
-    private static XmlFile findConfigXmlFile(@NotNull Project project, @NotNull Module module, @NotNull String conf) {
-        PsiFile[] files = FilenameIndex.getFilesByName(project, conf, module.getModuleScope());
+    private static XmlFile findConfigXmlFile(@NotNull Project project, @NotNull Module module) {
+        PsiFile[] files = FilenameIndex.getFilesByName(project, "applicationContext.xml", module.getModuleScope());
         for (PsiFile file : files) {
             if (file instanceof XmlFile) {
                 return (XmlFile) file;
@@ -213,9 +214,6 @@ public class JaxrsHelper {
 
         public String rootPath;
         public PsiClass psiClass;
-
-        public PsiClassBean() {
-        }
 
         public PsiClassBean(String rootPath, PsiClass psiClass) {
             this.rootPath = rootPath;
