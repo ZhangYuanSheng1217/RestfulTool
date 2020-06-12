@@ -37,6 +37,7 @@
 >       - change: `Setting` > `keymap` > `Plug-ins` > `RestfulTool`
 > * view
 >   - `right tool window` > `RestfulTool`
+> - ![gif](resources/tips/images/tip.gif)
 
 ****
 #### Fork

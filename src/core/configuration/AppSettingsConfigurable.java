@@ -11,6 +11,7 @@
 package core.configuration;
 
 import com.intellij.openapi.options.Configurable;
+import core.utils.Constants;
 import core.view.window.options.AppSettingsWindow;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +29,7 @@ public class AppSettingsConfigurable implements Configurable {
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
     public String getDisplayName() {
-        return "Restful Tool";
+        return Constants.Name.SETTING;
     }
 
     @Override

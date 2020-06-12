@@ -45,7 +45,7 @@
         <applicationConfigurable parentId="tools"
                                  instance="core.configuration.AppSettingsConfigurable"
                                  id="core.configuration.AppSettingsConfigurable"
-                                 displayName="Restful Tool"/>
+                                 dynamic="true"/>
 
         <projectService serviceInterface="core.service.RestfulToolService"
                         serviceImplementation="core.service.impl.RestfulToolServiceImpl"/>
@@ -68,5 +68,10 @@
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt SLASH"/>
         </action>
     </actions>
+
+    <projectListeners>
+        <listener class="core.service.impl.ToolWindowListenerImpl"
+                  topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
+    </projectListeners>
 
 </idea-plugin>

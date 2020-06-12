@@ -37,6 +37,7 @@
 >       - 更换：`Setting` > `keymap` > `Plug-ins` > `RestfulTool`
 > * 视图
 >   - `right tool window(右侧工具栏)` > `RestfulTool`
+> - ![gif](resources/tips/images/tip.gif)
 
 ****
 #### Fork

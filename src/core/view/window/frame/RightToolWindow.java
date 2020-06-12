@@ -14,6 +14,7 @@ import core.beans.HttpMethod;
 import core.beans.PropertiesKey;
 import core.beans.Request;
 import core.service.Notify;
+import core.service.topic.RefreshServiceTreeTopic;
 import core.service.topic.ServiceTreeTopic;
 import core.utils.RestUtil;
 import core.utils.SystemUtil;
@@ -41,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RightToolWindow extends JSplitPane {
 
     private static final Map<HttpMethod, Boolean> METHOD_CHOOSE_MAP;
+    private static final double WINDOW_WEIGHT = 0.55D;
 
     static {
         HttpMethod[] values = HttpMethod.values();
@@ -56,7 +58,6 @@ public class RightToolWindow extends JSplitPane {
     private final Project project;
     private final RestDetail restDetail;
     private final Dimension toolBarDimension = new Dimension(24, 24);
-    private static final double WINDOW_WEIGHT = 0.55D;
     /**
      * 按钮 - 扫描service
      */
@@ -172,7 +173,8 @@ public class RightToolWindow extends JSplitPane {
         }));
         scanApiFilter.addActionListener(e -> filterPopup.show(this, 0, toolBarDimension.height));
 
-        project.getMessageBus().connect().subscribe(ServiceTreeTopic.ACTION_SCAN_SERVICE, this::renderRequestTree);
+        project.getMessageBus().connect().subscribe(ServiceTreeTopic.TOPIC, this::renderRequestTree);
+        project.getMessageBus().connect().subscribe(RefreshServiceTreeTopic.TOPIC, this::renderRequestTree);
 
         // RequestTree子项点击监听
         tree.addTreeSelectionListener(e -> {
@@ -246,7 +248,7 @@ public class RightToolWindow extends JSplitPane {
     }
 
     public void renderRequestTree() {
-        ServiceTreeTopic restTopic = project.getMessageBus().syncPublisher(ServiceTreeTopic.ACTION_SCAN_SERVICE);
+        ServiceTreeTopic restTopic = project.getMessageBus().syncPublisher(ServiceTreeTopic.TOPIC);
         DumbService.getInstance(project).runWhenSmart(() -> restTopic.action(getRequests()));
     }
 

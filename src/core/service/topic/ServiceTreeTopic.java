@@ -2,6 +2,7 @@ package core.service.topic;
 
 import com.intellij.util.messages.Topic;
 import core.beans.Request;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.Map;
  */
 public interface ServiceTreeTopic extends RestTopic<Map<String, List<Request>>> {
 
-    Topic<ServiceTreeTopic> ACTION_SCAN_SERVICE = Topic.create("RestTopic.ServiceTreeTopic", ServiceTreeTopic.class);
+    Topic<ServiceTreeTopic> TOPIC = Topic.create("RestTopic.ServiceTreeTopic", ServiceTreeTopic.class);
 
     /**
      * action
@@ -20,5 +21,5 @@ public interface ServiceTreeTopic extends RestTopic<Map<String, List<Request>>> 
      * @param data data
      */
     @Override
-    void action(Map<String, List<Request>> data);
+    void action(@NotNull Map<String, List<Request>> data);
 }
