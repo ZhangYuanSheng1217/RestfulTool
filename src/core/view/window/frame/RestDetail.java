@@ -14,25 +14,34 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.http.Method;
 import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONStrFormater;
+import cn.hutool.json.JSONUtil;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextField;
 import core.beans.HttpMethod;
 import core.beans.Request;
+import core.service.Notify;
 import core.utils.RestUtil;
+import core.utils.SystemUtil;
 import core.utils.convert.BaseConvert;
 import core.utils.convert.JsonConvert;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXEditorPane;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -77,7 +86,7 @@ public class RestDetail extends JPanel {
     /**
      * 标签 - 显示返回结果
      */
-    private JLabel responseView;
+    private JEditorPane responseView;
 
     private DetailHandle callback;
 
@@ -133,9 +142,8 @@ public class RestDetail extends JPanel {
 
         JScrollPane scrollPane = new JBScrollPane();
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        tabbedPane.addTab("response",  scrollPane);
-        responseView = new JBLabel();
-        responseView.setVerticalAlignment(SwingConstants.TOP);
+        tabbedPane.addTab("response", scrollPane);
+        responseView = new JXEditorPane();
         scrollPane.setViewportView(responseView);
     }
 
@@ -173,8 +181,18 @@ public class RestDetail extends JPanel {
                     e.printStackTrace();
                     resp = e.getMessage();
                 }
-                responseView.setText(resp);
+                responseView.setText(formatJson(resp));
             });
+        });
+
+        responseView.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    popupMenu(responseView, e.getX(), e.getY());
+                }
+                super.mouseReleased(e);
+            }
         });
     }
 
@@ -241,6 +259,53 @@ public class RestDetail extends JPanel {
             }
         }
         return request.timeout(REQUEST_TIMEOUT);
+    }
+
+    /**
+     * 显示右键菜单
+     *
+     * @param component component
+     * @param x         横坐标
+     * @param y         纵坐标
+     */
+    private void popupMenu(@NotNull JComponent component, int x, int y) {
+        JPopupMenu menu = new JBPopupMenu();
+        ActionListener actionListener = actionEvent -> {
+            String responseViewText = responseView.getText();
+            switch (((JMenuItem) actionEvent.getSource()).getMnemonic()) {
+                case 0:
+                    if (responseViewText != null && responseViewText.trim().length() > 0) {
+                        SystemUtil.setClipboardString(responseViewText);
+                        Notify.getInstance(project).info("Copy Response success.");
+                    }
+                    break;
+                case 1:
+                    responseView.setText(formatJson(responseViewText));
+                    break;
+                default:
+            }
+        };
+
+        JMenuItem copyResponse = new JMenuItem("Copy Response", AllIcons.Actions.Copy);
+        copyResponse.setMnemonic(0);
+        copyResponse.addActionListener(actionListener);
+        menu.add(copyResponse);
+
+        JMenuItem formatResponse = new JMenuItem("Format Response", AllIcons.Actions.Refresh);
+        formatResponse.setMnemonic(1);
+        formatResponse.addActionListener(actionListener);
+        menu.add(formatResponse);
+
+        menu.show(component, x, y);
+    }
+
+    private String formatJson(@Nullable String resp) {
+        if (resp != null) {
+            if (JSONUtil.isJson(resp)) {
+                resp = JSONStrFormater.format(resp.trim());
+            }
+        }
+        return resp;
     }
 
     public interface DetailHandle {
