@@ -17,6 +17,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.*;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -28,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.YAMLFileType;
 import org.jetbrains.yaml.YAMLUtil;
+import org.jetbrains.yaml.psi.YAMLDocument;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
 
@@ -53,7 +55,7 @@ public class RestUtil {
 
         try {
             String value = getConfigurationValue(
-                    getScanConfigurationFile(project, scope),
+                    project, scope,
                     "server.port"
             );
             if (value == null || "".equals((value = value.trim()))) {
@@ -78,7 +80,7 @@ public class RestUtil {
         String protocol = "http";
 
         try {
-            String value = getConfigurationValue(getScanConfigurationFile(project, scope), "server.ssl.enabled");
+            String value = getConfigurationValue(project, scope, "server.ssl.enabled");
             if (value == null || "".equals((value = value.trim()))) {
                 throw new Exception();
             }
@@ -102,7 +104,7 @@ public class RestUtil {
         // server.servlet.context-path
         try {
             return getConfigurationValue(
-                    getScanConfigurationFile(project, scope),
+                    project, scope,
                     "server.servlet.context-path"
             );
         } catch (Exception ignore) {
@@ -300,12 +302,15 @@ public class RestUtil {
      *
      * @param project project
      * @param scope   scope
+     * @param profile ${spring.profiles.active}
      * @return {null | PropertiesFile | YAMLFile}
      */
     @Nullable
-    private static PsiFile getScanConfigurationFile(@NotNull Project project, @NotNull GlobalSearchScope scope) {
+    private static PsiFile getScanConfigurationFile(@NotNull Project project,
+                                                    @NotNull GlobalSearchScope scope,
+                                                    @Nullable String profile) {
         // Spring配置文件名前缀
-        final String configurationPrefix = "application";
+        final String configurationPrefix = "application" + (StringUtil.isEmpty(profile) ? "" : "-" + profile);
 
         // 配置文件全名
         final String[] configurationFileNames = {
@@ -320,11 +325,8 @@ public class RestUtil {
                 PsiFile[] files = FilenameIndex.getFilesByName(project, configurationFileName, scope);
 
                 for (PsiFile file : files) {
-                    if (file instanceof PropertiesFile) {
-                        // application.properties
-                        return file;
-                    } else if (file instanceof YAMLFile) {
-                        // application.yml
+                    if (file instanceof PropertiesFile || file instanceof YAMLFile) {
+                        // application.properties | application.yml
                         return file;
                     }
                 }
@@ -341,23 +343,59 @@ public class RestUtil {
     /**
      * 获取properties或yaml文件的kv值
      *
-     * @param conf PsiFile
-     * @param name name
+     * @param project project
+     * @param scope   scope
+     * @param name    name
      * @return {value | null}
      */
     @Nullable
-    private static String getConfigurationValue(@Nullable PsiFile conf, @NotNull String name) {
+    private static String getConfigurationValue(@NotNull Project project,
+                                                @NotNull GlobalSearchScope scope,
+                                                @NotNull String name) {
+        PsiFile conf = getScanConfigurationFile(project, scope, null);
         if (conf == null) {
             return null;
         }
         if (conf instanceof PropertiesFile) {
             // application.properties
             PropertiesFile propertiesFile = (PropertiesFile) conf;
+            String active = propertiesFile.getNamesMap().get("spring.profiles.active");
+            if (StringUtil.isNotEmpty(active)) {
+                conf = getScanConfigurationFile(project, scope, active);
+                if (conf instanceof PropertiesFile) {
+                    propertiesFile = (PropertiesFile) conf;
+                }
+            }
             return propertiesFile.getNamesMap().get(name);
         } else if (conf instanceof YAMLFile) {
             // application.yml
             YAMLFile yamlFile = (YAMLFile) conf;
 
+            YAMLKeyValue activeYaml = YAMLUtil.getQualifiedKeyInFile(yamlFile, "spring", "profiles", "active");
+            if (activeYaml != null && StringUtil.isNotEmpty(activeYaml.getValueText())) {
+                String active = activeYaml.getValueText();
+                if (yamlFile.getDocuments().size() > 1) {
+                    for (YAMLDocument yamlFileDocument : yamlFile.getDocuments()) {
+                        YAMLKeyValue yamlKeyValue = YAMLUtil.getQualifiedKeyInDocument(
+                                yamlFileDocument,
+                                Arrays.asList("spring", "profiles")
+                        );
+                        if (yamlKeyValue != null && active.equals(yamlKeyValue.getValueText())) {
+                            YAMLKeyValue keyValue = YAMLUtil.getQualifiedKeyInDocument(
+                                    yamlFileDocument,
+                                    Arrays.asList(name.split("\\."))
+                            );
+                            if (keyValue != null) {
+                                return keyValue.getValueText();
+                            }
+                        }
+                    }
+                }
+                conf = getScanConfigurationFile(project, scope, active);
+                if (conf instanceof YAMLFile) {
+                    yamlFile = (YAMLFile) conf;
+                }
+            }
             YAMLKeyValue server = YAMLUtil.getQualifiedKeyInFile(
                     yamlFile,
                     name.split("\\.")

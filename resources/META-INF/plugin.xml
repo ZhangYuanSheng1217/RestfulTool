@@ -25,6 +25,7 @@
     <change-notes><![CDATA[
       <ul>
         <li> 格式化请求工具返回的Response </li>
+        <li> 支持 Spring ${spring.profiles.active} 配置识别 </li>
       </ul>
     ]]>
     </change-notes>
