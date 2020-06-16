@@ -19,6 +19,7 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.*;
 import com.intellij.psi.search.FilenameIndex;
@@ -115,6 +116,7 @@ public class RestUtil {
                     "server.servlet.context-path"
             );
             @Language("RegExp") final String mavenPropReg = "@\\S+@";
+            @Language("RegExp") final String mavenPropItemReg = "\\$\\{\\S+}";
             @Nullable String mavenProp;
             if (contextPath != null && (mavenProp = ReUtil.getGroup0(mavenPropReg, contextPath)) != null) {
                 Document pomDoc = getModulePomFile(((ModuleWithDependenciesScope) scope).getModule());
@@ -123,6 +125,13 @@ public class RestUtil {
                     Element element = properties.element(mavenProp.substring(1, mavenProp.length() - 1));
                     if (element != null) {
                         mavenProp = element.getData().toString().trim();
+                        if (ReUtil.isMatch(mavenPropItemReg, mavenProp)) {
+                            mavenProp = Messages.showInputDialog(
+                                    project,
+                                    "Please enter the value of " + mavenProp,
+                                    "Unable to Parse the Value of ContextPath",
+                                    Messages.getQuestionIcon());
+                        }
                         if (StringUtil.isEmptyOrSpaces(mavenProp)) {
                             return null;
                         }
