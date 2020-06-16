@@ -10,11 +10,13 @@
  */
 package core.utils;
 
+import cn.hutool.core.util.ReUtil;
 import com.intellij.lang.jvm.annotation.*;
 import com.intellij.lang.properties.PropertiesFileType;
 import com.intellij.lang.properties.psi.PropertiesFile;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
+import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
@@ -25,6 +27,10 @@ import core.beans.PropertiesKey;
 import core.beans.Request;
 import core.utils.scanner.JaxrsHelper;
 import core.utils.scanner.SpringHelper;
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.YAMLFileType;
@@ -33,6 +39,7 @@ import org.jetbrains.yaml.psi.YAMLDocument;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -103,10 +110,27 @@ public class RestUtil {
     public static String scanContextPath(@NotNull Project project, @NotNull GlobalSearchScope scope) {
         // server.servlet.context-path
         try {
-            return getConfigurationValue(
+            String contextPath = getConfigurationValue(
                     project, scope,
                     "server.servlet.context-path"
             );
+            @Language("RegExp") final String mavenPropReg = "@\\S+@";
+            @Nullable String mavenProp;
+            if (contextPath != null && (mavenProp = ReUtil.getGroup0(mavenPropReg, contextPath)) != null) {
+                Document pomDoc = getModulePomFile(((ModuleWithDependenciesScope) scope).getModule());
+                if (pomDoc != null) {
+                    Element properties = pomDoc.getRootElement().element("properties");
+                    Element element = properties.element(mavenProp.substring(1, mavenProp.length() - 1));
+                    if (element != null) {
+                        mavenProp = element.getData().toString().trim();
+                        if (StringUtil.isEmptyOrSpaces(mavenProp)) {
+                            return null;
+                        }
+                    }
+                }
+                contextPath = ReUtil.replaceAll(contextPath, mavenPropReg, mavenProp);
+            }
+            return contextPath;
         } catch (Exception ignore) {
             return null;
         }
@@ -403,6 +427,31 @@ public class RestUtil {
             if (server != null) {
                 return server.getValueText();
             }
+        }
+        return null;
+    }
+
+    /**
+     * 获取pom文件Document
+     *
+     * @param module module
+     * @return XmlFile
+     */
+    @Nullable
+    private static Document getModulePomFile(@NotNull Module module) {
+        String pomFileName = "pom.xml";
+        try {
+            File moduleFile = new File(module.getModuleFilePath());
+            if (!moduleFile.exists()) {
+                throw new Exception();
+            }
+            File pomFile = new File(moduleFile.getParent(), pomFileName);
+            if (!pomFile.exists()) {
+                throw new Exception();
+            }
+            SAXReader reader = new SAXReader();
+            return reader.read(pomFile);
+        } catch (Exception ignore) {
         }
         return null;
     }

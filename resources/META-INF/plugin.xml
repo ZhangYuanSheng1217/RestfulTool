@@ -11,6 +11,7 @@
         2.Click the URL to jump directly to the corresponding method definition;<br>
         3.A simple http request tool;<br>
         4.Support Spring system (Spring MVC / Spring Boot)<br>
+        4.Support JAX-RS<br>
         5.Support `Navigate-> Request Service` search Mapping (Ctrl + Alt + /)<br>
       <br>
       一套 Restful 服务开发辅助工具集。<br>
@@ -18,14 +19,14 @@
         2.点击 URL 直接跳转到对应的方法定义;<br>
         3.一个简单的 http 请求工具;<br>
         4.支持 Spring 体系 (Spring MVC / Spring Boot);<br>
+        4.支持 JAX-RS;<br>
         5.支持 `Navigate -> Request Service` 搜索 Mapping (Ctrl + Alt + /)<br>
     ]]></description>
 
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
       <ul>
-        <li> 格式化请求工具返回的Response </li>
-        <li> 支持 Spring ${spring.profiles.active} 配置识别 </li>
+        <li> 在`ContextPath`配置中支持识别pom文件的properties配置 </li>
       </ul>
     ]]>
     </change-notes>
