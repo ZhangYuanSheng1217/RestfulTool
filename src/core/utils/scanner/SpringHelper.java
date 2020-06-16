@@ -51,7 +51,7 @@ public class SpringHelper {
                 parentRequests = getRequests(psiAnnotation, null);
             }
 
-            PsiMethod[] psiMethods = controllerClass.getMethods();
+            PsiMethod[] psiMethods = controllerClass.getAllMethods();
             for (PsiMethod psiMethod : psiMethods) {
                 childrenRequests.addAll(getRequests(psiMethod));
             }

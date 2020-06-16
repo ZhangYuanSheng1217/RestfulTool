@@ -1,7 +1,7 @@
 <idea-plugin url="https://www.jetbrains.com/idea">
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.2.1-RELEASE</version>
+    <version>1.2.2-RELEASE</version>
     <vendor email="2862297923@qq.com" url="">Yuonsa</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -27,6 +27,7 @@
     <change-notes><![CDATA[
       <ul>
         <li> 在`ContextPath`配置中支持识别pom文件的properties配置 </li>
+        <li> 修复 Controller 包含继承子类时接口显示不完整 </li>
       </ul>
     ]]>
     </change-notes>
