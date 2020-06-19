@@ -19,7 +19,6 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.*;
 import com.intellij.psi.search.FilenameIndex;
@@ -32,6 +31,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.YAMLFileType;
@@ -116,24 +116,18 @@ public class RestUtil {
                     "server.servlet.context-path"
             );
             @Language("RegExp") final String mavenPropReg = "@\\S+@";
-            @Language("RegExp") final String mavenPropItemReg = "\\$\\{\\S+}";
             @Nullable String mavenProp;
             if (contextPath != null && (mavenProp = ReUtil.getGroup0(mavenPropReg, contextPath)) != null) {
                 Document pomDoc = getModulePomFile(((ModuleWithDependenciesScope) scope).getModule());
                 if (pomDoc != null) {
                     Element properties = pomDoc.getRootElement().element("properties");
-                    Element element = properties.element(mavenProp.substring(1, mavenProp.length() - 1));
-                    if (element != null) {
-                        mavenProp = element.getData().toString().trim();
-                        if (ReUtil.isMatch(mavenPropItemReg, mavenProp)) {
-                            mavenProp = Messages.showInputDialog(
-                                    project,
-                                    "Please enter the value of " + mavenProp,
-                                    "Unable to Parse the Value of ContextPath",
-                                    Messages.getQuestionIcon());
-                        }
-                        if (StringUtil.isEmptyOrSpaces(mavenProp)) {
-                            return null;
+                    if (properties != null) {
+                        Element propItemElement = properties.element(mavenProp.substring(1, mavenProp.length() - 1));
+                        if (propItemElement != null) {
+                            mavenProp = getPomFileProperties(properties, propItemElement.getData().toString().trim());
+                            if (StringUtil.isEmptyOrSpaces(mavenProp)) {
+                                return null;
+                            }
                         }
                     }
                 }
@@ -143,6 +137,40 @@ public class RestUtil {
         } catch (Exception ignore) {
             return null;
         }
+    }
+
+    /**
+     * 获取element的值
+     *
+     * @param element element
+     * @param name    name
+     * @return value
+     */
+    @NotNull
+    private static String getPomFileProperties(@Nullable Element element, String name) {
+        // maven element 的变量格式：${java.version}
+        @Language("RegExp") final String propReg = "\\$\\{[A-Za-z0-9.:-]+}";
+        if (name == null) {
+            return "";
+        }
+        if (element == null) {
+            return "";
+        }
+        String response = name;
+        for (String nameItem : ReUtil.findAll(propReg, response, 0)) {
+            Element itemElement = element.element(nameItem.substring(
+                    nameItem.indexOf("{") + 1,
+                    nameItem.indexOf("}")
+            ));
+            if (itemElement != null) {
+                String itemResult = itemElement.getData().toString().trim();
+                for (String itemName : ReUtil.findAll(propReg, itemResult, 0)) {
+                    itemResult = itemResult.replace(itemName, getPomFileProperties(element, itemName));
+                }
+                response = response.replace(nameItem, itemResult);
+            }
+        }
+        return response;
     }
 
     /**
