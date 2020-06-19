@@ -11,7 +11,11 @@
 package core.utils;
 
 import cn.hutool.core.util.ReUtil;
-import com.intellij.lang.jvm.annotation.*;
+import com.intellij.lang.jvm.annotation.JvmAnnotationArrayValue;
+import com.intellij.lang.jvm.annotation.JvmAnnotationAttributeValue;
+import com.intellij.lang.jvm.annotation.JvmAnnotationClassValue;
+import com.intellij.lang.jvm.annotation.JvmAnnotationConstantValue;
+import com.intellij.lang.jvm.annotation.JvmAnnotationEnumFieldValue;
 import com.intellij.lang.properties.PropertiesFileType;
 import com.intellij.lang.properties.psi.PropertiesFile;
 import com.intellij.openapi.module.Module;
@@ -19,9 +23,12 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiExpression;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import core.beans.PropertiesKey;
@@ -42,7 +49,12 @@ import org.jetbrains.yaml.psi.YAMLKeyValue;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author ZhangYuanSheng
@@ -125,12 +137,14 @@ public class RestUtil {
                     Element element = properties.element(mavenProp.substring(1, mavenProp.length() - 1));
                     if (element != null) {
                         mavenProp = element.getData().toString().trim();
-                        if (ReUtil.isMatch(mavenPropItemReg, mavenProp)) {
-                            mavenProp = Messages.showInputDialog(
-                                    project,
-                                    "Please enter the value of " + mavenProp,
-                                    "Unable to Parse the Value of ContextPath",
-                                    Messages.getQuestionIcon());
+                        while (ReUtil.isMatch(mavenPropItemReg, mavenProp)) {
+                            mavenProp = mavenProp.substring(2, mavenProp.length() - 1);
+                            String[] path = mavenProp.split("\\.");
+                            element = pomDoc.getRootElement();
+                            for (int i = 1; i < path.length; i++) {
+                                element = element.element(path[i]);
+                            }
+                            mavenProp = element.getData().toString().trim();
                         }
                         if (StringUtil.isEmptyOrSpaces(mavenProp)) {
                             return null;
