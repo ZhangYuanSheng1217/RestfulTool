@@ -492,4 +492,28 @@ public class RestUtil {
         }
         return null;
     }
+
+    /**
+     * 格式化request path
+     *
+     * @param path path
+     * @return format path
+     */
+    @NotNull
+    @Contract(pure = true)
+    public static String formatPath(@Nullable Object path) {
+        if (path == null) {
+            return "/";
+        }
+        String currPath;
+        if (path instanceof String) {
+            currPath = (String) path;
+        } else {
+            currPath = path.toString();
+        }
+        if (currPath.startsWith("/")) {
+            return currPath;
+        }
+        return "/" + currPath;
+    }
 }

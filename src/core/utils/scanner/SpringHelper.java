@@ -157,11 +157,18 @@ public class SpringHelper {
             }
             Object value = RestUtil.getAttributeValue(attribute.getAttributeValue());
             if (value instanceof String) {
-                paths.add(((String) value));
+                paths.add(RestUtil.formatPath(value));
             } else if (value instanceof List) {
                 //noinspection unchecked,rawtypes
                 List<Object> list = (List) value;
-                list.forEach(item -> paths.add((String) item));
+                list.forEach(item -> paths.add(RestUtil.formatPath(item)));
+            } else {
+                throw new RuntimeException(String.format(
+                        "Scan api: %s\n" +
+                                "Class: %s",
+                        value,
+                        value != null ? value.getClass() : null
+                ));
             }
             hasImplicitPath = false;
         }
