@@ -39,6 +39,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.YAMLFileType;
@@ -128,26 +129,18 @@ public class RestUtil {
                     "server.servlet.context-path"
             );
             @Language("RegExp") final String mavenPropReg = "@\\S+@";
-            @Language("RegExp") final String mavenPropItemReg = "\\$\\{\\S+}";
             @Nullable String mavenProp;
             if (contextPath != null && (mavenProp = ReUtil.getGroup0(mavenPropReg, contextPath)) != null) {
                 Document pomDoc = getModulePomFile(((ModuleWithDependenciesScope) scope).getModule());
                 if (pomDoc != null) {
                     Element properties = pomDoc.getRootElement().element("properties");
-                    Element element = properties.element(mavenProp.substring(1, mavenProp.length() - 1));
-                    if (element != null) {
-                        mavenProp = element.getData().toString().trim();
-                        while (ReUtil.isMatch(mavenPropItemReg, mavenProp)) {
-                            mavenProp = mavenProp.substring(2, mavenProp.length() - 1);
-                            String[] path = mavenProp.split("\\.");
-                            element = pomDoc.getRootElement();
-                            for (int i = 1; i < path.length; i++) {
-                                element = element.element(path[i]);
+                    if (properties != null) {
+                        Element propItemElement = properties.element(mavenProp.substring(1, mavenProp.length() - 1));
+                        if (propItemElement != null) {
+                            mavenProp = getPomFileProperties(properties, propItemElement.getData().toString().trim());
+                            if (StringUtil.isEmptyOrSpaces(mavenProp)) {
+                                return null;
                             }
-                            mavenProp = element.getData().toString().trim();
-                        }
-                        if (StringUtil.isEmptyOrSpaces(mavenProp)) {
-                            return null;
                         }
                     }
                 }
@@ -157,6 +150,40 @@ public class RestUtil {
         } catch (Exception ignore) {
             return null;
         }
+    }
+
+    /**
+     * 获取element的值
+     *
+     * @param element element
+     * @param name    name
+     * @return value
+     */
+    @NotNull
+    private static String getPomFileProperties(@Nullable Element element, String name) {
+        // maven element 的变量格式：${java.version}
+        @Language("RegExp") final String propReg = "\\$\\{[A-Za-z0-9.:-]+}";
+        if (name == null) {
+            return "";
+        }
+        if (element == null) {
+            return "";
+        }
+        String response = name;
+        for (String nameItem : ReUtil.findAll(propReg, response, 0)) {
+            Element itemElement = element.element(nameItem.substring(
+                    nameItem.indexOf("{") + 1,
+                    nameItem.indexOf("}")
+            ));
+            if (itemElement != null) {
+                String itemResult = itemElement.getData().toString().trim();
+                for (String itemName : ReUtil.findAll(propReg, itemResult, 0)) {
+                    itemResult = itemResult.replace(itemName, getPomFileProperties(element, itemName));
+                }
+                response = response.replace(nameItem, itemResult);
+            }
+        }
+        return response;
     }
 
     /**
