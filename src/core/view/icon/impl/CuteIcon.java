@@ -14,8 +14,8 @@ import core.beans.HttpMethod;
 import core.view.icon.IconType;
 import core.view.icon.PreviewIcon;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.HashMap;
