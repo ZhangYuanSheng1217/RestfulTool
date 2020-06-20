@@ -122,7 +122,9 @@ public class RestUtil {
                 if (pomDoc != null) {
                     Element properties = pomDoc.getRootElement().element("properties");
                     if (properties != null) {
-                        Element propItemElement = properties.element(mavenProp.substring(1, mavenProp.length() - 1));
+                        Element propItemElement = properties.element(
+                                mavenProp.substring(mavenProp.indexOf("@") + 1, mavenProp.lastIndexOf("@"))
+                        );
                         if (propItemElement != null) {
                             mavenProp = getPomFileProperties(properties, propItemElement.getData().toString().trim());
                             if (StringUtil.isEmptyOrSpaces(mavenProp)) {
