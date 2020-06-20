@@ -82,7 +82,8 @@ public class Request {
         }
         String parentPath = parent.getPath();
         if (parentPath != null && parentPath.endsWith("/")) {
-            parentPath = "";
+            // 去掉末尾的斜杠
+            parentPath = parentPath.substring(0, parentPath.length() - 1);
         }
         this.setPath(parentPath + this.path);
     }
