@@ -102,9 +102,7 @@ public class RightToolWindow extends JSplitPane {
     }
 
     private void initView(@NotNull JPanel headPanel) {
-        JToolBar toolBar = new JToolBar("Restful Tool");
-        toolBar.setFloatable(false);
-        toolBar.setBorderPainted(false);
+        JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         headPanel.add(toolBar, BorderLayout.NORTH);
 
         scanApi = new JXButton(AllIcons.Actions.Refresh);
@@ -371,6 +369,7 @@ public class RightToolWindow extends JSplitPane {
                 component.setPreferredSize(dimension);
                 component.setMaximumSize(dimension);
                 component.setMinimumSize(dimension);
+                component.setBorder(JBUI.Borders.empty());
             }
         }
     }
