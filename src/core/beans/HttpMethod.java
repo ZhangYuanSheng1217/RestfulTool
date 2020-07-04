@@ -31,6 +31,11 @@ public enum HttpMethod {
     GET,
 
     /**
+     * OPTIONS
+     */
+    OPTIONS,
+
+    /**
      * POST
      */
     POST,
