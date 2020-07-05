@@ -126,7 +126,10 @@ public class RestUtil {
                                 mavenProp.substring(mavenProp.indexOf("@") + 1, mavenProp.lastIndexOf("@"))
                         );
                         if (propItemElement != null) {
-                            mavenProp = getPomFileProperties(properties, propItemElement.getData().toString().trim());
+                            String name = propItemElement.getData().toString().trim();
+                            mavenProp = getPomFileProperties(properties, name);
+                            // 如果<properties>找不到则到根标签<project>寻找
+                            mavenProp = getPomFileProject(pomDoc.getRootElement(), mavenProp);
                             if (StringUtil.isEmptyOrSpaces(mavenProp)) {
                                 return null;
                             }
@@ -142,7 +145,7 @@ public class RestUtil {
     }
 
     /**
-     * 获取element的值
+     * 获取properties-element的值
      *
      * @param element element
      * @param name    name
@@ -168,6 +171,44 @@ public class RestUtil {
                 String itemResult = itemElement.getData().toString().trim();
                 for (String itemName : ReUtil.findAll(propReg, itemResult, 0)) {
                     itemResult = itemResult.replace(itemName, getPomFileProperties(element, itemName));
+                }
+                response = response.replace(nameItem, itemResult);
+            }
+        }
+        return response;
+    }
+
+    /**
+     * 获取project-element的值
+     *
+     * @param element element
+     * @param name    name
+     * @return value
+     */
+    @NotNull
+    private static String getPomFileProject(@Nullable Element element, String name) {
+        // maven element 的变量格式：${project.version}
+        @Language("RegExp") final String propReg = "\\$\\{[A-Za-z0-9.:-]+}";
+        if (name == null) {
+            return "";
+        }
+        if (element == null) {
+            return "";
+        }
+        String response = name;
+        for (String nameItem : ReUtil.findAll(propReg, response, 0)) {
+            String elementName = nameItem.substring(
+                    nameItem.indexOf("{") + 1,
+                    nameItem.indexOf("}")
+            );
+            if (elementName.toLowerCase().startsWith("project.")) {
+                elementName = elementName.substring(elementName.indexOf(".") + 1);
+            }
+            Element itemElement = element.element(elementName);
+            if (itemElement != null) {
+                String itemResult = itemElement.getData().toString().trim();
+                for (String itemName : ReUtil.findAll(propReg, itemResult, 0)) {
+                    itemResult = itemResult.replace(itemName, getPomFileProject(element, itemName));
                 }
                 response = response.replace(nameItem, itemResult);
             }
