@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.Objects;
 
 /**
  * @author ZhangYuanSheng
@@ -24,9 +25,12 @@ import javax.swing.*;
 public class Request {
 
     private final PsiMethod psiMethod;
+    @Nullable
     private HttpMethod method;
+    @Nullable
     private String path;
-    private Icon icon;
+    @NotNull
+    private Icon icon = Icons.getMethodIcon(null);
 
     public Request(HttpMethod method, @Nullable String path, @Nullable PsiMethod psiMethod) {
         this.setMethod(method);
@@ -46,15 +50,17 @@ public class Request {
         }
     }
 
+    @Nullable
     public HttpMethod getMethod() {
         return method;
     }
 
-    public void setMethod(HttpMethod method) {
+    public void setMethod(@Nullable HttpMethod method) {
         this.method = method;
         this.icon = Icons.getMethodIcon(method);
     }
 
+    @NotNull
     public Icon getIcon() {
         return icon;
     }
@@ -63,6 +69,7 @@ public class Request {
         return Icons.getMethodIcon(this.method, true);
     }
 
+    @Nullable
     public String getPath() {
         return path;
     }
@@ -98,7 +105,59 @@ public class Request {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Request request = (Request) o;
+
+        if (!psiMethod.equals(request.psiMethod)) {
+            return false;
+        }
+        if (method != request.method) {
+            return false;
+        }
+        if (!Objects.equals(path, request.path)) {
+            return false;
+        }
+        return icon.equals(request.icon);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = psiMethod.hashCode();
+        result = 31 * result + (method != null ? method.hashCode() : 0);
+        result = 31 * result + (path != null ? path.hashCode() : 0);
+        result = 31 * result + icon.hashCode();
+        return result;
+    }
+
+    @NotNull
+    public String getIdentity(String... itemIds) {
+        HttpMethod method = this.method == null ? HttpMethod.REQUEST : this.method;
+        String path = this.path == null ? "" : this.path;
+
+        StringBuilder items = new StringBuilder();
+        if (itemIds != null) {
+            items.append("-[");
+            for (int i = 0; i < itemIds.length; i++) {
+                if (i > 0) {
+                    items.append(", ");
+                }
+                items.append(itemIds[i]);
+            }
+            items.append("]");
+        }
+
+        return String.format("{}[%s]%s(%s)%s", method, path, icon.getClass(), items.toString());
+    }
+
+    @Override
     public String toString() {
-        return "[" + method + "]" + path + "(" + icon + ")";
+        return this.getIdentity();
     }
 }

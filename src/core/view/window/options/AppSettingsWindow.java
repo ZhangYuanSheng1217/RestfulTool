@@ -36,15 +36,19 @@ public class AppSettingsWindow {
 
     private final ComboBox<IconType> selectIconType;
 
+    private final JBCheckBox enableCacheOfRestDetail;
+
     public AppSettingsWindow() {
         globalScanServiceWithLib = new JBCheckBox("Scan service with library on application default (全局配置)");
 
         selectIconType = new ComboBox<>(IconTypeManager.getIconTypes());
 
+        enableCacheOfRestDetail = new JBCheckBox("Enable cache for Http Tool? (May increase memory footprint)");
+
         content = FormBuilder.createFormBuilder()
                 .addComponent(new SystemOptions().getContent())
                 .addComponent(new IconOptions().getContent(), VERTICAL_CLEARANCE)
-                .addComponent(new OptionForm("Test Ignore").getContent(), VERTICAL_CLEARANCE)
+                .addComponent(new HttpToolOptions().getContent(), VERTICAL_CLEARANCE)
                 .addComponentFillVertically(new JPanel(), VERTICAL_CLEARANCE)
                 .getPanel();
     }
@@ -63,6 +67,7 @@ public class AppSettingsWindow {
         setting.scanServicesWithLibraryDefault = globalScanServiceWithLib.isSelected();
         //noinspection ConstantConditions
         setting.iconTypeClass = IconTypeManager.formatClass(((IconType) selectIconType.getSelectedItem()).getClass());
+        setting.enableCacheOfRestDetail = enableCacheOfRestDetail.isSelected();
         return setting;
     }
 
@@ -72,6 +77,7 @@ public class AppSettingsWindow {
         }
         globalScanServiceWithLib.setSelected(setting.scanServicesWithLibraryDefault);
         selectIconType.setSelectedItem(IconTypeManager.getInstance(IconTypeManager.formatName(setting.iconTypeClass)));
+        enableCacheOfRestDetail.setSelected(setting.enableCacheOfRestDetail);
     }
 
     private class SystemOptions extends OptionForm {
@@ -101,6 +107,15 @@ public class AppSettingsWindow {
             }
 
             return iconsPreview;
+        }
+    }
+
+    private class HttpToolOptions extends OptionForm {
+
+        public HttpToolOptions() {
+            super("Http Tool");
+
+            this.addOptionItem(enableCacheOfRestDetail);
         }
     }
 }

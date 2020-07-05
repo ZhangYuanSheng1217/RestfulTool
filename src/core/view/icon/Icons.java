@@ -14,6 +14,7 @@ import com.intellij.ui.IconManager;
 import core.beans.HttpMethod;
 import core.configuration.AppSettingsState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
@@ -37,13 +38,14 @@ public class Icons {
      * @return icon
      */
     @NotNull
-    public static Icon getMethodIcon(HttpMethod method) {
+    public static Icon getMethodIcon(@Nullable HttpMethod method) {
         return getMethodIcon(method, false);
     }
 
-    public static Icon getMethodIcon(HttpMethod method, boolean selected) {
+    public static Icon getMethodIcon(@Nullable HttpMethod method, boolean selected) {
         String iconTypeClass = AppSettingsState.getInstance().getAppSetting().iconTypeClass;
         IconType iconType = IconTypeManager.getInstance(iconTypeClass);
+        method = method == null ? HttpMethod.REQUEST : method;
         if (selected) {
             return iconType.getSelectIcon(method);
         }

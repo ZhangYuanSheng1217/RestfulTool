@@ -11,6 +11,7 @@
 package core.beans;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 
@@ -63,5 +64,14 @@ public enum HttpMethod {
     @NotNull
     public static HttpMethod[] getValues() {
         return Arrays.stream(HttpMethod.values()).filter(method -> !method.equals(HttpMethod.REQUEST)).toArray(HttpMethod[]::new);
+    }
+
+    public static HttpMethod parse(@Nullable Object method) {
+        try {
+            assert method != null;
+            return HttpMethod.parse(method);
+        } catch (Exception ignore) {
+            return GET;
+        }
     }
 }

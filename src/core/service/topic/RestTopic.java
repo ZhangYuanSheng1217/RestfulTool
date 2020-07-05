@@ -11,5 +11,7 @@ public interface RestTopic<T> {
      *
      * @param data data
      */
-    void action(T data);
+    default void action(T data) {
+        // default
+    }
 }

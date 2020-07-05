@@ -28,6 +28,7 @@ import com.intellij.ui.components.JBTextField;
 import core.beans.HttpMethod;
 import core.beans.Request;
 import core.service.Notify;
+import core.service.topic.RestDetailTopic;
 import core.utils.RestUtil;
 import core.utils.SystemUtil;
 import core.utils.convert.BaseConvert;
@@ -39,9 +40,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -54,6 +54,9 @@ import java.util.concurrent.TimeUnit;
 public class RestDetail extends JPanel {
 
     private static final int REQUEST_TIMEOUT = 1000 * 10;
+
+    private static final String IDENTITY_HEAD = "HEAD";
+    private static final String IDENTITY_BODY = "BODY";
 
     private final Project project;
     private final ThreadPoolExecutor poolExecutor;
@@ -90,9 +93,17 @@ public class RestDetail extends JPanel {
 
     private DetailHandle callback;
 
+    /**
+     * 选中的Request
+     */
+    private Request chooseRequest;
+
+    private final Map<Request, String> headCache;
+    private final Map<Request, String> bodyCache;
+
     public RestDetail(@NotNull Project project) {
         this.project = project;
-        poolExecutor = new ThreadPoolExecutor(
+        this.poolExecutor = new ThreadPoolExecutor(
                 1,
                 1,
                 1000,
@@ -102,6 +113,9 @@ public class RestDetail extends JPanel {
         );
         // this.convert = new DefaultConvert();
         this.convert = new JsonConvert();
+
+        this.headCache = new HashMap<>();
+        this.bodyCache = new HashMap<>();
 
         initView();
 
@@ -132,12 +146,14 @@ public class RestDetail extends JPanel {
         scrollPaneHead.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         tabbedPane.addTab("head", scrollPaneHead);
         requestHead = new JXEditorPane();
+        requestHead.setName(IDENTITY_HEAD);
         scrollPaneHead.setViewportView(requestHead);
 
         JScrollPane scrollPaneBody = new JBScrollPane();
         scrollPaneBody.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         tabbedPane.addTab("body", scrollPaneBody);
         requestBody = new JXEditorPane();
+        requestBody.setName(IDENTITY_BODY);
         scrollPaneBody.setViewportView(requestBody);
 
         JScrollPane scrollPane = new JBScrollPane();
@@ -194,11 +210,63 @@ public class RestDetail extends JPanel {
                 super.mouseReleased(e);
             }
         });
+
+        project.getMessageBus().connect().subscribe(RestDetailTopic.TOPIC, request -> {
+            if (request != null) {
+                headCache.remove(request);
+                bodyCache.remove(request);
+            } else {
+                headCache.clear();
+                bodyCache.clear();
+            }
+        });
+
+        KeyListener keyListener = new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                super.keyReleased(e);
+                if (!e.isAltDown() && !e.isShiftDown() && !e.isControlDown()) {
+                    JEditorPane editorPane = getEditorPane(e);
+                    if (editorPane != null) {
+                        String name = editorPane.getName();
+                        String inputValue = editorPane.getText();
+                        dumbSave(name, inputValue);
+                    }
+                }
+            }
+
+            @Nullable
+            private JEditorPane getEditorPane(@NotNull KeyEvent e) {
+                Object source = e.getSource();
+                if (source instanceof JEditorPane) {
+                    return (JEditorPane) source;
+                }
+                return null;
+            }
+
+            private void dumbSave(@NotNull String name, @NotNull String value) {
+                switch (name) {
+                    case IDENTITY_HEAD:
+                        headCache.put(chooseRequest, value);
+                        break;
+                    case IDENTITY_BODY:
+                        bodyCache.put(chooseRequest, value);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
+        requestHead.addKeyListener(keyListener);
+        requestBody.addKeyListener(keyListener);
     }
 
-    public void setRequest(Request request) {
+    public void setRequest(@Nullable Request request) {
+        this.chooseRequest = request;
+
         HttpMethod selItem = HttpMethod.GET;
         String reqUrl = "";
+        String reqHead = "";
         String reqBody = "";
 
         try {
@@ -217,8 +285,17 @@ public class RestDetail extends JPanel {
                 selItem = request.getMethod() == null || request.getMethod() == HttpMethod.REQUEST ?
                         HttpMethod.GET : request.getMethod();
 
-                convert.setPsiMethod(request.getPsiMethod());
-                reqBody = convert.formatString();
+                if (headCache.containsKey(request)) {
+                    reqHead = headCache.getOrDefault(request, "");
+                }
+
+                if (bodyCache.containsKey(request)) {
+                    reqBody = bodyCache.getOrDefault(request, "");
+                } else {
+                    convert.setPsiMethod(request.getPsiMethod());
+                    reqBody = convert.formatString();
+                    bodyCache.put(request, reqBody);
+                }
             }
         } catch (PsiInvalidElementAccessException e) {
             /*
@@ -232,6 +309,7 @@ public class RestDetail extends JPanel {
 
         requestMethod.setSelectedItem(selItem);
         requestUrl.setText(reqUrl);
+        requestHead.setText(reqHead);
         requestBody.setText(reqBody);
     }
 

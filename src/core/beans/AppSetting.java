@@ -32,6 +32,11 @@ public class AppSetting {
     @NotNull
     public String iconTypeClass = "";
 
+    /**
+     * 是否启用RestDetail的cache缓存
+     */
+    public boolean enableCacheOfRestDetail;
+
     public void initValue() {
         this.scanServicesWithLibraryDefault = false;
         this.iconTypeClass = IconTypeManager.formatClass(DefaultIcon.class);
@@ -42,7 +47,8 @@ public class AppSetting {
             return false;
         }
         return this.scanServicesWithLibraryDefault != setting.scanServicesWithLibraryDefault ||
-                !this.iconTypeClass.equals(setting.iconTypeClass);
+                !this.iconTypeClass.equals(setting.iconTypeClass) ||
+                this.enableCacheOfRestDetail != setting.enableCacheOfRestDetail;
     }
 
     public void applySetting(@Nullable AppSetting setting) {
@@ -51,5 +57,6 @@ public class AppSetting {
         }
         this.scanServicesWithLibraryDefault = setting.scanServicesWithLibraryDefault;
         this.iconTypeClass = setting.iconTypeClass;
+        this.enableCacheOfRestDetail = setting.enableCacheOfRestDetail;
     }
 }

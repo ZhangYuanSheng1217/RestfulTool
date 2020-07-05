@@ -15,6 +15,7 @@ import core.beans.PropertiesKey;
 import core.beans.Request;
 import core.service.Notify;
 import core.service.topic.RefreshServiceTreeTopic;
+import core.service.topic.RestDetailTopic;
 import core.service.topic.ServiceTreeTopic;
 import core.utils.RestUtil;
 import core.utils.SystemUtil;
@@ -248,6 +249,10 @@ public class RightToolWindow extends JSplitPane {
     public void renderRequestTree() {
         ServiceTreeTopic restTopic = project.getMessageBus().syncPublisher(ServiceTreeTopic.TOPIC);
         DumbService.getInstance(project).runWhenSmart(() -> restTopic.action(getRequests()));
+
+        // 清除RestDetail中的Cache缓存
+        RestDetailTopic restDetailTopic = project.getMessageBus().syncPublisher(RestDetailTopic.TOPIC);
+        restDetailTopic.clearCache(null);
     }
 
     /**

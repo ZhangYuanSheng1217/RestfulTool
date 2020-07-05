@@ -132,14 +132,14 @@ public class SpringHelper {
                 // method可能为数组
                 Object value = RestUtil.getAttributeValue(attribute.getAttributeValue());
                 if (value instanceof String) {
-                    methods.add(HttpMethod.valueOf((String) value));
+                    methods.add(HttpMethod.parse(value));
                 } else if (value instanceof List) {
                     //noinspection unchecked,rawtypes
                     List<String> list = (List) value;
                     for (String item : list) {
                         if (item != null) {
                             item = item.substring(item.lastIndexOf(".") + 1);
-                            methods.add(HttpMethod.valueOf(item));
+                            methods.add(HttpMethod.parse(item));
                         }
                     }
                 }

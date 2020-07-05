@@ -38,7 +38,7 @@ public abstract class BaseConvert<V> {
     }
 
     public BaseConvert(@NotNull PsiMethod psiMethod) {
-        this.psiMethod = psiMethod;
+        this.setPsiMethod(psiMethod);
     }
 
     public void setPsiMethod(@NotNull PsiMethod psiMethod) {
@@ -132,7 +132,6 @@ public abstract class BaseConvert<V> {
             String parameterName = parameter.getName();
             PsiType parameterType = parameter.getType();
 
-            boolean hasRequestParamAnnotation = false;
             for (PsiAnnotation parameterAnnotation : parameterAnnotations) {
                 if (!SpringHttpMethodAnnotation.REQUEST_PARAM.getQualifiedName().equals(parameterAnnotation.getQualifiedName())) {
                     continue;
@@ -146,7 +145,6 @@ public abstract class BaseConvert<V> {
                     Object value = RestUtil.getAttributeValue(attribute.getAttributeValue());
                     if (value != null) {
                         parameterName = value.toString();
-                        hasRequestParamAnnotation = !hasRequestParamAnnotation;
                     }
                 }
             }

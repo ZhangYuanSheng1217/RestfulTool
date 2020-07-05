@@ -1,7 +1,7 @@
 <idea-plugin url="https://www.jetbrains.com/idea">
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.2.2.1-RELEASE</version>
+    <version>1.2.3-RELEASE</version>
     <vendor email="2862297923@qq.com" url="">Yuonsa</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -26,8 +26,7 @@
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
       <ul>
-        <li> fix: 支持pom文件中已定义的${name}读取 </li>
-        <li> fix: 最外层`@RequestMapping("/api/")`时无法正常读取 </li>
+        <li> 支持Request的Body及Head缓存（刷新时会重置，默认关闭，在设置中开启） </li>
       </ul>
     ]]>
     </change-notes>
@@ -61,6 +60,9 @@
 
         <projectService serviceInterface="core.service.Notify"
                         serviceImplementation="core.service.impl.NotificationImpl"/>
+
+        <projectService serviceInterface="core.service.CacheService"
+                        serviceImplementation="core.service.impl.CacheServiceImpl"/>
     </extensions>
 
     <actions>
