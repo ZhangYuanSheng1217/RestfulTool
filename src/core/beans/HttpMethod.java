@@ -59,7 +59,12 @@ public enum HttpMethod {
     /**
      * HEAD
      */
-    HEAD;
+    HEAD,
+
+    /**
+     * TRACE
+     */
+    TRACE;
 
     @NotNull
     public static HttpMethod[] getValues() {

@@ -32,6 +32,8 @@ public class DefaultIcon implements IconType {
     public static final Icon PUT = Icons.load("/icons/method/default/PUT.png");
     public static final Icon PATCH = Icons.load("/icons/method/default/PATCH.png");
     public static final Icon HEAD = Icons.load("/icons/method/default/HEAD.png");
+    public static final Icon OPTIONS = Icons.load("/icons/method/default/OPTIONS.png");
+    public static final Icon TRACE = Icons.load("/icons/method/default/TRACE.png");
 
     private static final Map<HttpMethod, Icon> ICONS;
 
@@ -44,6 +46,8 @@ public class DefaultIcon implements IconType {
         ICONS.put(HttpMethod.PUT, PUT);
         ICONS.put(HttpMethod.PATCH, PATCH);
         ICONS.put(HttpMethod.HEAD, HEAD);
+        ICONS.put(HttpMethod.OPTIONS, OPTIONS);
+        ICONS.put(HttpMethod.TRACE, TRACE);
     }
 
     @NotNull

@@ -51,6 +51,12 @@ public class CuteIcon implements IconType {
     public static final Icon HEAD = load("/icons/method/cute/HEAD.svg");
     public static final Icon HEAD_SELECT = load("/icons/method/cute/HEAD_select.svg");
 
+    public static final Icon OPTIONS = load("/icons/method/cute/OPTIONS.svg");
+    public static final Icon OPTIONS_SELECT = load("/icons/method/cute/OPTIONS_select.svg");
+
+    public static final Icon TRACE = load("/icons/method/cute/TRACE.svg");
+    public static final Icon TRACE_SELECT = load("/icons/method/cute/TRACE_select.svg");
+
     private static final Map<HttpMethod, Icon> ICONS;
     private static final Map<HttpMethod, Icon> ICONS_SELECT;
 
@@ -63,6 +69,8 @@ public class CuteIcon implements IconType {
         ICONS.put(HttpMethod.PUT, PUT);
         ICONS.put(HttpMethod.PATCH, PATCH);
         ICONS.put(HttpMethod.HEAD, HEAD);
+        ICONS.put(HttpMethod.OPTIONS, OPTIONS);
+        ICONS.put(HttpMethod.TRACE, TRACE);
 
         ICONS_SELECT = new HashMap<>(HttpMethod.values().length);
         ICONS_SELECT.put(HttpMethod.REQUEST, REQUEST_SELECT);
@@ -72,6 +80,8 @@ public class CuteIcon implements IconType {
         ICONS_SELECT.put(HttpMethod.PUT, PUT_SELECT);
         ICONS_SELECT.put(HttpMethod.PATCH, PATCH_SELECT);
         ICONS_SELECT.put(HttpMethod.HEAD, HEAD_SELECT);
+        ICONS_SELECT.put(HttpMethod.OPTIONS, OPTIONS_SELECT);
+        ICONS_SELECT.put(HttpMethod.TRACE, TRACE_SELECT);
     }
 
     @NotNull
