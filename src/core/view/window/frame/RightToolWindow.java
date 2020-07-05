@@ -103,7 +103,9 @@ public class RightToolWindow extends JSplitPane {
     }
 
     private void initView(@NotNull JPanel headPanel) {
-        JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        // JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        JPanel toolBar = new JPanel();
+        toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.X_AXIS));
         headPanel.add(toolBar, BorderLayout.NORTH);
 
         scanApi = new JXButton(AllIcons.Actions.Refresh);

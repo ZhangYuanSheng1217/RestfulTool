@@ -69,9 +69,12 @@ public enum HttpMethod {
     public static HttpMethod parse(@Nullable Object method) {
         try {
             assert method != null;
-            return HttpMethod.parse(method);
+            if (method instanceof HttpMethod) {
+                return (HttpMethod) method;
+            }
+            return HttpMethod.valueOf(method.toString());
         } catch (Exception ignore) {
-            return GET;
+            return REQUEST;
         }
     }
 }
