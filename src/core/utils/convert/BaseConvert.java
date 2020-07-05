@@ -184,7 +184,7 @@ public abstract class BaseConvert<V> {
                         Map<String, Object> map = new HashMap<>();
                         for (PsiClass psiClass : fileClasses) {
                             if (type.getReference().getQualifiedName().equals(psiClass.getQualifiedName())) {
-                                PsiField[] fields = psiClass.getFields();
+                                PsiField[] fields = psiClass.getAllFields();
                                 for (PsiField field : fields) {
                                     String fieldName = field.getName();
                                     Object defaultData = getTypeDefaultData(method, field.getType());
