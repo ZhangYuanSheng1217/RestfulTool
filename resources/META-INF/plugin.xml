@@ -27,6 +27,8 @@
     <change-notes><![CDATA[
       <ul>
         <li> 支持Request的Body及Head缓存（刷新时会重置，默认关闭，在设置中开启） </li>
+        <li> 支持 Controller 上直接右键复制 FullPath | APIPath </li>
+        <li> fix some bug </li>
       </ul>
     ]]>
     </change-notes>
@@ -72,6 +74,16 @@
             <add-to-group group-id="GoToTargetEx" anchor="first"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt SLASH"/>
         </action>
+        <group id="RestfulTool.action.OptionForEditors" icon="/icons/service.png"
+               text="Restful Options" class="core.actions.OptionForEditorGroups">
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+            <action id="RestfulTool.action.OptionForEditor-CopyFullPath"
+                    class="core.actions.copy.CopyFullAction"
+                    text="Copy Full Path"/>
+            <action id="RestfulTool.action.OptionForEditor-CopyApiPath"
+                    class="core.actions.copy.CopyApiAction"
+                    text="Copy API Path"/>
+        </group>
     </actions>
 
     <projectListeners>

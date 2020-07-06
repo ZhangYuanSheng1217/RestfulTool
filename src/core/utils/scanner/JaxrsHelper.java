@@ -43,6 +43,10 @@ public class JaxrsHelper {
         return requests;
     }
 
+    public static boolean hasRestful(@NotNull PsiClass psiClass) {
+        return psiClass.hasAnnotation(Control.Path.getQualifiedName());
+    }
+
     @NotNull
     private static List<PsiClassBean> scanHasPathFiles(@NotNull Project project, @NotNull Module module) {
         Set<PsiClassBean> classSets = new HashSet<>();

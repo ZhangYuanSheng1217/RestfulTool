@@ -2,8 +2,7 @@ package core.service.topic;
 
 import com.intellij.util.messages.Topic;
 import core.beans.Request;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author ZhangYuanSheng

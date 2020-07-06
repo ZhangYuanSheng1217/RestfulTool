@@ -27,6 +27,7 @@ import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextField;
 import core.beans.HttpMethod;
 import core.beans.Request;
+import core.configuration.AppSettingsState;
 import core.service.Notify;
 import core.service.topic.RestDetailTopic;
 import core.utils.RestUtil;
@@ -230,7 +231,7 @@ public class RestDetail extends JPanel {
                     if (editorPane != null) {
                         String name = editorPane.getName();
                         String inputValue = editorPane.getText();
-                        dumbSave(name, inputValue);
+                        setCache(name, chooseRequest, inputValue);
                     }
                 }
             }
@@ -242,19 +243,6 @@ public class RestDetail extends JPanel {
                     return (JEditorPane) source;
                 }
                 return null;
-            }
-
-            private void dumbSave(@NotNull String name, @NotNull String value) {
-                switch (name) {
-                    case IDENTITY_HEAD:
-                        headCache.put(chooseRequest, value);
-                        break;
-                    case IDENTITY_BODY:
-                        bodyCache.put(chooseRequest, value);
-                        break;
-                    default:
-                        break;
-                }
             }
         };
         requestHead.addKeyListener(keyListener);
@@ -286,15 +274,15 @@ public class RestDetail extends JPanel {
                         HttpMethod.GET : request.getMethod();
 
                 if (headCache.containsKey(request)) {
-                    reqHead = headCache.getOrDefault(request, "");
+                    reqHead = getCache(IDENTITY_HEAD, request);
                 }
 
                 if (bodyCache.containsKey(request)) {
-                    reqBody = bodyCache.getOrDefault(request, "");
+                    reqBody = getCache(IDENTITY_BODY, request);
                 } else {
                     convert.setPsiMethod(request.getPsiMethod());
                     reqBody = convert.formatString();
-                    bodyCache.put(request, reqBody);
+                    setCache(IDENTITY_BODY, request, reqBody);
                 }
             }
         } catch (PsiInvalidElementAccessException e) {
@@ -384,6 +372,38 @@ public class RestDetail extends JPanel {
             }
         }
         return resp;
+    }
+
+    @NotNull
+    private String getCache(@NotNull String name, @NotNull Request request) {
+        boolean enable = AppSettingsState.getInstance().getAppSetting().enableCacheOfRestDetail;
+        if (enable) {
+            switch (name) {
+                case IDENTITY_HEAD:
+                    return headCache.getOrDefault(request, "");
+                case IDENTITY_BODY:
+                    return bodyCache.getOrDefault(request, "");
+                default:
+                    break;
+            }
+        }
+        return "";
+    }
+
+    private void setCache(@NotNull String name, @NotNull Request request, @NotNull String cache) {
+        boolean enable = AppSettingsState.getInstance().getAppSetting().enableCacheOfRestDetail;
+        if (enable) {
+            switch (name) {
+                case IDENTITY_HEAD:
+                    headCache.put(request, cache);
+                    break;
+                case IDENTITY_BODY:
+                    bodyCache.put(request, cache);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     public interface DetailHandle {

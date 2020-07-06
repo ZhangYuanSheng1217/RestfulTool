@@ -145,6 +145,19 @@ public class RestUtil {
     }
 
     /**
+     * 检测当前 PsiClass 是否含有`RestController` | `Controller` | `Path`
+     *
+     * @param psiClass psiClass
+     * @return bool
+     */
+    public static boolean hasRestful(@Nullable PsiClass psiClass) {
+        if (psiClass == null) {
+            return false;
+        }
+        return SpringHelper.hasRestful(psiClass) || JaxrsHelper.hasRestful(psiClass);
+    }
+
+    /**
      * 获取properties-element的值
      *
      * @param element element

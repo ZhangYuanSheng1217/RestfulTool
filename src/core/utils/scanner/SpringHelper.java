@@ -67,6 +67,10 @@ public class SpringHelper {
         return moduleList;
     }
 
+    public static boolean hasRestful(@NotNull PsiClass psiClass) {
+        return psiClass.hasAnnotation(Control.Controller.getQualifiedName()) || psiClass.hasAnnotation(Control.RestController.getQualifiedName());
+    }
+
     /**
      * 获取所有的控制器类
      *
@@ -216,21 +220,27 @@ public class SpringHelper {
         /**
          * <p>@Controller</p>
          */
-        Controller("Controller"),
+        Controller("Controller", "org.springframework.web.bind.annotation.Controller"),
 
         /**
          * <p>@RestController</p>
          */
-        RestController("RestController");
+        RestController("RestController", "org.springframework.web.bind.annotation.RestController");
 
         private final String name;
+        private final String qualifiedName;
 
-        Control(String name) {
+        Control(String name, String qualifiedName) {
             this.name = name;
+            this.qualifiedName = qualifiedName;
         }
 
         public String getName() {
             return name;
+        }
+
+        public String getQualifiedName() {
+            return qualifiedName;
         }
     }
 }
