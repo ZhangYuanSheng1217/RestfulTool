@@ -41,30 +41,42 @@ public class SpringHelper {
         }
 
         for (PsiClass controllerClass : controllers) {
-            List<Request> parentRequests = new ArrayList<>(0);
-            List<Request> childrenRequests = new ArrayList<>();
-            PsiAnnotation psiAnnotation = RestUtil.getClassAnnotation(
-                    controllerClass,
-                    SpringHttpMethodAnnotation.REQUEST_MAPPING.getQualifiedName()
-            );
-            if (psiAnnotation != null) {
-                parentRequests = getRequests(psiAnnotation, null);
-            }
-
-            PsiMethod[] psiMethods = controllerClass.getAllMethods();
-            for (PsiMethod psiMethod : psiMethods) {
-                childrenRequests.addAll(getRequests(psiMethod));
-            }
-            if (parentRequests.isEmpty()) {
-                moduleList.addAll(childrenRequests);
-            } else {
-                parentRequests.forEach(parentRequest -> childrenRequests.forEach(childrenRequest -> {
-                    Request request = childrenRequest.copyWithParent(parentRequest);
-                    moduleList.add(request);
-                }));
-            }
+            moduleList.addAll(getRequests(controllerClass));
         }
         return moduleList;
+    }
+
+    @NotNull
+    public static List<Request> getRequests(PsiClass psiClass) {
+        List<Request> requests = new ArrayList<>();
+        List<Request> parentRequests = new ArrayList<>();
+        List<Request> childrenRequests = new ArrayList<>();
+
+        String qualifiedName = SpringHttpMethodAnnotation.REQUEST_MAPPING.getQualifiedName();
+        if (psiClass.getResolveScope().isSearchInLibraries()) {
+            qualifiedName = SpringHttpMethodAnnotation.REQUEST_MAPPING.getShortName();
+        }
+        PsiAnnotation psiAnnotation = RestUtil.getClassAnnotation(
+                psiClass,
+                qualifiedName
+        );
+        if (psiAnnotation != null) {
+            parentRequests = getRequests(psiAnnotation, null);
+        }
+
+        PsiMethod[] psiMethods = psiClass.getAllMethods();
+        for (PsiMethod psiMethod : psiMethods) {
+            childrenRequests.addAll(getRequests(psiMethod));
+        }
+        if (parentRequests.isEmpty()) {
+            requests.addAll(childrenRequests);
+        } else {
+            parentRequests.forEach(parentRequest -> childrenRequests.forEach(childrenRequest -> {
+                Request request = childrenRequest.copyWithParent(parentRequest);
+                requests.add(request);
+            }));
+        }
+        return requests;
     }
 
     public static boolean hasRestful(@NotNull PsiClass psiClass) {
@@ -119,6 +131,9 @@ public class SpringHelper {
         SpringHttpMethodAnnotation spring = SpringHttpMethodAnnotation.getByQualifiedName(
                 annotation.getQualifiedName()
         );
+        if (annotation.getResolveScope().isSearchInLibraries()) {
+            spring = SpringHttpMethodAnnotation.getByShortName(annotation.getQualifiedName());
+        }
         if (spring == null) {
             return Collections.emptyList();
         }

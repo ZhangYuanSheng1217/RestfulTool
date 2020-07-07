@@ -1,7 +1,7 @@
 <idea-plugin url="https://www.jetbrains.com/idea">
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.2.3-RELEASE</version>
+    <version>1.2.3.1-RELEASE</version>
     <vendor email="2862297923@qq.com" url="">Yuonsa</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -26,8 +26,8 @@
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
       <ul>
-        <li> 支持Request的Body及Head缓存（刷新时会重置，默认关闭，在设置中开启） </li>
-        <li> 支持 Controller 上直接右键复制 FullPath | APIPath </li>
+        <li> 支持 Controller 类名上右键`Show Current Class RESTFul`查看当前Class的接口列表 </li>
+        <li> 优化代码结构 </li>
         <li> fix some bug </li>
       </ul>
     ]]>
@@ -74,9 +74,14 @@
             <add-to-group group-id="GoToTargetEx" anchor="first"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt SLASH"/>
         </action>
-        <group id="RestfulTool.action.OptionForEditors" icon="/icons/service.png"
-               text="Restful Options" class="core.actions.OptionForEditorGroups">
+        <action id="RestfulTool.action.OptionForEditor-CurrentClassTree"
+                class="core.actions.dialog.CurrClassTreeAction"
+                text="Show Current Class RESTFul">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+        </action>
+        <group id="RestfulTool.action.OptionForEditors" icon="/icons/service.png"
+               text="Restful Options" class="core.actions.copy.OptionForEditorGroups">
+            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="RestfulTool.action.OptionForEditor-CurrentClassTree"/>
             <action id="RestfulTool.action.OptionForEditor-CopyFullPath"
                     class="core.actions.copy.CopyFullAction"
                     text="Copy Full Path"/>

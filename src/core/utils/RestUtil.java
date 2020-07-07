@@ -285,6 +285,19 @@ public class RestUtil {
         return Collections.emptyList();
     }
 
+    @NotNull
+    public static List<Request> getCurrClassRequests(@Nullable PsiClass psiClass) {
+        if (psiClass == null) {
+            return Collections.emptyList();
+        }
+        List<Request> requests;
+        if (!(requests = SpringHelper.getRequests(psiClass)).isEmpty()) {
+            return requests;
+        }
+        requests = JaxrsHelper.getCurrClassRequests(psiClass);
+        return requests;
+    }
+
     /**
      * 获取url
      *
