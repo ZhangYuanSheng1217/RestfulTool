@@ -489,49 +489,71 @@ public class RestUtil {
         if (conf instanceof PropertiesFile) {
             // application.properties
             PropertiesFile propertiesFile = (PropertiesFile) conf;
+            String result = propertiesFile.getNamesMap().get(name);
+
             String active = propertiesFile.getNamesMap().get("spring.profiles.active");
             if (StringUtil.isNotEmpty(active)) {
                 conf = getScanConfigurationFile(project, scope, active);
                 if (conf instanceof PropertiesFile) {
                     propertiesFile = (PropertiesFile) conf;
+                    String readTemp = propertiesFile.getNamesMap().get(name);
+                    if (readTemp != null) {
+                        result = readTemp;
+                    }
                 }
             }
-            return propertiesFile.getNamesMap().get(name);
+            return result;
         } else if (conf instanceof YAMLFile) {
             // application.yml
             YAMLFile yamlFile = (YAMLFile) conf;
 
+            // 获取application.yml文件默认profile的value
+            YAMLKeyValue resultValue = YAMLUtil.getQualifiedKeyInFile(
+                    yamlFile,
+                    name.split("\\.")
+            );
+
+            // 获取application.yml文件默认profile定义的active
             YAMLKeyValue activeYaml = YAMLUtil.getQualifiedKeyInFile(yamlFile, "spring", "profiles", "active");
             if (activeYaml != null && StringUtil.isNotEmpty(activeYaml.getValueText())) {
-                String active = activeYaml.getValueText();
-                if (yamlFile.getDocuments().size() > 1) {
-                    for (YAMLDocument yamlFileDocument : yamlFile.getDocuments()) {
+                String profileName = activeYaml.getValueText();
+
+                // 先查看application.yml中是否定义了多个profile
+                List<YAMLDocument> documents = yamlFile.getDocuments();
+                if (documents.size() > 1) {
+                    for (int i = 1; i < documents.size(); i++) {
+                        YAMLDocument yamlDocument = documents.get(i);
+                        // 当前定义 profile 的名称
                         YAMLKeyValue yamlKeyValue = YAMLUtil.getQualifiedKeyInDocument(
-                                yamlFileDocument,
+                                yamlDocument,
                                 Arrays.asList("spring", "profiles")
                         );
-                        if (yamlKeyValue != null && active.equals(yamlKeyValue.getValueText())) {
+                        if (yamlKeyValue != null && profileName.equals(yamlKeyValue.getValueText())) {
                             YAMLKeyValue keyValue = YAMLUtil.getQualifiedKeyInDocument(
-                                    yamlFileDocument,
+                                    yamlDocument,
                                     Arrays.asList(name.split("\\."))
                             );
                             if (keyValue != null) {
-                                return keyValue.getValueText();
+                                resultValue = keyValue;
                             }
                         }
                     }
                 }
-                conf = getScanConfigurationFile(project, scope, active);
-                if (conf instanceof YAMLFile) {
+                // 内置profile未找到则寻找 classpath:application-${profileName}.yml
+                if ((conf = getScanConfigurationFile(project, scope, profileName)) instanceof YAMLFile) {
                     yamlFile = (YAMLFile) conf;
+                    YAMLKeyValue keyValue = YAMLUtil.getQualifiedKeyInFile(
+                            yamlFile,
+                            name.split("\\.")
+                    );
+                    if (keyValue != null) {
+                        resultValue = keyValue;
+                    }
                 }
             }
-            YAMLKeyValue server = YAMLUtil.getQualifiedKeyInFile(
-                    yamlFile,
-                    name.split("\\.")
-            );
-            if (server != null) {
-                return server.getValueText();
+
+            if (resultValue != null) {
+                return resultValue.getValueText();
             }
         }
         return null;
