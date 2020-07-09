@@ -45,11 +45,14 @@
 >   - `.\plugins\properties\lib\properties.jar`
 >   - `.\plugins\yaml\lib\yaml.jar`
 
-### 舔砖Java
+### 添砖加瓦
 > - 增加适配图标
 >   - 将16x16的svg图标文件放入`/icons/method/{图标主题名}`
 >   - 仿照`DefaultIcon`类写一个实现`IconType`接口的图标主题类(可以直接复制更改)
 >   - 在`IconTypeManager#getIconTypes`中根据示例加入新建的图标主题类
+
+### 捐助
+    如果您觉得我们的开源软件对你有所帮助，请扫下方二维码打赏我们一杯咖啡。
 
 #### 参考
 > + 插件地址 - [RESTFullToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit/)

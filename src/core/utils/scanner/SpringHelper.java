@@ -47,19 +47,21 @@ public class SpringHelper {
     }
 
     @NotNull
-    public static List<Request> getRequests(PsiClass psiClass) {
+    public static List<Request> getRequests(@NotNull PsiClass psiClass) {
         List<Request> requests = new ArrayList<>();
         List<Request> parentRequests = new ArrayList<>();
         List<Request> childrenRequests = new ArrayList<>();
 
-        String qualifiedName = SpringHttpMethodAnnotation.REQUEST_MAPPING.getQualifiedName();
-        if (psiClass.getResolveScope().isSearchInLibraries()) {
-            qualifiedName = SpringHttpMethodAnnotation.REQUEST_MAPPING.getShortName();
-        }
         PsiAnnotation psiAnnotation = RestUtil.getClassAnnotation(
                 psiClass,
-                qualifiedName
+                SpringHttpMethodAnnotation.REQUEST_MAPPING.getQualifiedName()
         );
+        if (psiAnnotation == null) {
+            psiAnnotation = RestUtil.getClassAnnotation(
+                    psiClass,
+                    SpringHttpMethodAnnotation.REQUEST_MAPPING.getShortName()
+            );
+        }
         if (psiAnnotation != null) {
             parentRequests = getRequests(psiAnnotation, null);
         }
