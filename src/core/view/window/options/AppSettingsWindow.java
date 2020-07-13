@@ -12,8 +12,12 @@ package core.view.window.options;
 
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBCheckBox;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.util.ui.FormBuilder;
+import com.intellij.util.ui.JBEmptyBorder;
+import com.intellij.util.ui.JBUI;
 import core.beans.AppSetting;
+import core.view.components.editor.StyleType;
 import core.view.icon.IconType;
 import core.view.icon.IconTypeManager;
 import core.view.icon.PreviewIconType;
@@ -38,12 +42,18 @@ public class AppSettingsWindow {
 
     private final JBCheckBox enableCacheOfRestDetail;
 
+    private final ComboBox<StyleType> lightStyleType;
+    private final ComboBox<StyleType> darkStyleType;
+
     public AppSettingsWindow() {
         globalScanServiceWithLib = new JBCheckBox("Scan service with library on application default (全局配置)");
 
         selectIconType = new ComboBox<>(IconTypeManager.getIconTypes());
 
         enableCacheOfRestDetail = new JBCheckBox("Enable cache for Http Tool? (May increase memory footprint)");
+
+        lightStyleType = new ComboBox<>(StyleType.getLightStyles());
+        darkStyleType = new ComboBox<>(StyleType.getDarkStyles());
 
         content = FormBuilder.createFormBuilder()
                 .addComponent(new SystemOptions().getContent())
@@ -68,6 +78,12 @@ public class AppSettingsWindow {
         //noinspection ConstantConditions
         setting.iconTypeClass = IconTypeManager.formatClass(((IconType) selectIconType.getSelectedItem()).getClass());
         setting.enableCacheOfRestDetail = enableCacheOfRestDetail.isSelected();
+
+        StyleType lightSelected = (StyleType) lightStyleType.getSelectedItem();
+        StyleType darkSelected = (StyleType) darkStyleType.getSelectedItem();
+        setting.lightStyleType = lightSelected == null ? StyleType.DEFAULT.name : lightSelected.name;
+        setting.darkStyleType = darkSelected == null ? StyleType.DARK.name : darkSelected.name;
+
         return setting;
     }
 
@@ -78,6 +94,9 @@ public class AppSettingsWindow {
         globalScanServiceWithLib.setSelected(setting.scanServicesWithLibraryDefault);
         selectIconType.setSelectedItem(IconTypeManager.getInstance(IconTypeManager.formatName(setting.iconTypeClass)));
         enableCacheOfRestDetail.setSelected(setting.enableCacheOfRestDetail);
+
+        lightStyleType.setSelectedItem(StyleType.parse(setting.lightStyleType, false));
+        darkStyleType.setSelectedItem(StyleType.parse(setting.darkStyleType, true));
     }
 
     private class SystemOptions extends OptionForm {
@@ -116,6 +135,28 @@ public class AppSettingsWindow {
             super("Http Tool");
 
             this.addOptionItem(enableCacheOfRestDetail);
+            this.addOptionItem(getStyleTypeView(), 10);
+        }
+
+        @NotNull
+        private JComponent getStyleTypeView() {
+            JPanel panel = new JPanel(new BorderLayout());
+
+            JComponent lightStylePane = FormBuilder.createFormBuilder()
+                    .addLabeledComponent("LightStyleType: ", AppSettingsWindow.this.lightStyleType)
+                    .getPanel();
+            JComponent darkStylePane = FormBuilder.createFormBuilder()
+                    .addLabeledComponent("DarkStyleType: ", darkStyleType)
+                    .getPanel();
+
+            panel.add(new JBLabel("Change JSON syntax highlighting scheme (Reopen the project to take effect)"), BorderLayout.NORTH);
+            panel.add(lightStylePane, BorderLayout.WEST);
+            panel.add(darkStylePane, BorderLayout.CENTER);
+
+            JBEmptyBorder emptyLeft = JBUI.Borders.emptyLeft(15);
+            lightStylePane.setBorder(emptyLeft);
+            darkStylePane.setBorder(emptyLeft);
+            return panel;
         }
     }
 }

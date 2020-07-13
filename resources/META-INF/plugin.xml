@@ -1,8 +1,8 @@
 <idea-plugin url="https://www.jetbrains.com/idea">
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.2.3.1-RELEASE</version>
-    <vendor email="2862297923@qq.com" url="">Yuonsa</vendor>
+    <version>1.2.4-RELEASE</version>
+    <vendor email="2862297923@qq.com" url="">ZhangYuanSheng</vendor>
 
     <!--suppress PluginXmlValidity -->
     <description><![CDATA[
@@ -26,8 +26,9 @@
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
       <ul>
-        <li> 支持 Controller 类名上右键`Show Current Class RESTFul`查看当前Class的接口列表 </li>
-        <li> 优化代码结构 </li>
+        <li> 增加HTTP工具中的请求头、请求体和返回结果的JSON格式高亮 </li>
+        <li> AppSetting中可设置 { 亮色 | 暗色 } 对应的JSON格式高亮主题 </li>
+        <li> 修复格式化JSON时缩进异常 </li>
         <li> fix some bug </li>
       </ul>
     ]]>
@@ -81,7 +82,8 @@
         </action>
         <group id="RestfulTool.action.OptionForEditors" icon="/icons/service.png"
                text="Restful Options" class="core.actions.copy.OptionForEditorGroups">
-            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="RestfulTool.action.OptionForEditor-CurrentClassTree"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="after"
+                          relative-to-action="RestfulTool.action.OptionForEditor-CurrentClassTree"/>
             <action id="RestfulTool.action.OptionForEditor-CopyFullPath"
                     class="core.actions.copy.CopyFullAction"
                     text="Copy Full Path"/>

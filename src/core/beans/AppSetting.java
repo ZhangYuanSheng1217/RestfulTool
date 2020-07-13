@@ -10,6 +10,7 @@
  */
 package core.beans;
 
+import core.view.components.editor.StyleType;
 import core.view.icon.IconTypeManager;
 import core.view.icon.impl.DefaultIcon;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +38,17 @@ public class AppSetting {
      */
     public boolean enableCacheOfRestDetail;
 
+    /**
+     * HTTP工具中的JSON语法高亮：亮色模式的主题
+     */
+    @NotNull
+    public String lightStyleType = StyleType.DEFAULT.name;
+    /**
+     * HTTP工具中的JSON语法高亮：暗色模式的主题
+     */
+    @NotNull
+    public String darkStyleType = StyleType.DARK.name;
+
     public void initValue() {
         this.scanServicesWithLibraryDefault = false;
         this.iconTypeClass = IconTypeManager.formatClass(DefaultIcon.class);
@@ -48,7 +60,9 @@ public class AppSetting {
         }
         return this.scanServicesWithLibraryDefault != setting.scanServicesWithLibraryDefault ||
                 !this.iconTypeClass.equals(setting.iconTypeClass) ||
-                this.enableCacheOfRestDetail != setting.enableCacheOfRestDetail;
+                this.enableCacheOfRestDetail != setting.enableCacheOfRestDetail ||
+                !this.lightStyleType.equals(setting.lightStyleType) ||
+                !this.darkStyleType.equals(setting.darkStyleType);
     }
 
     public void applySetting(@Nullable AppSetting setting) {
@@ -58,5 +72,7 @@ public class AppSetting {
         this.scanServicesWithLibraryDefault = setting.scanServicesWithLibraryDefault;
         this.iconTypeClass = setting.iconTypeClass;
         this.enableCacheOfRestDetail = setting.enableCacheOfRestDetail;
+        this.lightStyleType = setting.lightStyleType;
+        this.darkStyleType = setting.darkStyleType;
     }
 }
