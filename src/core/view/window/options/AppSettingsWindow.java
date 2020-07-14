@@ -76,7 +76,7 @@ public class AppSettingsWindow {
         AppSetting setting = new AppSetting();
         setting.scanServicesWithLibraryDefault = globalScanServiceWithLib.isSelected();
         //noinspection ConstantConditions
-        setting.iconTypeClass = IconTypeManager.formatClass(((IconType) selectIconType.getSelectedItem()).getClass());
+        setting.iconTypeScheme = IconTypeManager.getInstance(selectIconType.getSelectedItem()).toString();
         setting.enableCacheOfRestDetail = enableCacheOfRestDetail.isSelected();
 
         StyleType lightSelected = (StyleType) lightStyleType.getSelectedItem();
@@ -92,7 +92,7 @@ public class AppSettingsWindow {
             return;
         }
         globalScanServiceWithLib.setSelected(setting.scanServicesWithLibraryDefault);
-        selectIconType.setSelectedItem(IconTypeManager.getInstance(IconTypeManager.formatName(setting.iconTypeClass)));
+        selectIconType.setSelectedItem(IconTypeManager.getInstance(setting.iconTypeScheme));
         enableCacheOfRestDetail.setSelected(setting.enableCacheOfRestDetail);
 
         lightStyleType.setSelectedItem(StyleType.parse(setting.lightStyleType, false));

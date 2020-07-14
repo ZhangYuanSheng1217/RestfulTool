@@ -44,12 +44,21 @@
 > - If something goes wrong, please add the following lib to Platform SDK
 >   - `.\plugins\properties\lib\properties.jar`
 >   - `.\plugins\yaml\lib\yaml.jar`
+>
+>
+> - Add adapter icon scheme
+>   - Put the 16 x 16 svg icon file into `/icons/method/{iconThemeName}`
+>   - Icon naming method (only supports png | svg format):<br/>
+>
+>       | FileName | Directions |
+>       | :---: | :---: |
+>       | `GET.[svg,png]`                    | The default icon requested by `GET`       |
+>       | `GET_select.[svg,png]`             | Selected icon requested by `GET` method   |
+>       | `POST.[svg,png]`                   | The default icon requested by `POST`      |
+>       | `POST_select.[svg,png]`            | Selected icon requested by `POST`         |
+>       | `${HttpMethod}[_select].[svg,png]` | (Checked) icon requested by `Http Method` |
 
-### Perfect
-> - Add adapter icon
->   - Put the 16x16 svg icon file in`/icons/method/{IconThemeName}`
->   - Write an icon theme class that implements the Icon Type interface, imitating the `DefaultIcon` class
->   - Add a new icon theme class according to the example in `IconTypeManager#getIconTypes`
+>   - Refer to `/icons/method/default` or `/icons/method/cute`
 
 #### Reference
 > + Plugin address - [RESTFullToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit/)

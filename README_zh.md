@@ -44,12 +44,20 @@
 > - 如果运行出现问题，请在Platform SDK中增加以下lib
 >   - `.\plugins\properties\lib\properties.jar`
 >   - `.\plugins\yaml\lib\yaml.jar`
-
-### 添砖加瓦
+>
+>
 > - 增加适配图标
 >   - 将16x16的svg图标文件放入`/icons/method/{图标主题名}`
->   - 仿照`DefaultIcon`类写一个实现`IconType`接口的图标主题类(可以直接复制更改)
->   - 在`IconTypeManager#getIconTypes`中根据示例加入新建的图标主题类
+>   - 图标命名方式（只支持 png | svg 格式）:<br/>
+>
+>       | FileName | Directions |
+>       | :---: | :---: |
+>       | `GET.[svg,png]`                    | `GET`方式请求的默认图标          |
+>       | `GET_select.[svg,png]`             | `GET`方式请求的选中图标          |
+>       | `POST.[svg,png]`                   | `POST`方式请求的默认图标         |
+>       | `POST_select.[svg,png]`            | `POST`方式请求的选中图标         |
+>       | `${HttpMethod}[_select].[svg,png]` | `HttpMethod`方式请求的(选中)图标 |
+>   - 参考`/icons/method/default`或`/icons/method/cute`
 
 ### 捐助
     如果您觉得我们的开源软件对你有所帮助，请扫下方二维码打赏我们一杯咖啡。

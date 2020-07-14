@@ -43,7 +43,7 @@ public class Icons {
     }
 
     public static Icon getMethodIcon(@Nullable HttpMethod method, boolean selected) {
-        String iconTypeClass = AppSettingsState.getInstance().getAppSetting().iconTypeClass;
+        String iconTypeClass = AppSettingsState.getInstance().getAppSetting().iconTypeScheme;
         IconType iconType = IconTypeManager.getInstance(iconTypeClass);
         method = method == null ? HttpMethod.REQUEST : method;
         if (selected) {

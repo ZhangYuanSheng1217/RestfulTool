@@ -92,8 +92,9 @@ public class JsonTextArea extends RSyntaxTextArea {
      *
      * @return 当前应用的主题 {@link StyleType}
      */
+    @NotNull
     @SuppressWarnings("UnusedReturnValue")
-    public final StyleType autoSwitchTheme() {
+    public StyleType autoSwitchTheme() {
         AppSetting setting = AppSettingsState.getInstance().getAppSetting();
         boolean darkEditor = EditorColorsManager.getInstance().isDarkEditor();
         String styleType;

@@ -12,7 +12,6 @@ package core.beans;
 
 import core.view.components.editor.StyleType;
 import core.view.icon.IconTypeManager;
-import core.view.icon.impl.DefaultIcon;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,10 +27,10 @@ public class AppSetting {
     public boolean scanServicesWithLibraryDefault;
 
     /**
-     * 图标的类型具体实现类的className
+     * 图标的类型具体实现类的Scheme
      */
     @NotNull
-    public String iconTypeClass = "";
+    public String iconTypeScheme = "";
 
     /**
      * 是否启用RestDetail的cache缓存
@@ -51,7 +50,7 @@ public class AppSetting {
 
     public void initValue() {
         this.scanServicesWithLibraryDefault = false;
-        this.iconTypeClass = IconTypeManager.formatClass(DefaultIcon.class);
+        this.iconTypeScheme = IconTypeManager.getInstance("default").toString();
     }
 
     public boolean isModified(@Nullable AppSetting setting) {
@@ -59,7 +58,7 @@ public class AppSetting {
             return false;
         }
         return this.scanServicesWithLibraryDefault != setting.scanServicesWithLibraryDefault ||
-                !this.iconTypeClass.equals(setting.iconTypeClass) ||
+                !this.iconTypeScheme.equals(setting.iconTypeScheme) ||
                 this.enableCacheOfRestDetail != setting.enableCacheOfRestDetail ||
                 !this.lightStyleType.equals(setting.lightStyleType) ||
                 !this.darkStyleType.equals(setting.darkStyleType);
@@ -70,7 +69,7 @@ public class AppSetting {
             return;
         }
         this.scanServicesWithLibraryDefault = setting.scanServicesWithLibraryDefault;
-        this.iconTypeClass = setting.iconTypeClass;
+        this.iconTypeScheme = setting.iconTypeScheme;
         this.enableCacheOfRestDetail = setting.enableCacheOfRestDetail;
         this.lightStyleType = setting.lightStyleType;
         this.darkStyleType = setting.darkStyleType;
