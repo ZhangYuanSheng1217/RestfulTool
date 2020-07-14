@@ -59,9 +59,6 @@
 >       | `${HttpMethod}[_select].[svg,png]` | `HttpMethod`方式请求的(选中)图标 |
 >   - 参考`/icons/method/default`或`/icons/method/cute`
 
-### 捐助
-    如果您觉得我们的开源软件对你有所帮助，请扫下方二维码打赏我们一杯咖啡。
-
 #### 参考
 > + 插件地址 - [RESTFullToolkit](https://plugins.jetbrains.com/plugin/10292-restfultoolkit/)
 > + Github - [RESTFullToolkit](https://github.com/mrmanzhaow/RestfulToolkit)
