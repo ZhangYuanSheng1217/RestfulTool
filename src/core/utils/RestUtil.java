@@ -428,6 +428,35 @@ public class RestUtil {
     }
 
     /**
+     * 获取配置文件PsiFile
+     *
+     * @param project       project
+     * @param scope         scope
+     * @param qualifiedName 配置文件名（带后缀）
+     * @return PsiFile
+     */
+    @Nullable
+    private static PsiFile getConfigurationPsiFile(@NotNull Project project,
+                                                   @NotNull GlobalSearchScope scope,
+                                                   @NotNull String qualifiedName) {
+        try {
+            PsiFile[] files = FilenameIndex.getFilesByName(project, qualifiedName, scope);
+
+            for (PsiFile file : files) {
+                if (file instanceof PropertiesFile || file instanceof YAMLFile) {
+                    return file;
+                }
+            }
+        } catch (NoClassDefFoundError e) {
+            DumbService.getInstance(project).showDumbModeNotification(String.format(
+                    "IDE is missing the corresponding package file: %s",
+                    e.getMessage()
+            ));
+        }
+        return null;
+    }
+
+    /**
      * 获取扫描到的配置文件
      *
      * @param project project
@@ -450,24 +479,37 @@ public class RestUtil {
                 configurationPrefix + "." + YAMLFileType.DEFAULT_EXTENSION,
         };
 
-        try {
-            for (String configurationFileName : configurationFileNames) {
-                PsiFile[] files = FilenameIndex.getFilesByName(project, configurationFileName, scope);
-
-                for (PsiFile file : files) {
-                    if (file instanceof PropertiesFile || file instanceof YAMLFile) {
-                        // application.properties | application.yml
-                        return file;
-                    }
-                }
+        for (String configurationFileName : configurationFileNames) {
+            PsiFile psiFile = getConfigurationPsiFile(project, scope, configurationFileName);
+            if (psiFile != null) {
+                return psiFile;
             }
-        } catch (NoClassDefFoundError e) {
-            DumbService.getInstance(project).showDumbModeNotification(String.format(
-                    "IDE is missing the corresponding package file: %s",
-                    e.getMessage()
-            ));
         }
         return null;
+    }
+
+    @Nullable
+    public static String getBootstrapConfigValue(@NotNull Project project,
+                                                 @NotNull GlobalSearchScope scope,
+                                                 @NotNull String propName) {
+        final String bootstrapName = "bootstrap";
+        final String[] bootstrapNames = {
+                bootstrapName + "." + PropertiesFileType.DEFAULT_EXTENSION,
+                bootstrapName + "." + YAMLFileType.DEFAULT_EXTENSION
+        };
+
+        PsiFile psiFile = null;
+        for (String name : bootstrapNames) {
+            psiFile = getConfigurationPsiFile(project, scope, name);
+            if (psiFile != null) {
+                break;
+            }
+        }
+
+        if (psiFile == null) {
+            return null;
+        }
+        return getConfigValue(psiFile, propName);
     }
 
     /**
@@ -479,24 +521,28 @@ public class RestUtil {
      * @return {value | null}
      */
     @Nullable
-    private static String getConfigurationValue(@NotNull Project project,
-                                                @NotNull GlobalSearchScope scope,
-                                                @NotNull String name) {
+    public static String getConfigurationValue(@NotNull Project project,
+                                               @NotNull GlobalSearchScope scope,
+                                               @NotNull String name) {
         PsiFile conf = getScanConfigurationFile(project, scope, null);
         if (conf == null) {
             return null;
         }
+        String bootstrapConfigValue = getBootstrapConfigValue(project, scope, name);
+        if (bootstrapConfigValue != null) {
+            return bootstrapConfigValue;
+        }
         if (conf instanceof PropertiesFile) {
             // application.properties
             PropertiesFile propertiesFile = (PropertiesFile) conf;
-            String result = propertiesFile.getNamesMap().get(name);
+            String result = getPropertiesValue(propertiesFile, name);
 
-            String active = propertiesFile.getNamesMap().get("spring.profiles.active");
+            String active = getPropertiesValue(propertiesFile, "spring.profiles.active");
             if (StringUtil.isNotEmpty(active)) {
                 conf = getScanConfigurationFile(project, scope, active);
                 if (conf instanceof PropertiesFile) {
                     propertiesFile = (PropertiesFile) conf;
-                    String readTemp = propertiesFile.getNamesMap().get(name);
+                    String readTemp = getPropertiesValue(propertiesFile, name);
                     if (readTemp != null) {
                         result = readTemp;
                     }
@@ -508,15 +554,11 @@ public class RestUtil {
             YAMLFile yamlFile = (YAMLFile) conf;
 
             // 获取application.yml文件默认profile的value
-            YAMLKeyValue resultValue = YAMLUtil.getQualifiedKeyInFile(
-                    yamlFile,
-                    name.split("\\.")
-            );
+            String result = getYamlValue(yamlFile, name.split("\\."));
 
             // 获取application.yml文件默认profile定义的active
-            YAMLKeyValue activeYaml = YAMLUtil.getQualifiedKeyInFile(yamlFile, "spring", "profiles", "active");
-            if (activeYaml != null && StringUtil.isNotEmpty(activeYaml.getValueText())) {
-                String profileName = activeYaml.getValueText();
+            String profileName = getYamlValue(yamlFile, "spring", "profiles", "active");
+            if (StringUtil.isNotEmpty(profileName)) {
 
                 // 先查看application.yml中是否定义了多个profile
                 List<YAMLDocument> documents = yamlFile.getDocuments();
@@ -524,17 +566,11 @@ public class RestUtil {
                     for (int i = 1; i < documents.size(); i++) {
                         YAMLDocument yamlDocument = documents.get(i);
                         // 当前定义 profile 的名称
-                        YAMLKeyValue yamlKeyValue = YAMLUtil.getQualifiedKeyInDocument(
-                                yamlDocument,
-                                Arrays.asList("spring", "profiles")
-                        );
-                        if (yamlKeyValue != null && profileName.equals(yamlKeyValue.getValueText())) {
-                            YAMLKeyValue keyValue = YAMLUtil.getQualifiedKeyInDocument(
-                                    yamlDocument,
-                                    Arrays.asList(name.split("\\."))
-                            );
-                            if (keyValue != null) {
-                                resultValue = keyValue;
+                        String currProfileName = getYamlValue(yamlDocument, "spring", "profiles");
+                        if (profileName.equals(currProfileName)) {
+                            String currResult = getYamlValue(yamlDocument, name.split("\\."));
+                            if (currResult != null) {
+                                result = currResult;
                             }
                         }
                     }
@@ -542,16 +578,49 @@ public class RestUtil {
                 // 内置profile未找到则寻找 classpath:application-${profileName}.yml
                 if ((conf = getScanConfigurationFile(project, scope, profileName)) instanceof YAMLFile) {
                     yamlFile = (YAMLFile) conf;
-                    YAMLKeyValue keyValue = YAMLUtil.getQualifiedKeyInFile(
-                            yamlFile,
-                            name.split("\\.")
-                    );
-                    if (keyValue != null) {
-                        resultValue = keyValue;
+                    String currResult = getYamlValue(yamlFile, name.split("\\."));
+                    if (currResult != null) {
+                        result = currResult;
                     }
                 }
             }
 
+            return result;
+        }
+        return null;
+    }
+
+    @Nullable
+    public static String getConfigValue(@NotNull Object psiFile, @NotNull String propName) {
+        if (psiFile instanceof PropertiesFile) {
+            return getPropertiesValue(psiFile, propName);
+        } else if (psiFile instanceof YAMLFile || psiFile instanceof YAMLDocument) {
+            return getYamlValue(psiFile, propName.split("\\."));
+        }
+        return null;
+    }
+
+    @Nullable
+    private static String getPropertiesValue(@NotNull Object psiFile, @NotNull String propName) {
+        if (psiFile instanceof PropertiesFile) {
+            PropertiesFile config = (PropertiesFile) psiFile;
+            return config.getNamesMap().get(propName);
+        }
+        return null;
+    }
+
+    @Nullable
+    private static String getYamlValue(@NotNull Object psiFile, @NotNull String... propNames) {
+        if (psiFile instanceof YAMLFile) {
+            YAMLFile config = (YAMLFile) psiFile;
+            YAMLKeyValue resultValue = YAMLUtil.getQualifiedKeyInFile(config, propNames);
+            if (resultValue != null) {
+                return resultValue.getValueText();
+            }
+        }
+        if (psiFile instanceof YAMLDocument) {
+            YAMLDocument document = (YAMLDocument) psiFile;
+            YAMLKeyValue resultValue = YAMLUtil.getQualifiedKeyInDocument(document, Arrays.asList(propNames));
             if (resultValue != null) {
                 return resultValue.getValueText();
             }
