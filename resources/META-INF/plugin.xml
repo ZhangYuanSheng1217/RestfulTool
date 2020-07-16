@@ -42,56 +42,56 @@
     <depends>org.jetbrains.plugins.yaml</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="com.github.restfulTool.configuration.AppSettingsState"/>
+        <applicationService serviceImplementation="com.github.restful.tool.configuration.AppSettingsState"/>
 
         <applicationConfigurable parentId="tools"
-                                 instance="com.github.restfulTool.configuration.AppSettingsConfigurable"
-                                 id="com.github.restfulTool.configuration.AppSettingsConfigurable"
+                                 instance="com.github.restful.tool.configuration.AppSettingsConfigurable"
+                                 id="com.github.restful.tool.configuration.AppSettingsConfigurable"
                                  dynamic="true"/>
 
-        <projectService serviceInterface="com.github.restfulTool.service.RestfulToolService"
-                        serviceImplementation="com.github.restfulTool.service.impl.RestfulToolServiceImpl"/>
+        <projectService serviceInterface="com.github.restful.tool.service.RestfulToolService"
+                        serviceImplementation="com.github.restful.tool.service.impl.RestfulToolServiceImpl"/>
 
-        <projectService serviceImplementation="com.github.restfulTool.view.search.GotoRequestConfiguration"/>
+        <projectService serviceImplementation="com.github.restful.tool.view.search.GotoRequestConfiguration"/>
 
         <toolWindow id="RestfulTool" anchor="right"
-                    factoryClass="com.github.restfulTool.view.window.RestfulToolWindowFactory" order="last"
+                    factoryClass="com.github.restful.tool.view.window.RestfulToolWindowFactory" order="last"
                     doNotActivateOnStart="false" icon="/icons/service.png"/>
 
-        <projectService serviceInterface="com.github.restfulTool.service.Notify"
-                        serviceImplementation="com.github.restfulTool.service.impl.NotificationImpl"/>
+        <projectService serviceInterface="com.github.restful.tool.service.Notify"
+                        serviceImplementation="com.github.restful.tool.service.impl.NotificationImpl"/>
 
-        <projectService serviceInterface="com.github.restfulTool.service.CacheService"
-                        serviceImplementation="com.github.restfulTool.service.impl.CacheServiceImpl"/>
+        <projectService serviceInterface="com.github.restful.tool.service.CacheService"
+                        serviceImplementation="com.github.restful.tool.service.impl.CacheServiceImpl"/>
     </extensions>
 
     <actions>
-        <action id="Tool.GotoRequestService" class="com.github.restfulTool.view.search.GotoRequestAction"
+        <action id="Tool.GotoRequestService" class="com.github.restful.tool.view.search.GotoRequestAction"
                 text="Request _Service" description="Goto request service"
                 icon="AllIcons.Actions.Search">
             <add-to-group group-id="GoToTargetEx" anchor="first"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt SLASH"/>
         </action>
         <action id="RestfulTool.action.OptionForEditor-CurrentClassTree"
-                class="com.github.restfulTool.actions.dialog.CurrClassTreeAction"
+                class="com.github.restful.tool.actions.dialog.CurrClassTreeAction"
                 text="Show Current Class RESTFul">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </action>
         <group id="RestfulTool.action.OptionForEditors" icon="/icons/service.png"
-               text="Restful Options" class="com.github.restfulTool.actions.copy.OptionForEditorGroups">
+               text="Restful Options" class="com.github.restful.tool.actions.copy.OptionForEditorGroups">
             <add-to-group group-id="EditorPopupMenu" anchor="after"
                           relative-to-action="RestfulTool.action.OptionForEditor-CurrentClassTree"/>
             <action id="RestfulTool.action.OptionForEditor-CopyFullPath"
-                    class="com.github.restfulTool.actions.copy.CopyFullAction"
+                    class="com.github.restful.tool.actions.copy.CopyFullAction"
                     text="Copy Full Path"/>
             <action id="RestfulTool.action.OptionForEditor-CopyApiPath"
-                    class="com.github.restfulTool.actions.copy.CopyApiAction"
+                    class="com.github.restful.tool.actions.copy.CopyApiAction"
                     text="Copy API Path"/>
         </group>
     </actions>
 
     <projectListeners>
-        <listener class="com.github.restfulTool.service.impl.ToolWindowListenerImpl"
+        <listener class="com.github.restful.tool.service.impl.ToolWindowListenerImpl"
                   topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
     </projectListeners>
 
