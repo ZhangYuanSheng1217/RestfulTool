@@ -29,6 +29,7 @@ import core.beans.Request;
 import core.configuration.AppSettingsState;
 import core.service.topic.RestDetailTopic;
 import core.utils.RestUtil;
+import core.utils.SystemUtil;
 import core.utils.convert.BaseConvert;
 import core.utils.convert.JsonConvert;
 import core.view.components.editor.JsonTextArea;
@@ -247,7 +248,7 @@ public class RestDetail extends JPanel {
         try {
             if (request != null) {
                 GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
-                reqUrl = RestUtil.getRequestUrl(
+                reqUrl = SystemUtil.buildUrl(
                         RestUtil.scanListenerProtocol(project, scope),
                         RestUtil.scanListenerPort(project, scope),
                         RestUtil.scanContextPath(project, scope),

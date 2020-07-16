@@ -131,7 +131,7 @@ public interface CopyOption extends EditorOption {
                 if (i > 0) {
                     paths.append("\n");
                 }
-                paths.append(RestUtil.getRequestUrl(
+                paths.append(SystemUtil.buildUrl(
                         protocol,
                         port,
                         contextPath,
@@ -139,7 +139,7 @@ public interface CopyOption extends EditorOption {
                 ));
             }
         }
-        SystemUtil.setClipboardString(paths.toString());
+        SystemUtil.Clipboard.copy(paths.toString());
         Notify.getInstance(project).info("Copy path success.");
     }
 }

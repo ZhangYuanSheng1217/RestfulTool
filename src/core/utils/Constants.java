@@ -19,14 +19,19 @@ package core.utils;
 public final class Constants {
 
     /**
-     * 名称
+     * 应用
      */
-    public final static class Name {
+    public final static class Application {
+
+        /**
+         * 插件ID
+         */
+        public static final String ID = "cn.cloud.auto.restful.tool";
 
         /**
          * 插件名
          */
-        public static final String APP = "RestfulTool";
+        public static final String NAME = "RestfulTool";
 
         /**
          * 设置名

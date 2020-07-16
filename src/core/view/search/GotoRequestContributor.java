@@ -15,7 +15,7 @@ import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import core.beans.Request;
-import core.utils.RestUtil;
+import core.utils.RequestUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -42,10 +42,10 @@ public class GotoRequestContributor implements ChooseByNameContributor {
 
         List<Request> requests;
         if (includeNonProjectItems && module != null) {
-            requests = RestUtil.getAllRequestByModule(project, module);
+            requests = RequestUtil.getModuleRequests(project, module);
         } else {
             requests = new ArrayList<>();
-            RestUtil.getAllRequest(project).forEach((s, rs) -> requests.addAll(rs));
+            RequestUtil.getAllRequests(project).forEach((s, rs) -> requests.addAll(rs));
         }
         names = new ArrayList<>(requests.size());
 

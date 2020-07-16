@@ -12,18 +12,15 @@ package core.utils;
 
 import cn.hutool.core.util.ReUtil;
 import com.intellij.lang.jvm.annotation.*;
-import com.intellij.lang.properties.PropertiesFileType;
-import com.intellij.lang.properties.psi.PropertiesFile;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.*;
-import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiExpression;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
-import core.beans.PropertiesKey;
 import core.beans.Request;
 import core.utils.scanner.JaxrsHelper;
 import core.utils.scanner.SpringHelper;
@@ -31,18 +28,15 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.intellij.lang.annotations.Language;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.yaml.YAMLFileType;
-import org.jetbrains.yaml.YAMLUtil;
-import org.jetbrains.yaml.psi.YAMLDocument;
-import org.jetbrains.yaml.psi.YAMLFile;
-import org.jetbrains.yaml.psi.YAMLKeyValue;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author ZhangYuanSheng
@@ -62,7 +56,7 @@ public class RestUtil {
         int port = 8080;
 
         try {
-            String value = getConfigurationValue(
+            String value = ProjectConfigUtil.getApplicationConfig(
                     project, scope,
                     "server.port"
             );
@@ -88,7 +82,7 @@ public class RestUtil {
         String protocol = "http";
 
         try {
-            String value = getConfigurationValue(project, scope, "server.ssl.enabled");
+            String value = ProjectConfigUtil.getApplicationConfig(project, scope, "server.ssl.enabled");
             if (value == null || "".equals((value = value.trim()))) {
                 throw new Exception();
             }
@@ -111,7 +105,7 @@ public class RestUtil {
     public static String scanContextPath(@NotNull Project project, @NotNull GlobalSearchScope scope) {
         // server.servlet.context-path
         try {
-            String contextPath = getConfigurationValue(
+            String contextPath = ProjectConfigUtil.getApplicationConfig(
                     project, scope,
                     "server.servlet.context-path"
             );
@@ -229,62 +223,6 @@ public class RestUtil {
         return response;
     }
 
-    /**
-     * 获取所有的Request
-     *
-     * @param project project
-     * @return map-{key: moduleName, value: itemRequestList}
-     */
-    @NotNull
-    public static Map<String, List<Request>> getAllRequest(@NotNull Project project) {
-        return getAllRequest(project, false);
-    }
-
-    /**
-     * 获取所有的Request
-     *
-     * @param hasEmpty 是否生成包含空Request的moduleName
-     * @param project  project
-     * @return map-{key: moduleName, value: itemRequestList}
-     */
-    @NotNull
-    public static Map<String, List<Request>> getAllRequest(@NotNull Project project, boolean hasEmpty) {
-        Map<String, List<Request>> map = new HashMap<>();
-
-        Module[] modules = ModuleManager.getInstance(project).getModules();
-        for (Module module : modules) {
-            List<Request> requests = getAllRequestByModule(project, module);
-            if (!hasEmpty && requests.isEmpty()) {
-                continue;
-            }
-            map.put(module.getName(), requests);
-        }
-        return map;
-    }
-
-    /**
-     * 获取选中module的所有Request
-     *
-     * @param project project
-     * @param module  module
-     * @return list
-     */
-    @NotNull
-    public static List<Request> getAllRequestByModule(@NotNull Project project, @NotNull Module module) {
-        // JAX-RS方式
-        List<Request> jaxrsRequestByModule = JaxrsHelper.getJaxrsRequestByModule(project, module);
-        if (!jaxrsRequestByModule.isEmpty()) {
-            return jaxrsRequestByModule;
-        }
-
-        // Spring RESTFul方式
-        List<Request> springRequestByModule = SpringHelper.getSpringRequestByModule(project, module);
-        if (!springRequestByModule.isEmpty()) {
-            return springRequestByModule;
-        }
-        return Collections.emptyList();
-    }
-
     @NotNull
     public static List<Request> getCurrClassRequests(@Nullable PsiClass psiClass) {
         if (psiClass == null) {
@@ -296,44 +234,6 @@ public class RestUtil {
         }
         requests = JaxrsHelper.getCurrClassRequests(psiClass);
         return requests;
-    }
-
-    /**
-     * 获取url
-     *
-     * @param protocol    协议
-     * @param port        端口
-     * @param contextPath 访问根目录名
-     * @param path        路径
-     * @return url
-     */
-    @NotNull
-    public static String getRequestUrl(@NotNull String protocol, @Nullable Integer port, @Nullable String contextPath, String path) {
-        StringBuilder url = new StringBuilder(protocol + "://");
-        url.append("localhost");
-        if (port != null) {
-            url.append(":").append(port);
-        }
-        if (contextPath != null && !"null".equals(contextPath) && contextPath.startsWith("/")) {
-            url.append(contextPath);
-        }
-        if (!path.startsWith("/")) {
-            url.append("/");
-        }
-        url.append(path);
-        return url.toString();
-    }
-
-    public static GlobalSearchScope getModuleScope(@NotNull Module module) {
-        return getModuleScope(module, PropertiesKey.scanServiceWithLibrary(module.getProject()));
-    }
-
-    protected static GlobalSearchScope getModuleScope(@NotNull Module module, boolean hasLibrary) {
-        if (hasLibrary) {
-            return module.getModuleWithLibrariesScope();
-        } else {
-            return module.getModuleScope();
-        }
     }
 
     /**
@@ -428,208 +328,7 @@ public class RestUtil {
     }
 
     /**
-     * 获取配置文件PsiFile
-     *
-     * @param project       project
-     * @param scope         scope
-     * @param qualifiedName 配置文件名（带后缀）
-     * @return PsiFile
-     */
-    @Nullable
-    private static PsiFile getConfigurationPsiFile(@NotNull Project project,
-                                                   @NotNull GlobalSearchScope scope,
-                                                   @NotNull String qualifiedName) {
-        try {
-            PsiFile[] files = FilenameIndex.getFilesByName(project, qualifiedName, scope);
-
-            for (PsiFile file : files) {
-                if (file instanceof PropertiesFile || file instanceof YAMLFile) {
-                    return file;
-                }
-            }
-        } catch (NoClassDefFoundError e) {
-            DumbService.getInstance(project).showDumbModeNotification(String.format(
-                    "IDE is missing the corresponding package file: %s",
-                    e.getMessage()
-            ));
-        }
-        return null;
-    }
-
-    /**
-     * 获取扫描到的配置文件
-     *
-     * @param project project
-     * @param scope   scope
-     * @param profile ${spring.profiles.active}
-     * @return {null | PropertiesFile | YAMLFile}
-     */
-    @Nullable
-    private static PsiFile getScanConfigurationFile(@NotNull Project project,
-                                                    @NotNull GlobalSearchScope scope,
-                                                    @Nullable String profile) {
-        // Spring配置文件名前缀
-        final String configurationPrefix = "application" + (StringUtil.isEmpty(profile) ? "" : "-" + profile);
-
-        // 配置文件全名
-        final String[] configurationFileNames = {
-                // properties file
-                configurationPrefix + "." + PropertiesFileType.DEFAULT_EXTENSION,
-                // yaml file
-                configurationPrefix + "." + YAMLFileType.DEFAULT_EXTENSION,
-        };
-
-        for (String configurationFileName : configurationFileNames) {
-            PsiFile psiFile = getConfigurationPsiFile(project, scope, configurationFileName);
-            if (psiFile != null) {
-                return psiFile;
-            }
-        }
-        return null;
-    }
-
-    @Nullable
-    public static String getBootstrapConfigValue(@NotNull Project project,
-                                                 @NotNull GlobalSearchScope scope,
-                                                 @NotNull String propName) {
-        final String bootstrapName = "bootstrap";
-        final String[] bootstrapNames = {
-                bootstrapName + "." + PropertiesFileType.DEFAULT_EXTENSION,
-                bootstrapName + "." + YAMLFileType.DEFAULT_EXTENSION
-        };
-
-        PsiFile psiFile = null;
-        for (String name : bootstrapNames) {
-            psiFile = getConfigurationPsiFile(project, scope, name);
-            if (psiFile != null) {
-                break;
-            }
-        }
-
-        if (psiFile == null) {
-            return null;
-        }
-        return getConfigValue(psiFile, propName);
-    }
-
-    /**
-     * 获取properties或yaml文件的kv值
-     *
-     * @param project project
-     * @param scope   scope
-     * @param name    name
-     * @return {value | null}
-     */
-    @Nullable
-    public static String getConfigurationValue(@NotNull Project project,
-                                               @NotNull GlobalSearchScope scope,
-                                               @NotNull String name) {
-        PsiFile conf = getScanConfigurationFile(project, scope, null);
-        if (conf == null) {
-            return null;
-        }
-        String bootstrapConfigValue = getBootstrapConfigValue(project, scope, name);
-        if (bootstrapConfigValue != null) {
-            return bootstrapConfigValue;
-        }
-        if (conf instanceof PropertiesFile) {
-            // application.properties
-            PropertiesFile propertiesFile = (PropertiesFile) conf;
-            String result = getPropertiesValue(propertiesFile, name);
-
-            String active = getPropertiesValue(propertiesFile, "spring.profiles.active");
-            if (StringUtil.isNotEmpty(active)) {
-                conf = getScanConfigurationFile(project, scope, active);
-                if (conf instanceof PropertiesFile) {
-                    propertiesFile = (PropertiesFile) conf;
-                    String readTemp = getPropertiesValue(propertiesFile, name);
-                    if (readTemp != null) {
-                        result = readTemp;
-                    }
-                }
-            }
-            return result;
-        } else if (conf instanceof YAMLFile) {
-            // application.yml
-            YAMLFile yamlFile = (YAMLFile) conf;
-
-            // 获取application.yml文件默认profile的value
-            String result = getYamlValue(yamlFile, name.split("\\."));
-
-            // 获取application.yml文件默认profile定义的active
-            String profileName = getYamlValue(yamlFile, "spring", "profiles", "active");
-            if (StringUtil.isNotEmpty(profileName)) {
-
-                // 先查看application.yml中是否定义了多个profile
-                List<YAMLDocument> documents = yamlFile.getDocuments();
-                if (documents.size() > 1) {
-                    for (int i = 1; i < documents.size(); i++) {
-                        YAMLDocument yamlDocument = documents.get(i);
-                        // 当前定义 profile 的名称
-                        String currProfileName = getYamlValue(yamlDocument, "spring", "profiles");
-                        if (profileName.equals(currProfileName)) {
-                            String currResult = getYamlValue(yamlDocument, name.split("\\."));
-                            if (currResult != null) {
-                                result = currResult;
-                            }
-                        }
-                    }
-                }
-                // 内置profile未找到则寻找 classpath:application-${profileName}.yml
-                if ((conf = getScanConfigurationFile(project, scope, profileName)) instanceof YAMLFile) {
-                    yamlFile = (YAMLFile) conf;
-                    String currResult = getYamlValue(yamlFile, name.split("\\."));
-                    if (currResult != null) {
-                        result = currResult;
-                    }
-                }
-            }
-
-            return result;
-        }
-        return null;
-    }
-
-    @Nullable
-    public static String getConfigValue(@NotNull Object psiFile, @NotNull String propName) {
-        if (psiFile instanceof PropertiesFile) {
-            return getPropertiesValue(psiFile, propName);
-        } else if (psiFile instanceof YAMLFile || psiFile instanceof YAMLDocument) {
-            return getYamlValue(psiFile, propName.split("\\."));
-        }
-        return null;
-    }
-
-    @Nullable
-    private static String getPropertiesValue(@NotNull Object psiFile, @NotNull String propName) {
-        if (psiFile instanceof PropertiesFile) {
-            PropertiesFile config = (PropertiesFile) psiFile;
-            return config.getNamesMap().get(propName);
-        }
-        return null;
-    }
-
-    @Nullable
-    private static String getYamlValue(@NotNull Object psiFile, @NotNull String... propNames) {
-        if (psiFile instanceof YAMLFile) {
-            YAMLFile config = (YAMLFile) psiFile;
-            YAMLKeyValue resultValue = YAMLUtil.getQualifiedKeyInFile(config, propNames);
-            if (resultValue != null) {
-                return resultValue.getValueText();
-            }
-        }
-        if (psiFile instanceof YAMLDocument) {
-            YAMLDocument document = (YAMLDocument) psiFile;
-            YAMLKeyValue resultValue = YAMLUtil.getQualifiedKeyInDocument(document, Arrays.asList(propNames));
-            if (resultValue != null) {
-                return resultValue.getValueText();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 获取pom文件Document
+     * 通过绝对地址读取pom.xml文件并转换成Document
      *
      * @param module module
      * @return XmlFile
@@ -651,29 +350,5 @@ public class RestUtil {
         } catch (Exception ignore) {
         }
         return null;
-    }
-
-    /**
-     * 格式化request path
-     *
-     * @param path path
-     * @return format path
-     */
-    @NotNull
-    @Contract(pure = true)
-    public static String formatPath(@Nullable Object path) {
-        if (path == null) {
-            return "/";
-        }
-        String currPath;
-        if (path instanceof String) {
-            currPath = (String) path;
-        } else {
-            currPath = path.toString();
-        }
-        if (currPath.startsWith("/")) {
-            return currPath;
-        }
-        return "/" + currPath;
     }
 }

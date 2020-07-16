@@ -24,6 +24,7 @@ import com.intellij.psi.xml.XmlTag;
 import core.annotation.JaxrsHttpMethodAnnotation;
 import core.beans.HttpMethod;
 import core.beans.Request;
+import core.utils.ProjectConfigUtil;
 import core.utils.RestUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -109,7 +110,7 @@ public class JaxrsHelper {
         Collection<PsiAnnotation> pathList = JavaAnnotationIndex.getInstance().get(
                 Control.Path.getName(),
                 project,
-                RestUtil.getModuleScope(module)
+                ProjectConfigUtil.getModuleScope(module)
         );
         for (PsiAnnotation psiAnnotation : pathList) {
             PsiElement psiElement = psiAnnotation.getParent().getParent();

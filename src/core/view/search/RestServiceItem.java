@@ -13,6 +13,7 @@ import com.intellij.psi.codeStyle.NameUtil;
 import com.intellij.psi.search.GlobalSearchScope;
 import core.beans.HttpMethod;
 import core.utils.RestUtil;
+import core.utils.SystemUtil;
 import core.view.icon.Icons;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -159,7 +160,7 @@ public class RestServiceItem implements NavigationItem {
             Project project = this.psiMethod.getProject();
             GlobalSearchScope scope = this.psiMethod.getResolveScope();
 
-            return RestUtil.getRequestUrl(
+            return SystemUtil.buildUrl(
                     RestUtil.scanListenerProtocol(project, scope),
                     RestUtil.scanListenerPort(project, scope),
                     RestUtil.scanContextPath(project, scope),

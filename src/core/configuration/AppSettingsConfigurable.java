@@ -29,7 +29,7 @@ public class AppSettingsConfigurable implements Configurable {
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
     public String getDisplayName() {
-        return Constants.Name.SETTING;
+        return Constants.Application.SETTING;
     }
 
     @Override

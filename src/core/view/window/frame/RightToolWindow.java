@@ -12,7 +12,7 @@ import core.beans.Request;
 import core.service.topic.RefreshServiceTreeTopic;
 import core.service.topic.RestDetailTopic;
 import core.service.topic.ServiceTreeTopic;
-import core.utils.RestUtil;
+import core.utils.RequestUtil;
 import org.jdesktop.swingx.JXButton;
 import org.jetbrains.annotations.NotNull;
 
@@ -157,7 +157,7 @@ public class RightToolWindow extends JSplitPane {
 
     @NotNull
     private Map<String, List<Request>> getRequests() {
-        Map<String, List<Request>> allRequest = RestUtil.getAllRequest(project);
+        Map<String, List<Request>> allRequest = RequestUtil.getAllRequests(project);
 
         allRequest.forEach((moduleName, requests) -> requests.removeIf(next -> !METHOD_CHOOSE_MAP.get(next.getMethod())));
 

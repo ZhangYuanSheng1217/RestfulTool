@@ -199,7 +199,7 @@ public class ServiceTree extends JScrollPane {
             String contextPath = RestUtil.scanContextPath(project, scope);
             switch (((JMenuItem) actionEvent.getSource()).getMnemonic()) {
                 case 0:
-                    copy = RestUtil.getRequestUrl(
+                    copy = SystemUtil.buildUrl(
                             RestUtil.scanListenerProtocol(project, scope),
                             RestUtil.scanListenerPort(project, scope),
                             contextPath,
@@ -213,7 +213,7 @@ public class ServiceTree extends JScrollPane {
                 default:
                     return;
             }
-            SystemUtil.setClipboardString(copy);
+            SystemUtil.Clipboard.copy(copy);
             Notify.getInstance(project).info("Copy path success.");
         };
 

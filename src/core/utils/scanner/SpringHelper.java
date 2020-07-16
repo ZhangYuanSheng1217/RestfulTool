@@ -19,7 +19,9 @@ import com.intellij.psi.search.GlobalSearchScope;
 import core.annotation.SpringHttpMethodAnnotation;
 import core.beans.HttpMethod;
 import core.beans.Request;
+import core.utils.ProjectConfigUtil;
 import core.utils.RestUtil;
+import core.utils.SystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -96,7 +98,7 @@ public class SpringHelper {
     private static List<PsiClass> getAllControllerClass(@NotNull Project project, @NotNull Module module) {
         List<PsiClass> allControllerClass = new ArrayList<>();
 
-        GlobalSearchScope moduleScope = RestUtil.getModuleScope(module);
+        GlobalSearchScope moduleScope = ProjectConfigUtil.getModuleScope(module);
         Collection<PsiAnnotation> pathList = JavaAnnotationIndex.getInstance().get(
                 Control.Controller.getName(),
                 project,
@@ -178,11 +180,11 @@ public class SpringHelper {
             }
             Object value = RestUtil.getAttributeValue(attribute.getAttributeValue());
             if (value instanceof String) {
-                paths.add(RestUtil.formatPath(value));
+                paths.add(SystemUtil.formatPath(value));
             } else if (value instanceof List) {
                 //noinspection unchecked,rawtypes
                 List<Object> list = (List) value;
-                list.forEach(item -> paths.add(RestUtil.formatPath(item)));
+                list.forEach(item -> paths.add(SystemUtil.formatPath(item)));
             } else {
                 throw new RuntimeException(String.format(
                         "Scan api: %s\n" +
