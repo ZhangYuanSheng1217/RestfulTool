@@ -239,7 +239,7 @@ public class SpringHelper {
         /**
          * <p>@Controller</p>
          */
-        Controller("Controller", "org.springframework.web.bind.annotation.Controller"),
+        Controller("Controller", "org.springframework.stereotype.Controller"),
 
         /**
          * <p>@RestController</p>
