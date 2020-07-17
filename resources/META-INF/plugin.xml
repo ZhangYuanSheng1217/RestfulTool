@@ -27,6 +27,7 @@
     <change-notes><![CDATA[
       <ul>
         <li> add `bootstrap` configuration file support </li>
+        <li> fix some bugs </li>
       </ul>
     ]]>
     </change-notes>
@@ -42,7 +43,8 @@
     <depends>org.jetbrains.plugins.yaml</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="com.github.restful.tool.configuration.AppSettingsState"/>
+        <applicationService
+                serviceImplementation="com.github.restful.tool.configuration.AppSettingsState"/>
 
         <applicationConfigurable parentId="tools"
                                  instance="com.github.restful.tool.configuration.AppSettingsConfigurable"
@@ -52,10 +54,12 @@
         <projectService serviceInterface="com.github.restful.tool.service.RestfulToolService"
                         serviceImplementation="com.github.restful.tool.service.impl.RestfulToolServiceImpl"/>
 
-        <projectService serviceImplementation="com.github.restful.tool.view.search.GotoRequestConfiguration"/>
+        <projectService
+                serviceImplementation="com.github.restful.tool.view.search.GotoRequestConfiguration"/>
 
         <toolWindow id="RestfulTool" anchor="right"
-                    factoryClass="com.github.restful.tool.view.window.RestfulToolWindowFactory" order="last"
+                    factoryClass="com.github.restful.tool.view.window.RestfulToolWindowFactory"
+                    order="last"
                     doNotActivateOnStart="false" icon="/icons/service.png"/>
 
         <projectService serviceInterface="com.github.restful.tool.service.Notify"
@@ -66,7 +70,8 @@
     </extensions>
 
     <actions>
-        <action id="Tool.GotoRequestService" class="com.github.restful.tool.view.search.GotoRequestAction"
+        <action id="Tool.GotoRequestService"
+                class="com.github.restful.tool.view.search.GotoRequestAction"
                 text="Request _Service" description="Goto request service"
                 icon="AllIcons.Actions.Search">
             <add-to-group group-id="GoToTargetEx" anchor="first"/>
@@ -78,7 +83,8 @@
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </action>
         <group id="RestfulTool.action.OptionForEditors" icon="/icons/service.png"
-               text="Restful Options" class="com.github.restful.tool.actions.copy.OptionForEditorGroups">
+               text="Restful Options"
+               class="com.github.restful.tool.actions.copy.OptionForEditorGroups">
             <add-to-group group-id="EditorPopupMenu" anchor="after"
                           relative-to-action="RestfulTool.action.OptionForEditor-CurrentClassTree"/>
             <action id="RestfulTool.action.OptionForEditor-CopyFullPath"

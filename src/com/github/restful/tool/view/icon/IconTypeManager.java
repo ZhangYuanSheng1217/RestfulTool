@@ -16,11 +16,13 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
+import java.net.JarURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * @author ZhangYuanSheng
@@ -28,59 +30,13 @@ import java.util.Map;
  */
 public class IconTypeManager {
 
-    private static final String BASE_PATH = "/icons/method/";
+    private static final String ICON_SCHEME_PATH = "icons/method/";
 
-    private static final Map<String, IconType> ICON_TYPES = new HashMap<>();
+    private static final String DEFAULT_ICON_SCHEME = "default";
+
+    private static final Map<String, IconType> ICON_TYPES = new ConcurrentHashMap<>();
 
     static {
-        // load default scheme
-        /*{
-            final Map<HttpMethod, Icon> defaultIcons = new HashMap<>(HttpMethod.values().length);
-            defaultIcons.put(HttpMethod.REQUEST, Icons.load("/icons/method/default/Request.png"));
-            defaultIcons.put(HttpMethod.GET, Icons.load("/icons/method/default/GET.png"));
-            defaultIcons.put(HttpMethod.POST, Icons.load("/icons/method/default/POST.png"));
-            defaultIcons.put(HttpMethod.DELETE, Icons.load("/icons/method/default/DELETE.png"));
-            defaultIcons.put(HttpMethod.PUT, Icons.load("/icons/method/default/PUT.png"));
-            defaultIcons.put(HttpMethod.PATCH, Icons.load("/icons/method/default/PATCH.png"));
-            defaultIcons.put(HttpMethod.HEAD, Icons.load("/icons/method/default/HEAD.png"));
-            defaultIcons.put(HttpMethod.OPTIONS, Icons.load("/icons/method/default/OPTIONS.png"));
-            defaultIcons.put(HttpMethod.TRACE, Icons.load("/icons/method/default/TRACE.png"));
-            ICON_TYPES.put("default", new IconType() {
-
-                @NotNull
-                @Override
-                public Icon getDefaultIcon(HttpMethod method) {
-                    return defaultIcons.get(method);
-                }
-
-                @NotNull
-                @Override
-                public Icon getSelectIcon(HttpMethod method) {
-                    return this.getDefaultIcon(method);
-                }
-
-                @NotNull
-                @Override
-                public List<PreviewIcon> getDefaultIcons() {
-                    List<PreviewIcon> list = new ArrayList<>(defaultIcons.size());
-                    defaultIcons.forEach((method, icon) -> list.add(new PreviewIcon(method.name(), icon)));
-                    return list;
-                }
-
-                @NotNull
-                @Override
-                public List<PreviewIcon> getSelectIcons() {
-                    return this.getDefaultIcons();
-                }
-
-                @NotNull
-                @Override
-                public String toString() {
-                    return "default";
-                }
-            });
-        }*/
-
         autoScanner();
     }
 
@@ -104,8 +60,7 @@ public class IconTypeManager {
             char[] chars1 = o1.toString().toCharArray();
             char[] chars2 = o2.toString().toCharArray();
 
-            int maxLen = Math.min(chars1.length, chars2.length);
-            for (int i = 0; i < maxLen; i++) {
+            for (int i = 0; i < Math.min(chars1.length, chars2.length); i++) {
                 if (chars1[i] != chars2[i]) {
                     return chars1[i] - chars2[i];
                 }
@@ -129,7 +84,7 @@ public class IconTypeManager {
         }
         String scheme = obj instanceof String ? ((String) obj) : obj.toString();
         if (!ICON_TYPES.containsKey(scheme)) {
-            throw new RuntimeException(scheme + " Scheme notfound");
+            return ICON_TYPES.get(DEFAULT_ICON_SCHEME);
         }
         return ICON_TYPES.get(scheme);
     }
@@ -138,52 +93,111 @@ public class IconTypeManager {
      * 扫描 resources/icons/method 下的图标主题
      * <p>
      * 命名方式:<br/>
-     * L 文件夹名 --- 图标主题名<br/>
-     * L_ GET.[svg|png] --- GET方式请求的默认图标<br/>
-     * L_ GET_select.[svg|png] --- GET方式请求的选中图标<br/>
+     * 文件夹名 --- 图标主题名<br/>
+     * |--- GET.[svg|png] --- GET方式请求的默认图标<br/>
+     * |--- GET_select.[svg|png] --- GET方式请求的选中图标<br/>
      * </p>
      */
     public static void autoScanner() {
-        try {
-            URL url = IconType.class.getResource(BASE_PATH);
-            File iconsDir = new File(url.toURI());
-            assert iconsDir.isDirectory();
-            File[] files = iconsDir.listFiles(File::isDirectory);
-            assert files != null;
-            ICON_TYPES.clear();
-            for (File file : files) {
-                try {
-                    IconType iconType = generateIconType(file);
-                    ICON_TYPES.put(iconType.toString(), iconType);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        URL url = IconTypeManager.class.getClassLoader().getResource(ICON_SCHEME_PATH);
+        if (url == null) {
+            url = IconTypeManager.class.getResource(ICON_SCHEME_PATH);
         }
+        String urlStr = url.toString();
+        String jarPath = urlStr.substring(0, urlStr.indexOf("!/") + 2);
+        Map<String, List<String>> directory = readDirectoryFromPath(jarPath);
+        if (!directory.isEmpty()) {
+            ICON_TYPES.clear();
+        }
+        directory.forEach((name, paths) -> {
+            IconType iconType = generateIconType(name, paths);
+            ICON_TYPES.put(name, iconType);
+        });
     }
 
+    /**
+     * 扫描jar包下指定文件夹的文件列表
+     *
+     * @param jarPath jar包的绝对定位
+     * @return map
+     */
     @NotNull
-    private static IconType generateIconType(@NotNull File iconDir) throws Exception {
-        String name = iconDir.getName();
-
-        File[] iconsFile = iconDir.listFiles((dir, fileName) -> {
-            String temp = fileName.toLowerCase();
-            // 只识别 { .svg | .png } 格式的图标
-            return temp.endsWith(".svg") || temp.endsWith(".png");
-        });
-        if (iconsFile == null || iconsFile.length < 1) {
-            throw new Exception("Icons must be not empty [.png | .svg]");
+    private static Map<String, List<String>> readDirectoryFromPath(@NotNull String jarPath) {
+        Map<String, List<String>> map = new HashMap<>();
+        try {
+            if (!jarPath.endsWith("!/")) {
+                jarPath += "!/";
+            }
+            URL jarUrl = new URL(jarPath);
+            JarURLConnection jarCon = (JarURLConnection) jarUrl.openConnection();
+            JarFile jarFile = jarCon.getJarFile();
+            Enumeration<JarEntry> jarEntry = jarFile.entries();
+            while (jarEntry.hasMoreElements()) {
+                JarEntry entry = jarEntry.nextElement();
+                String fullName = entry.getName();
+                if (fullName.equals(IconTypeManager.ICON_SCHEME_PATH) || !fullName.startsWith(IconTypeManager.ICON_SCHEME_PATH)) {
+                    continue;
+                }
+                String currName = fullName.replace(IconTypeManager.ICON_SCHEME_PATH, "");
+                if (entry.isDirectory()) {
+                    if (currName.endsWith("/")) {
+                        currName = currName.substring(0, currName.lastIndexOf("/"));
+                    }
+                    map.put(currName, new ArrayList<>());
+                } else if (fullName.toLowerCase().endsWith(".svg") || fullName.toLowerCase().endsWith(".png")) {
+                    String sub = currName.substring(0, currName.indexOf("/"));
+                    List<String> list = map.get(sub);
+                    if (list != null) {
+                        list.add(currName);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            // jar包已经被解压
+            try {
+                URL url = IconType.class.getResource("/" + IconTypeManager.ICON_SCHEME_PATH);
+                File iconsDir = new File(url.toURI());
+                assert iconsDir.isDirectory();
+                File[] files = iconsDir.listFiles(File::isDirectory);
+                assert files != null;
+                map.clear();
+                for (File file : files) {
+                    String[] icons = file.list();
+                    if (icons == null) {
+                        continue;
+                    }
+                    String name = file.getName();
+                    List<String> iconPaths = new ArrayList<>(icons.length);
+                    for (String fileName : icons) {
+                        if (fileName.toLowerCase().endsWith(".svg") || fileName.toLowerCase().endsWith(".png")) {
+                            iconPaths.add(name + "/" + fileName);
+                        }
+                    }
+                    map.put(name, iconPaths);
+                }
+            } catch (Exception ignore) {
+            }
         }
+        return map;
+    }
 
-        Map<HttpMethod, Icon> defaultIcons = new HashMap<>(9);
-        Map<HttpMethod, Icon> selectedIcons = new HashMap<>(9);
+    /**
+     * 生成IconScheme的IconType实现类
+     *
+     * @param name  主题名
+     * @param icons 图标相对地址
+     * @return IconTypeImpl
+     */
+    @NotNull
+    private static IconType generateIconType(@NotNull String name, @NotNull List<String> icons) {
+        HttpMethod[] httpMethods = HttpMethod.values();
 
-        for (File file : iconsFile) {
-            String fileName = file.getName();
-            Icon icon = Icons.load(BASE_PATH + name + "/" + fileName);
-            fileName = fileName.substring(0, fileName.lastIndexOf("."));
+        Map<HttpMethod, Icon> defaultIcons = new HashMap<>(httpMethods.length);
+        Map<HttpMethod, Icon> selectedIcons = new HashMap<>(httpMethods.length);
+
+        for (String iconPath : icons) {
+            String fileName = iconPath.substring(iconPath.indexOf("/") + 1, iconPath.lastIndexOf("."));
+            Icon icon = Icons.load("/" + ICON_SCHEME_PATH + iconPath);
             if (fileName.contains("_select")) {
                 // select
                 selectedIcons.put(
@@ -196,6 +210,14 @@ public class IconTypeManager {
                         HttpMethod.parse(fileName),
                         icon
                 );
+            }
+        }
+
+        if (defaultIcons.isEmpty() || defaultIcons.size() < httpMethods.length) {
+            for (HttpMethod method : httpMethods) {
+                if (!defaultIcons.containsKey(method)) {
+                    defaultIcons.put(method, null);
+                }
             }
         }
         return generateIconType(name, defaultIcons, selectedIcons);

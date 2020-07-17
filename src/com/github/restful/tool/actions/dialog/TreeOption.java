@@ -1,6 +1,7 @@
 package com.github.restful.tool.actions.dialog;
 
 import com.github.restful.tool.actions.EditorOption;
+import com.github.restful.tool.utils.RestUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
@@ -53,6 +54,6 @@ public interface TreeOption extends EditorOption {
             return false;
         }
         PSI_CLASSES[0] = getPsiClass(e);
-        return PSI_CLASSES[0] != null;
+        return RestUtil.hasRestful(PSI_CLASSES[0]);
     }
 }
