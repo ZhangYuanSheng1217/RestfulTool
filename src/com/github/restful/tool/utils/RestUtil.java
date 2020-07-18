@@ -122,8 +122,10 @@ public class RestUtil {
                         if (propItemElement != null) {
                             String name = propItemElement.getData().toString().trim();
                             mavenProp = getPomFileProperties(properties, name);
-                            // 如果<properties>找不到则到根标签<project>寻找
-                            mavenProp = getPomFileProject(pomDoc.getRootElement(), mavenProp);
+                            if (!ReUtil.findAll("\\$\\{[A-Za-z0-9.:-]+}", mavenProp, 0).isEmpty()) {
+                                // 如果<properties>找不到则到根标签<project>寻找
+                                mavenProp = getPomFileProject(pomDoc, name);
+                            }
                             if (StringUtil.isEmptyOrSpaces(mavenProp)) {
                                 return null;
                             }
@@ -186,39 +188,36 @@ public class RestUtil {
     }
 
     /**
-     * 获取project-element的值
+     * 获取element的值
      *
-     * @param element element
-     * @param name    name
+     * @param pomDoc maven pom
+     * @param name   name 例如 ${project.build.finalName}-${project.version}
      * @return value
      */
     @NotNull
-    private static String getPomFileProject(@Nullable Element element, String name) {
-        // maven element 的变量格式：${project.version}
+    private static String getPomFileProject(@Nullable Document pomDoc, String name) {
         @Language("RegExp") final String propReg = "\\$\\{[A-Za-z0-9.:-]+}";
         if (name == null) {
             return "";
         }
-        if (element == null) {
+        if (pomDoc == null) {
             return "";
         }
         String response = name;
         for (String nameItem : ReUtil.findAll(propReg, response, 0)) {
-            String elementName = nameItem.substring(
-                    nameItem.indexOf("{") + 1,
-                    nameItem.indexOf("}")
-            );
-            if (elementName.toLowerCase().startsWith("project.")) {
-                elementName = elementName.substring(elementName.indexOf(".") + 1);
-            }
-            Element itemElement = element.element(elementName);
-            if (itemElement != null) {
-                String itemResult = itemElement.getData().toString().trim();
-                for (String itemName : ReUtil.findAll(propReg, itemResult, 0)) {
-                    itemResult = itemResult.replace(itemName, getPomFileProject(element, itemName));
+            Element currentElement = pomDoc.getRootElement();
+            String[] path = nameItem.substring(nameItem.indexOf("{") + 1, nameItem.indexOf("}")).split("\\.");
+            for (int i = 1; i < path.length; i++) {
+                currentElement = currentElement.element(path[i]);
+                if (currentElement == null) {
+                    return "";
                 }
-                response = response.replace(nameItem, itemResult);
             }
+            String itemResult = currentElement.getData().toString().trim();
+            for (String itemName : ReUtil.findAll(propReg, itemResult, 0)) {
+                itemResult = itemResult.replace(itemName, getPomFileProject(pomDoc, itemName));
+            }
+            response = response.replace(nameItem, itemResult);
         }
         return response;
     }
