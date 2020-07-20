@@ -160,3 +160,4 @@ fabric.properties
 hs_err_pid*
 
 test/
+!/RestfulTool.zip
