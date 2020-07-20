@@ -32,7 +32,7 @@ public class JsonConvert extends BaseConvert<Object> {
     @Override
     public String formatString() {
         Map<String, Object> methodParams = parseMethodParams();
-        return new JSONObject(methodParams).toStringPretty();
+        return new JSONObject(methodParams).toJSONString(2);
     }
 
     @Override

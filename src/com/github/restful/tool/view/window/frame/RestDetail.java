@@ -10,18 +10,21 @@
  */
 package com.github.restful.tool.view.window.frame;
 
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.http.Method;
+import cn.hutool.http.*;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONStrFormater;
 import cn.hutool.json.JSONUtil;
+import com.github.restful.tool.beans.HttpMethod;
+import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.configuration.AppSettingsState;
 import com.github.restful.tool.service.topic.RestDetailTopic;
+import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.utils.convert.BaseConvert;
 import com.github.restful.tool.utils.convert.JsonConvert;
-import com.intellij.openapi.editor.colors.EditorColorsManager;
+import com.github.restful.tool.view.components.editor.JsonEditor;
+import com.intellij.json.JsonFileType;
+import com.intellij.openapi.fileTypes.FileTypes;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.psi.PsiInvalidElementAccessException;
@@ -29,10 +32,6 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.messages.MessageBusConnection;
-import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.utils.RestUtil;
-import com.github.restful.tool.view.components.editor.JsonTextArea;
 import org.jdesktop.swingx.JXButton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -83,15 +82,15 @@ public class RestDetail extends JPanel {
     /**
      * 文本域 - 请求头
      */
-    private JsonTextArea requestHead;
+    private JsonEditor requestHead;
     /**
      * 文本域 - 请求体
      */
-    private JsonTextArea requestBody;
+    private JsonEditor requestBody;
     /**
      * 标签 - 显示返回结果
      */
-    private JsonTextArea responseView;
+    private JsonEditor responseView;
 
     private DetailHandle callback;
     /**
@@ -140,16 +139,16 @@ public class RestDetail extends JPanel {
         tabbedPane = new JBTabbedPane(JTabbedPane.TOP);
         add(tabbedPane, BorderLayout.CENTER);
 
-        requestHead = new JsonTextArea();
+        requestHead = new JsonEditor(project);
         requestHead.setName(IDENTITY_HEAD);
-        tabbedPane.addTab("head", requestHead.getScrollPane());
+        tabbedPane.addTab("head", requestHead);
 
-        requestBody = new JsonTextArea();
-        tabbedPane.addTab("body", requestBody.getScrollPane());
+        requestBody = new JsonEditor(project);
+        tabbedPane.addTab("body", requestBody);
         requestBody.setName(IDENTITY_BODY);
 
-        responseView = new JsonTextArea();
-        tabbedPane.addTab("response", responseView.getScrollPane());
+        responseView = new JsonEditor(project, FileTypes.PLAIN_TEXT);
+        tabbedPane.addTab("response", responseView);
     }
 
     /**
@@ -178,16 +177,28 @@ public class RestDetail extends JPanel {
             HttpRequest httpRequest = getHttpRequest(method, url, head, body);
 
             responseView.setText(" -> request thread is running");
-            poolExecutor.execute(() -> {
+            Runnable command = () -> {
                 String resp;
                 try {
-                    resp = httpRequest.execute().body();
+                    HttpResponse response = httpRequest.execute();
+                    resp = response.body();
+                    if (response.isOk()) {
+                        String contentType = response.header(Header.CONTENT_TYPE);
+                        if (contentType != null && contentType.toLowerCase().contains("json")) {
+                            // 如果返回结果为 application/json 则更改ResponseView的FileType
+                            responseView.setFileType(JsonFileType.INSTANCE);
+                        } else {
+                            responseView.setFileType(null);
+                        }
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                     resp = e.getMessage();
                 }
+                // TODO fixBug: setText只允许在主线程中执行，但是耗时操作不允许放在主线程中
                 responseView.setText(formatJson(resp));
-            });
+            };
+            poolExecutor.execute(command);
         });
 
         MessageBusConnection messageBusConnection = project.getMessageBus().connect();
@@ -200,39 +211,33 @@ public class RestDetail extends JPanel {
                 bodyCache.clear();
             }
         });
-        // 监听IDEA主题更改
-        messageBusConnection.subscribe(EditorColorsManager.TOPIC, scheme -> {
-            if (scheme == null) {
-                return;
-            }
-            requestHead.autoSwitchTheme();
-            requestBody.autoSwitchTheme();
-            responseView.autoSwitchTheme();
-        });
 
         KeyListener keyListener = new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
                 super.keyReleased(e);
                 if (!e.isAltDown() && !e.isShiftDown() && !e.isControlDown()) {
-                    JsonTextArea textArea = getJsonTextArea(e);
-                    if (textArea != null) {
-                        String name = textArea.getName();
-                        String inputValue = textArea.getText();
+                    JsonEditor editor = getJsonEditor(e);
+                    if (editor != null) {
+                        System.out.println("RestDetail.keyReleased: " + editor);
+                        String name = editor.getName();
+                        String inputValue = editor.getText();
+                        System.out.println("name: " + name + ", inputValue: " + inputValue);
                         setCache(name, chooseRequest, inputValue);
                     }
                 }
             }
 
             @Nullable
-            private JsonTextArea getJsonTextArea(@NotNull KeyEvent e) {
+            private JsonEditor getJsonEditor(@NotNull KeyEvent e) {
                 Object source = e.getSource();
-                if (source instanceof JsonTextArea) {
-                    return (JsonTextArea) source;
+                if (source instanceof JsonEditor) {
+                    return (JsonEditor) source;
                 }
                 return null;
             }
         };
+        // TODO fixBug: 无法正确绑定监听事件，导致无法缓存单个request的请求头或请求参数的数据
         requestHead.addKeyListener(keyListener);
         requestBody.addKeyListener(keyListener);
     }
