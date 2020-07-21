@@ -10,10 +10,10 @@
  */
 package com.github.restful.tool.view.window.frame;
 
-import cn.hutool.http.*;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.http.Method;
 import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONStrFormater;
-import cn.hutool.json.JSONUtil;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.configuration.AppSettingsState;
@@ -23,8 +23,11 @@ import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.utils.convert.BaseConvert;
 import com.github.restful.tool.utils.convert.JsonConvert;
 import com.github.restful.tool.view.components.editor.JsonEditor;
-import com.intellij.json.JsonFileType;
-import com.intellij.openapi.fileTypes.FileTypes;
+import com.intellij.openapi.application.Application;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.editor.event.DocumentEvent;
+import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.psi.PsiInvalidElementAccessException;
@@ -38,9 +41,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -147,7 +149,7 @@ public class RestDetail extends JPanel {
         tabbedPane.addTab("body", requestBody);
         requestBody.setName(IDENTITY_BODY);
 
-        responseView = new JsonEditor(project, FileTypes.PLAIN_TEXT);
+        responseView = new JsonEditor(project);
         tabbedPane.addTab("response", responseView);
     }
 
@@ -157,48 +159,15 @@ public class RestDetail extends JPanel {
     private void initEvent() {
         // 发送请求按钮监听
         sendRequest.addActionListener(event -> {
-            // 选择Response页面
-            tabbedPane.setSelectedIndex(2);
-
-            HttpMethod method = (HttpMethod) requestMethod.getSelectedItem();
-            if (method == null) {
-                method = HttpMethod.GET;
-            }
             String url = requestUrl.getText();
-
             if (url == null || "".equals(url.trim())) {
-                responseView.setText("request path must be not empty!");
+                requestUrl.requestFocus();
                 return;
             }
 
-            String head = requestHead.getText();
-            String body = requestBody.getText();
-
-            HttpRequest httpRequest = getHttpRequest(method, url, head, body);
-
-            responseView.setText(" -> request thread is running");
-            Runnable command = () -> {
-                String resp;
-                try {
-                    HttpResponse response = httpRequest.execute();
-                    resp = response.body();
-                    if (response.isOk()) {
-                        String contentType = response.header(Header.CONTENT_TYPE);
-                        if (contentType != null && contentType.toLowerCase().contains("json")) {
-                            // 如果返回结果为 application/json 则更改ResponseView的FileType
-                            responseView.setFileType(JsonFileType.INSTANCE);
-                        } else {
-                            responseView.setFileType(null);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    resp = e.getMessage();
-                }
-                // TODO fixBug: setText只允许在主线程中执行，但是耗时操作不允许放在主线程中
-                responseView.setText(formatJson(resp));
-            };
-            poolExecutor.execute(command);
+            // 选择Response页面
+            tabbedPane.setSelectedIndex(2);
+            sendRequest(url);
         });
 
         MessageBusConnection messageBusConnection = project.getMessageBus().connect();
@@ -212,34 +181,80 @@ public class RestDetail extends JPanel {
             }
         });
 
-        KeyListener keyListener = new KeyAdapter() {
+        DocumentListener documentListenerForCache = new DocumentListener() {
             @Override
-            public void keyReleased(KeyEvent e) {
-                super.keyReleased(e);
-                if (!e.isAltDown() && !e.isShiftDown() && !e.isControlDown()) {
-                    JsonEditor editor = getJsonEditor(e);
-                    if (editor != null) {
-                        System.out.println("RestDetail.keyReleased: " + editor);
-                        String name = editor.getName();
-                        String inputValue = editor.getText();
-                        System.out.println("name: " + name + ", inputValue: " + inputValue);
-                        setCache(name, chooseRequest, inputValue);
-                    }
+            public void documentChanged(@NotNull DocumentEvent event) {
+                JsonEditor editor = getCurrentTabbedOfRequest();
+                if (editor != null) {
+                    String name = editor.getName();
+                    String text = editor.getText();
+                    setCache(name, chooseRequest, text);
+                }
+            }
+        };
+        // fixBug: 无法正确绑定监听事件，导致无法缓存单个request的请求头或请求参数的数据
+        FocusAdapter focusAdapter = new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                JsonEditor editor = getCurrentTabbedOfRequest();
+                if (editor != null) {
+                    editor.addDocumentListener(documentListenerForCache);
                 }
             }
 
-            @Nullable
-            private JsonEditor getJsonEditor(@NotNull KeyEvent e) {
-                Object source = e.getSource();
-                if (source instanceof JsonEditor) {
-                    return (JsonEditor) source;
+            @Override
+            public void focusLost(FocusEvent e) {
+                JsonEditor editor = getCurrentTabbedOfRequest();
+                if (editor != null) {
+                    editor.removeDocumentListener(documentListenerForCache);
                 }
-                return null;
             }
         };
-        // TODO fixBug: 无法正确绑定监听事件，导致无法缓存单个request的请求头或请求参数的数据
-        requestHead.addKeyListener(keyListener);
-        requestBody.addKeyListener(keyListener);
+        requestHead.addFocusListener(focusAdapter);
+        requestBody.addFocusListener(focusAdapter);
+    }
+
+    private void sendRequest(String url) {
+        HttpMethod method = (HttpMethod) requestMethod.getSelectedItem();
+        if (method == null) {
+            method = HttpMethod.GET;
+        }
+        HttpRequest httpRequest = getHttpRequest(method, url, requestHead.getText(), requestBody.getText());
+
+        Runnable command = () -> {
+            Application application = ApplicationManager.getApplication();
+            application.invokeLater(
+                    () -> responseView.setPlaceholder("Thread request are running..."),
+                    ModalityState.defaultModalityState()
+            );
+            String response;
+            try {
+                response = httpRequest.execute().body();
+            } catch (Exception e) {
+                response = String.format("%s", e);
+            }
+            String resultResponse = response;
+            application.invokeLater(
+                    () -> {
+                        responseView.setPlaceholder(null);
+                        responseView.setText(resultResponse);
+                    },
+                    ModalityState.defaultModalityState()
+            );
+        };
+        responseView.setText(null);
+        poolExecutor.execute(command);
+    }
+
+    @Nullable
+    private JsonEditor getCurrentTabbedOfRequest() {
+        Component component = tabbedPane.getSelectedComponent();
+        int selectedIndex = tabbedPane.getSelectedIndex();
+        // selectedIndex: [0: requestHead, 1: requestBody, 2: response]
+        if (selectedIndex < 2 && component instanceof JsonEditor) {
+            return (JsonEditor) component;
+        }
+        return null;
     }
 
     public void setRequest(@Nullable Request request) {
@@ -318,15 +333,6 @@ public class RestDetail extends JPanel {
             }
         }
         return request.timeout(REQUEST_TIMEOUT);
-    }
-
-    private String formatJson(@Nullable String resp) {
-        if (resp != null) {
-            if (JSONUtil.isJson(resp)) {
-                resp = JSONStrFormater.format(resp.trim());
-            }
-        }
-        return resp;
     }
 
     @NotNull
