@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -32,11 +31,9 @@ public final class IconTypeManager {
 
     public static final String DEFAULT_ICON_SCHEME = "default";
     private static final String ICON_SCHEME_PATH = "icons/method/";
-    private static final Map<String, IconType> ICON_TYPES = new ConcurrentHashMap<>();
+    private static final Map<String, IconType> ICON_TYPES = new HashMap<>();
 
     static {
-        ICON_TYPES.put(DEFAULT_ICON_SCHEME, new DefaultIconType());
-
         autoScanner();
     }
 
@@ -111,11 +108,10 @@ public final class IconTypeManager {
         }
         directory.forEach((name, paths) -> {
             IconType iconType = generateIconType(name, paths);
-            if (DEFAULT_ICON_SCHEME.equals(name)) {
-                return;
-            }
             ICON_TYPES.put(name, iconType);
         });
+
+        ICON_TYPES.putIfAbsent(DEFAULT_ICON_SCHEME, new DefaultIconType());
     }
 
     /**
