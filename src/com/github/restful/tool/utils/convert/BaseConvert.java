@@ -4,7 +4,6 @@ import com.github.restful.tool.annotation.SpringHttpMethodAnnotation;
 import com.github.restful.tool.utils.PsiUtil;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.tree.java.PsiLiteralExpressionImpl;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -110,6 +109,7 @@ public abstract class BaseConvert<V> {
      *
      * @return map
      */
+    @NotNull
     protected Map<String, V> parseMethodParams() {
         if (psiMethod == null) {
             return Collections.emptyMap();
@@ -154,36 +154,6 @@ public abstract class BaseConvert<V> {
             }
         }
         return map;
-    }
-
-    @Contract(pure = true)
-    private Object getDefaultData(@NotNull String classType) {
-        Object data = null;
-        switch (classType.toLowerCase()) {
-            case "string":
-                data = "demoData";
-                break;
-            case "char":
-            case "character":
-                data = 'A';
-                break;
-            case "byte":
-            case "short":
-            case "int":
-            case "long":
-                data = 0;
-                break;
-            case "float":
-            case "double":
-                data = 0.0;
-                break;
-            case "boolean":
-                data = true;
-                break;
-            default:
-                break;
-        }
-        return data;
     }
 
     /**

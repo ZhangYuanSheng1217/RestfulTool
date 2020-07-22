@@ -115,7 +115,6 @@ public class ServiceTree extends JScrollPane {
         tree.addTreeSelectionListener(e -> {
             Request request = getTreeNodeRequest(tree);
             if (chooseRequestCallback == null) {
-                System.out.println("ServiceTree.initEvent");
                 return;
             }
             if (request == null) {
