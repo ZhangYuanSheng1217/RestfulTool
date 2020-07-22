@@ -35,8 +35,6 @@ public final class IconTypeManager {
     private static final Map<String, IconType> ICON_TYPES = new ConcurrentHashMap<>();
 
     static {
-        ICON_TYPES.put(DEFAULT_ICON_SCHEME, new DefaultIconType());
-
         autoScanner();
     }
 
@@ -111,11 +109,11 @@ public final class IconTypeManager {
         }
         directory.forEach((name, paths) -> {
             IconType iconType = generateIconType(name, paths);
-            if (DEFAULT_ICON_SCHEME.equals(name)) {
-                return;
+            if (!DEFAULT_ICON_SCHEME.equals(name)) {
+                ICON_TYPES.put(name, iconType);
             }
-            ICON_TYPES.put(name, iconType);
         });
+        ICON_TYPES.put(DEFAULT_ICON_SCHEME, new DefaultIconType());
     }
 
     /**
