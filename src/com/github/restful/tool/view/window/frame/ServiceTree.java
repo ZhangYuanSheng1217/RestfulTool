@@ -10,16 +10,16 @@
  */
 package com.github.restful.tool.view.window.frame;
 
-import com.intellij.icons.AllIcons;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.JBPopupMenu;
-import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.ui.TreeSpeedSearch;
 import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.service.Notify;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.view.window.RestfulTreeCellRenderer;
+import com.intellij.icons.AllIcons;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.JBPopupMenu;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.ui.TreeSpeedSearch;
 import org.jdesktop.swingx.JXTree;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -114,10 +114,14 @@ public class ServiceTree extends JScrollPane {
         // RequestTree子项点击监听
         tree.addTreeSelectionListener(e -> {
             Request request = getTreeNodeRequest(tree);
-            if (request == null || chooseRequestCallback == null) {
+            if (chooseRequestCallback == null) {
+                System.out.println("ServiceTree.initEvent");
                 return;
             }
-            // restDetail.setRequest(request);
+            if (request == null) {
+                chooseRequestCallback.choose(null);
+                return;
+            }
             chooseRequestCallback.choose(request);
         });
 
@@ -263,6 +267,6 @@ public class ServiceTree extends JScrollPane {
          *
          * @param request request
          */
-        void choose(@NotNull Request request);
+        void choose(@Nullable Request request);
     }
 }

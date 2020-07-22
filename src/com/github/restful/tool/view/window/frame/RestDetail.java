@@ -313,6 +313,10 @@ public class RestDetail extends JPanel {
         this.callback = callback;
     }
 
+    public void reset() {
+        this.setRequest(null);
+    }
+
     private HttpRequest getHttpRequest(@NotNull HttpMethod method, @NotNull String url, String head, String body) {
         HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url);
         if (head != null && !"".equals(head.trim())) {
@@ -356,9 +360,15 @@ public class RestDetail extends JPanel {
         if (enable) {
             switch (name) {
                 case IDENTITY_HEAD:
+                    if (cache.equals(headCache.get(request))) {
+                        return;
+                    }
                     headCache.put(request, cache);
                     break;
                 case IDENTITY_BODY:
+                    if (cache.equals(bodyCache.get(request))) {
+                        return;
+                    }
                     bodyCache.put(request, cache);
                     break;
                 default:

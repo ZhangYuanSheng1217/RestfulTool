@@ -165,6 +165,8 @@ public class RightToolWindow extends JSplitPane {
     }
 
     public void renderRequestTree() {
+        restDetail.reset();
+
         ServiceTreeTopic restTopic = project.getMessageBus().syncPublisher(ServiceTreeTopic.TOPIC);
         DumbService.getInstance(project).runWhenSmart(() -> restTopic.action(getRequests()));
 

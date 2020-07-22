@@ -1,19 +1,14 @@
 package com.github.restful.tool.utils.convert;
 
-import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
-import com.intellij.psi.*;
-import com.intellij.psi.impl.source.PsiClassReferenceType;
-import com.intellij.psi.search.FilenameIndex;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.github.restful.tool.annotation.SpringHttpMethodAnnotation;
-import com.github.restful.tool.utils.RestUtil;
+import com.github.restful.tool.utils.PsiUtil;
+import com.intellij.psi.*;
+import com.intellij.psi.impl.source.tree.java.PsiLiteralExpressionImpl;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -115,7 +110,6 @@ public abstract class BaseConvert<V> {
      *
      * @return map
      */
-    @SuppressWarnings("unchecked")
     protected Map<String, V> parseMethodParams() {
         if (psiMethod == null) {
             return Collections.emptyMap();
@@ -132,79 +126,34 @@ public abstract class BaseConvert<V> {
             String parameterName = parameter.getName();
             PsiType parameterType = parameter.getType();
 
-            for (PsiAnnotation parameterAnnotation : parameterAnnotations) {
-                if (!SpringHttpMethodAnnotation.REQUEST_PARAM.getQualifiedName().equals(parameterAnnotation.getQualifiedName())) {
-                    continue;
+            // 如果存在 @RequestParam 注解则获取其注解
+            PsiAnnotation annotation = parameter.getAnnotation(SpringHttpMethodAnnotation.REQUEST_PARAM.getQualifiedName());
+            if (annotation != null) {
+                PsiAnnotationMemberValue attrValue = annotation.findDeclaredAttributeValue("value");
+                if (attrValue == null) {
+                    attrValue = annotation.findDeclaredAttributeValue("name");
                 }
-                List<JvmAnnotationAttribute> attributes = parameterAnnotation.getAttributes();
-                for (JvmAnnotationAttribute attribute : attributes) {
-                    String name = attribute.getAttributeName();
-                    if (!("name".equals(name) || "value".equals(name))) {
-                        continue;
-                    }
-                    Object value = RestUtil.getAttributeValue(attribute.getAttributeValue());
+                if (attrValue instanceof PsiLiteralExpressionImpl) {
+                    Object value = ((PsiLiteralExpressionImpl) attrValue).getValue();
                     if (value != null) {
                         parameterName = value.toString();
                     }
                 }
             }
 
-            Object paramDefaultTypeValue = getTypeDefaultData(psiMethod, parameterType);
+            Object paramDefaultTypeValue = PsiUtil.getDefaultValueOfPsiType(parameterType);
             if (paramDefaultTypeValue != null) {
                 if (paramDefaultTypeValue instanceof Map) {
                     //noinspection unchecked,rawtypes
                     Map<String, V> value = (Map) paramDefaultTypeValue;
                     value.forEach(map::put);
                 } else {
+                    //noinspection unchecked
                     map.put(parameterName, (V) paramDefaultTypeValue);
                 }
             }
         }
         return map;
-    }
-
-    @Nullable
-    private Object getTypeDefaultData(@NotNull PsiMethod method, PsiType parameterType) {
-        if (parameterType instanceof PsiArrayType) {
-            return "[]";
-        } else if (parameterType instanceof PsiClassReferenceType) {
-            // Object | String | Integer | List<?> | Map<K, V>
-            PsiClassReferenceType type = (PsiClassReferenceType) parameterType;
-
-            GlobalSearchScope resolveScope = type.getResolveScope();
-            PsiFile[] psiFiles = FilenameIndex.getFilesByName(
-                    method.getProject(),
-                    type.getName() + ".java",
-                    resolveScope
-            );
-            if (psiFiles.length > 0) {
-                for (PsiFile psiFile : psiFiles) {
-                    if (psiFile instanceof PsiJavaFile) {
-                        PsiClass[] fileClasses = ((PsiJavaFile) psiFile).getClasses();
-                        Map<String, Object> map = new HashMap<>();
-                        for (PsiClass psiClass : fileClasses) {
-                            if (type.getReference().getQualifiedName().equals(psiClass.getQualifiedName())) {
-                                PsiField[] fields = psiClass.getAllFields();
-                                for (PsiField field : fields) {
-                                    String fieldName = field.getName();
-                                    Object defaultData = getTypeDefaultData(method, field.getType());
-                                    map.put(fieldName, defaultData);
-                                }
-                                break;
-                            }
-                        }
-                        return map;
-                    }
-                }
-            } else {
-                return getDefaultData(type.getName());
-            }
-        } else if (parameterType instanceof PsiPrimitiveType) {
-            // int | char | boolean
-            PsiPrimitiveType type = (PsiPrimitiveType) parameterType;
-            return getDefaultData(type.getName());
-        }
-        return null;
     }
 
     @Contract(pure = true)
