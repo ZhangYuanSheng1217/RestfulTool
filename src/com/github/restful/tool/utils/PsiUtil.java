@@ -180,6 +180,7 @@ public class PsiUtil {
             case "byte":
             case "short":
             case "int":
+            case "integer":
             case "long":
                 data = 0;
                 break;
