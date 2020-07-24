@@ -1,11 +1,13 @@
 package com.github.restful.tool.view.components.editor;
 
 import com.github.restful.tool.utils.Constants;
+import com.intellij.ide.highlighter.HtmlFileType;
 import com.intellij.json.JsonFileType;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorSettings;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.fileTypes.FileTypes;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
@@ -14,6 +16,7 @@ import com.intellij.ui.EditorTextField;
 import com.intellij.util.LocalTimeCounter;
 import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.border.Border;
 
@@ -22,8 +25,21 @@ import javax.swing.border.Border;
  */
 public class JsonEditor extends EditorTextField {
 
+    /**
+     * 文本格式
+     */
+    public static final FileType TEXT_FILE_TYPE = FileTypes.PLAIN_TEXT;
+    /**
+     * json格式
+     */
+    public static final FileType JSON_FILE_TYPE = JsonFileType.INSTANCE;
+    /**
+     * html格式
+     */
+    public static final FileType HTML_FILE_TYPE = HtmlFileType.INSTANCE;
+
     public JsonEditor(Project project) {
-        super(null, project, JsonFileType.INSTANCE, false, false);
+        this(project, JsonFileType.INSTANCE);
     }
 
     public JsonEditor(Project project, FileType fileType) {
@@ -39,19 +55,20 @@ public class JsonEditor extends EditorTextField {
         editor.setVerticalScrollbarVisible(true);
     }
 
+    public void setText(@Nullable final String text, @NotNull final FileType fileType) {
+        super.setFileType(fileType);
+        setDocument(createDocument(text, fileType));
+    }
+
+    @Override
+    public void setFileType(@NotNull FileType fileType) {
+        super.setFileType(fileType);
+        setDocument(createDocument(null, fileType));
+    }
+
     @Override
     protected Document createDocument() {
-        final PsiFileFactory factory = PsiFileFactory.getInstance(getProject());
-        final long stamp = LocalTimeCounter.currentTime();
-        final PsiFile psiFile = factory.createFileFromText(
-                Constants.Application.NAME,
-                getFileType(),
-                "",
-                stamp,
-                true,
-                false
-        );
-        return PsiDocumentManager.getInstance(getProject()).getDocument(psiFile);
+        return createDocument(null, getFileType());
     }
 
     private void initOneLineMode(@NotNull final EditorEx editor) {
@@ -79,5 +96,19 @@ public class JsonEditor extends EditorTextField {
     @Override
     public void setBorder(Border border) {
         super.setBorder(JBUI.Borders.empty());
+    }
+
+    public Document createDocument(@Nullable final String text, @NotNull final FileType fileType) {
+        final PsiFileFactory factory = PsiFileFactory.getInstance(getProject());
+        final long stamp = LocalTimeCounter.currentTime();
+        final PsiFile psiFile = factory.createFileFromText(
+                Constants.Application.NAME,
+                fileType,
+                text == null ? "" : text,
+                stamp,
+                true,
+                false
+        );
+        return PsiDocumentManager.getInstance(getProject()).getDocument(psiFile);
     }
 }

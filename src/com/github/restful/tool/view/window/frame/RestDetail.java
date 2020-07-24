@@ -10,14 +10,12 @@
  */
 package com.github.restful.tool.view.window.frame;
 
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.http.Method;
-import cn.hutool.json.JSONObject;
+import cn.hutool.http.*;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.configuration.AppSettingsState;
 import com.github.restful.tool.service.topic.RestDetailTopic;
+import com.github.restful.tool.utils.JsonUtil;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.utils.convert.BaseConvert;
@@ -25,7 +23,6 @@ import com.github.restful.tool.utils.convert.JsonConvert;
 import com.github.restful.tool.view.components.editor.JsonEditor;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.project.Project;
@@ -35,6 +32,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.messages.MessageBusConnection;
+import org.intellij.lang.annotations.Language;
 import org.jdesktop.swingx.JXButton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,6 +46,7 @@ import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * @author ZhangYuanSheng
@@ -223,24 +222,30 @@ public class RestDetail extends JPanel {
 
         Runnable command = () -> {
             Application application = ApplicationManager.getApplication();
-            application.invokeLater(
-                    () -> responseView.setPlaceholder("Thread request are running..."),
-                    ModalityState.defaultModalityState()
-            );
-            String response;
+            application.invokeLater(() -> responseView.setPlaceholder("Thread request are running..."));
             try {
-                response = httpRequest.execute().body();
+                HttpResponse execute = httpRequest.execute();
+                final String response = execute.body();
+
+                @Language("RegExp") final String regJsonContext
+                        = "[Aa][Pp]{2}[Ll][Ii][Cc][Aa][Tt][Ii][Oo][Nn]/[Jj][Ss][Oo][Nn]";
+
+                @Language("RegExp") final String regHtml
+                        = "</[Hh][Tt][Mm][Ll]>";
+
+                if (Pattern.compile(regJsonContext).matcher(execute.header(Header.CONTENT_TYPE)).find()) {
+                    application.invokeLater(() -> responseView.setText(response, JsonEditor.JSON_FILE_TYPE));
+                } else if (Pattern.compile(regHtml).matcher(response).find()) {
+                    application.invokeLater(() -> responseView.setText(response, JsonEditor.HTML_FILE_TYPE));
+                } else {
+                    application.invokeLater(() -> responseView.setText(response, JsonEditor.TEXT_FILE_TYPE));
+                }
             } catch (Exception e) {
-                response = String.format("%s", e);
+                final String response = String.format("%s", e);
+                application.invokeLater(() -> responseView.setText(response, JsonEditor.TEXT_FILE_TYPE));
             }
-            String resultResponse = response;
-            application.invokeLater(
-                    () -> {
-                        responseView.setPlaceholder(null);
-                        responseView.setText(resultResponse);
-                    },
-                    ModalityState.defaultModalityState()
-            );
+            // String resultResponse = response;
+            application.invokeLater(() -> responseView.setPlaceholder(null));
         };
         responseView.setText(null);
         poolExecutor.execute(command);
@@ -307,6 +312,7 @@ public class RestDetail extends JPanel {
         requestUrl.setText(reqUrl);
         requestHead.setText(reqHead);
         requestBody.setText(reqBody);
+        responseView.setText(null);
     }
 
     public void setCallback(DetailHandle callback) {
@@ -331,7 +337,7 @@ public class RestDetail extends JPanel {
                 if (convert.isBasicDataTypes()) {
                     requestBody = (String) formatMap.get(convert.getBasicDataParamName());
                 } else {
-                    requestBody = new JSONObject(formatMap).toString();
+                    requestBody = JsonUtil.formatJson(formatMap);
                 }
                 request.body(requestBody, "application/json");
             }

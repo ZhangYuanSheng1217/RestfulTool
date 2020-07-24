@@ -10,7 +10,7 @@
  */
 package com.github.restful.tool.utils.convert;
 
-import cn.hutool.json.JSONObject;
+import com.github.restful.tool.utils.JsonUtil;
 import com.intellij.psi.PsiMethod;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,11 +32,12 @@ public class JsonConvert extends BaseConvert<Object> {
     @Override
     public String formatString() {
         Map<String, Object> methodParams = parseMethodParams();
-        return new JSONObject(methodParams).toJSONString(2);
+        return JsonUtil.formatJson(methodParams);
     }
 
     @Override
     public Map<String, Object> formatMap(@NotNull String paramsStr) {
-        return new JSONObject(paramsStr);
+        //noinspection unchecked
+        return (Map<String, Object>) JsonUtil.formatMap(paramsStr);
     }
 }
