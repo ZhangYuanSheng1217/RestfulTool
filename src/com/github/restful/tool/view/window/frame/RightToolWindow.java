@@ -123,7 +123,7 @@ public class RightToolWindow extends JSplitPane {
      */
     private void initEvent() {
         this.serviceTree.showPopupMenu();
-        this.serviceTree.setChooseRequestCallback(restDetail::setRequest);
+        this.serviceTree.setChooseRequestCallback(restDetail::chooseRequest);
         this.restDetail.setCallback(this::renderRequestTree);
 
         // 控制器扫描监听
