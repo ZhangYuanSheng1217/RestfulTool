@@ -25,6 +25,7 @@ import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
+import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.psi.PsiInvalidElementAccessException;
@@ -233,15 +234,16 @@ public class RestDetail extends JPanel {
                 @Language("RegExp") final String regHtml
                         = "</[Hh][Tt][Mm][Ll]>";
 
+                FileType fileType = JsonEditor.TEXT_FILE_TYPE;
                 if (Pattern.compile(regJsonContext).matcher(execute.header(Header.CONTENT_TYPE)).find()) {
-                    application.invokeLater(() -> responseView.setText(response, JsonEditor.JSON_FILE_TYPE));
-                } else if (Pattern.compile(regHtml).matcher(response).find()) {
-                    application.invokeLater(() -> responseView.setText(response, JsonEditor.HTML_FILE_TYPE));
-                } else {
-                    application.invokeLater(() -> responseView.setText(response, JsonEditor.TEXT_FILE_TYPE));
+                    fileType = JsonEditor.JSON_FILE_TYPE;
+                } else if (response != null && Pattern.compile(regHtml).matcher(response).find()) {
+                    fileType = JsonEditor.HTML_FILE_TYPE;
                 }
+                FileType finalFileType = fileType;
+                application.invokeLater(() -> responseView.setText(response, finalFileType));
             } catch (Exception e) {
-                final String response = String.format("%s", e);
+                final String response = String.format("%s", e.getMessage());
                 application.invokeLater(() -> responseView.setText(response, JsonEditor.TEXT_FILE_TYPE));
             }
             // String resultResponse = response;
