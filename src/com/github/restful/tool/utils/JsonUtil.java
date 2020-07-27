@@ -10,12 +10,14 @@
  */
 package com.github.restful.tool.utils;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -73,6 +75,30 @@ public class JsonUtil {
             @Override
             public DefaultPrettyPrinter createInstance() {
                 return this;
+            }
+
+            @Override
+            public void writeEndObject(JsonGenerator g, int nrOfEntries) throws IOException {
+                if (!_objectIndenter.isInline()) {
+                    --_nesting;
+                }
+                if (nrOfEntries > 0) {
+                    _objectIndenter.writeIndentation(g, _nesting);
+                }
+                /* else { g.writeRaw(' '); } */
+                g.writeRaw('}');
+            }
+
+            @Override
+            public void writeEndArray(JsonGenerator g, int nrOfValues) throws IOException {
+                if (!_arrayIndenter.isInline()) {
+                    --_nesting;
+                }
+                if (nrOfValues > 0) {
+                    _arrayIndenter.writeIndentation(g, _nesting);
+                }
+                /* else { g.writeRaw(' '); } */
+                g.writeRaw(']');
             }
         }
     }
