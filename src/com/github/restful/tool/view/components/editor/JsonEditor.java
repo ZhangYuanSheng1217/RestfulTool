@@ -2,6 +2,7 @@ package com.github.restful.tool.view.components.editor;
 
 import com.github.restful.tool.utils.Constants;
 import com.intellij.ide.highlighter.HtmlFileType;
+import com.intellij.ide.highlighter.XmlFileType;
 import com.intellij.json.JsonFileType;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorSettings;
@@ -37,9 +38,13 @@ public class JsonEditor extends EditorTextField {
      * html格式
      */
     public static final FileType HTML_FILE_TYPE = HtmlFileType.INSTANCE;
+    /**
+     * xml格式
+     */
+    public static final FileType XML_FILE_TYPE = XmlFileType.INSTANCE;
 
     public JsonEditor(Project project) {
-        this(project, JsonFileType.INSTANCE);
+        this(project, TEXT_FILE_TYPE);
     }
 
     public JsonEditor(Project project, FileType fileType) {

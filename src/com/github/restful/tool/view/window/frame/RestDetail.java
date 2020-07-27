@@ -141,11 +141,11 @@ public class RestDetail extends JPanel {
         tabbedPane = new JBTabbedPane(JTabbedPane.TOP);
         add(tabbedPane, BorderLayout.CENTER);
 
-        requestHead = new JsonEditor(project);
+        requestHead = new JsonEditor(project, JsonEditor.JSON_FILE_TYPE);
         requestHead.setName(IDENTITY_HEAD);
         tabbedPane.addTab("head", requestHead);
 
-        requestBody = new JsonEditor(project);
+        requestBody = new JsonEditor(project, JsonEditor.JSON_FILE_TYPE);
         tabbedPane.addTab("body", requestBody);
         requestBody.setName(IDENTITY_BODY);
 
@@ -228,17 +228,19 @@ public class RestDetail extends JPanel {
                 HttpResponse execute = httpRequest.execute();
                 final String response = execute.body();
 
-                @Language("RegExp") final String regJsonContext
-                        = "[Aa][Pp]{2}[Ll][Ii][Cc][Aa][Tt][Ii][Oo][Nn]/[Jj][Ss][Oo][Nn]";
-
-                @Language("RegExp") final String regHtml
-                        = "</[Hh][Tt][Mm][Ll]>";
+                @Language("RegExp") final String regJsonContext = "application/json";
+                @Language("RegExp") final String regHtml = "text/html";
+                @Language("RegExp") final String regXml = "text/xml";
 
                 FileType fileType = JsonEditor.TEXT_FILE_TYPE;
-                if (Pattern.compile(regJsonContext).matcher(execute.header(Header.CONTENT_TYPE)).find()) {
+                // Content-Type
+                final String contentType = execute.header(Header.CONTENT_TYPE);
+                if (compileRegExp(regJsonContext).matcher(contentType).find()) {
                     fileType = JsonEditor.JSON_FILE_TYPE;
-                } else if (response != null && Pattern.compile(regHtml).matcher(response).find()) {
+                } else if (compileRegExp(regHtml).matcher(contentType).find()) {
                     fileType = JsonEditor.HTML_FILE_TYPE;
+                } else if (compileRegExp(regXml).matcher(contentType).find()) {
+                    fileType = JsonEditor.XML_FILE_TYPE;
                 }
                 FileType finalFileType = fileType;
                 application.invokeLater(() -> responseView.setText(response, finalFileType));
@@ -264,13 +266,13 @@ public class RestDetail extends JPanel {
         return null;
     }
 
-    public void setRequest(@Nullable Request request) {
+    public void chooseRequest(@Nullable Request request) {
         this.chooseRequest = request;
 
         HttpMethod selItem = HttpMethod.GET;
-        String reqUrl = "";
-        String reqHead = "";
-        String reqBody = "";
+        String reqUrl = null;
+        String reqHead = null;
+        String reqBody = null;
 
         try {
             if (request != null) {
@@ -322,7 +324,7 @@ public class RestDetail extends JPanel {
     }
 
     public void reset() {
-        this.setRequest(null);
+        this.chooseRequest(null);
     }
 
     private HttpRequest getHttpRequest(@NotNull HttpMethod method, @NotNull String url, String head, String body) {
@@ -383,6 +385,11 @@ public class RestDetail extends JPanel {
                     break;
             }
         }
+    }
+
+    @NotNull
+    private Pattern compileRegExp(@NotNull final String reg) {
+        return Pattern.compile(reg, Pattern.CASE_INSENSITIVE);
     }
 
     public interface DetailHandle {
