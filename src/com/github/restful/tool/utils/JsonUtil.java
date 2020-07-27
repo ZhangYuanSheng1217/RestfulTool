@@ -85,7 +85,7 @@ public class JsonUtil {
                 if (nrOfEntries > 0) {
                     _objectIndenter.writeIndentation(g, _nesting);
                 }
-                /* else { g.writeRaw(' '); } */
+
                 g.writeRaw('}');
             }
 
@@ -97,7 +97,7 @@ public class JsonUtil {
                 if (nrOfValues > 0) {
                     _arrayIndenter.writeIndentation(g, _nesting);
                 }
-                /* else { g.writeRaw(' '); } */
+
                 g.writeRaw(']');
             }
         }
