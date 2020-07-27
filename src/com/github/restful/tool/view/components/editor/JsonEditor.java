@@ -4,6 +4,7 @@ import com.github.restful.tool.utils.Constants;
 import com.intellij.ide.highlighter.HtmlFileType;
 import com.intellij.ide.highlighter.XmlFileType;
 import com.intellij.json.JsonFileType;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorSettings;
 import com.intellij.openapi.editor.ex.EditorEx;
@@ -13,6 +14,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.ui.EditorTextField;
 import com.intellij.util.LocalTimeCounter;
 import com.intellij.util.ui.JBUI;
@@ -62,7 +64,17 @@ public class JsonEditor extends EditorTextField {
 
     public void setText(@Nullable final String text, @NotNull final FileType fileType) {
         super.setFileType(fileType);
-        setDocument(createDocument(text, fileType));
+        Document document = createDocument(text, fileType);
+        setDocument(document);
+        PsiFile psiFile = PsiDocumentManager.getInstance(getProject()).getPsiFile(document);
+        if (psiFile != null) {
+            WriteCommandAction.runWriteCommandAction(
+                    getProject(),
+                    () -> {
+                        CodeStyleManager.getInstance(getProject()).reformat(psiFile);
+                    }
+            );
+        }
     }
 
     @Override

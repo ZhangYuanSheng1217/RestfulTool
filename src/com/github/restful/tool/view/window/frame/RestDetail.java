@@ -245,7 +245,7 @@ public class RestDetail extends JPanel {
                 FileType finalFileType = fileType;
                 application.invokeLater(() -> responseView.setText(response, finalFileType));
             } catch (Exception e) {
-                final String response = String.format("%s", e.getMessage());
+                final String response = String.format("%s", e);
                 application.invokeLater(() -> responseView.setText(response, JsonEditor.TEXT_FILE_TYPE));
             }
             // String resultResponse = response;
