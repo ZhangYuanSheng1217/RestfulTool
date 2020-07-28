@@ -10,7 +10,9 @@
  */
 package com.github.restful.tool.view.window.frame;
 
+import com.github.restful.tool.beans.AppSetting;
 import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.configuration.AppSettingsState;
 import com.github.restful.tool.service.Notify;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
@@ -95,7 +97,11 @@ public class ServiceTree extends JScrollPane {
         root.setUserObject(controllerCount.get());
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         model.setRoot(root);
-        expandAll(new TreePath(tree.getModel().getRoot()), true);
+
+        AppSetting setting = AppSettingsState.getInstance().getAppSetting();
+        if (setting.expandOfServiceTree) {
+            expandAll(new TreePath(tree.getModel().getRoot()), true);
+        }
     }
 
     public void setChooseRequestCallback(@Nullable ChooseRequestCallback chooseRequestCallback) {
