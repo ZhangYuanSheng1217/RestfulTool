@@ -45,12 +45,16 @@ public class AppSettingsWindow {
     private final ComboBox<StyleType> lightStyleType;
     private final ComboBox<StyleType> darkStyleType;
 
+    private final JBCheckBox expandOfServiceTree;
+
     public AppSettingsWindow() {
         globalScanServiceWithLib = new JBCheckBox("Scan service with library on application default (全局配置)");
 
         selectIconType = new ComboBox<>(IconTypeManager.getIconTypes());
 
         enableCacheOfRestDetail = new JBCheckBox("Enable cache for Http Tool? (May increase memory footprint)");
+
+        expandOfServiceTree = new JBCheckBox("Whether to expand the ServiceTree by default?");
 
         lightStyleType = new ComboBox<>(StyleType.getLightStyles());
         darkStyleType = new ComboBox<>(StyleType.getDarkStyles());
@@ -84,6 +88,8 @@ public class AppSettingsWindow {
         setting.lightStyleType = lightSelected == null ? StyleType.DEFAULT.name : lightSelected.name;
         setting.darkStyleType = darkSelected == null ? StyleType.DARK.name : darkSelected.name;
 
+        setting.expandOfServiceTree = expandOfServiceTree.isSelected();
+
         return setting;
     }
 
@@ -97,6 +103,8 @@ public class AppSettingsWindow {
 
         lightStyleType.setSelectedItem(StyleType.parse(setting.lightStyleType, false));
         darkStyleType.setSelectedItem(StyleType.parse(setting.darkStyleType, true));
+
+        expandOfServiceTree.setSelected(setting.expandOfServiceTree);
     }
 
     private class SystemOptions extends OptionForm {
@@ -105,6 +113,7 @@ public class AppSettingsWindow {
             super("System");
 
             this.addOptionItem(globalScanServiceWithLib);
+            this.addOptionItem(expandOfServiceTree);
         }
     }
 
