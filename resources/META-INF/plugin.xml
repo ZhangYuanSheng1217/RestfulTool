@@ -1,7 +1,7 @@
 <idea-plugin url="https://www.jetbrains.com/idea">
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.2.5</version>
+    <version>1.2.4.727</version>
     <vendor email="2862297923@qq.com" url="">ZhangYuanSheng</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -26,10 +26,8 @@
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
       <ul>
-        <li> 设置中增加`ServiceTree`是否默认展开 </li>
-      </ul>
-      <ul>
-        <li> Add `Service Tree` in the settings to expand by default </li>
+        <li> 优化性能及代码结构 </li>
+        <li> fix some bugs </li>
       </ul>
     ]]>
     </change-notes>

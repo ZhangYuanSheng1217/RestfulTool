@@ -48,27 +48,20 @@ public class AppSetting {
     @NotNull
     public String darkStyleType = StyleType.DARK.name;
 
-    /**
-     * 是否默认展开所有ServiceTree
-     */
-    public boolean expandOfServiceTree;
-
     public void initValue() {
         this.scanServicesWithLibraryDefault = false;
         this.iconTypeScheme = IconTypeManager.getInstance("default").toString();
-        this.expandOfServiceTree = true;
     }
 
     public boolean isModified(@Nullable AppSetting setting) {
         if (setting == null) {
             return false;
         }
-        return this.scanServicesWithLibraryDefault != setting.scanServicesWithLibraryDefault
-                || !this.iconTypeScheme.equals(setting.iconTypeScheme)
-                || this.enableCacheOfRestDetail != setting.enableCacheOfRestDetail
-                || !this.lightStyleType.equals(setting.lightStyleType)
-                || !this.darkStyleType.equals(setting.darkStyleType)
-                || this.expandOfServiceTree != setting.expandOfServiceTree;
+        return this.scanServicesWithLibraryDefault != setting.scanServicesWithLibraryDefault ||
+                !this.iconTypeScheme.equals(setting.iconTypeScheme) ||
+                this.enableCacheOfRestDetail != setting.enableCacheOfRestDetail ||
+                !this.lightStyleType.equals(setting.lightStyleType) ||
+                !this.darkStyleType.equals(setting.darkStyleType);
     }
 
     public void applySetting(@Nullable AppSetting setting) {
@@ -80,6 +73,5 @@ public class AppSetting {
         this.enableCacheOfRestDetail = setting.enableCacheOfRestDetail;
         this.lightStyleType = setting.lightStyleType;
         this.darkStyleType = setting.darkStyleType;
-        this.expandOfServiceTree = setting.expandOfServiceTree;
     }
 }
