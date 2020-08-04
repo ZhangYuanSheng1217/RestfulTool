@@ -27,9 +27,11 @@
     <change-notes><![CDATA[
       <ul>
         <li> 设置中增加`ServiceTree`是否默认展开 </li>
+        <li> 完善`ContextPath`的扫描方式 </li>
       </ul>
       <ul>
         <li> Add `Service Tree` in the settings to expand by default </li>
+        <li> Improve the scanning method of `Context Path` </li>
       </ul>
     ]]>
     </change-notes>

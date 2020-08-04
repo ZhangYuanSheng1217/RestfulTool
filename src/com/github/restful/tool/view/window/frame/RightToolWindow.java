@@ -1,18 +1,19 @@
 package com.github.restful.tool.view.window.frame;
 
+import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.PropertiesKey;
+import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.service.topic.RefreshServiceTreeTopic;
 import com.github.restful.tool.service.topic.RestDetailTopic;
+import com.github.restful.tool.service.topic.ServiceTreeTopic;
+import com.github.restful.tool.utils.PomUtil;
+import com.github.restful.tool.utils.RequestUtil;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.util.ui.JBUI;
-import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.service.topic.ServiceTreeTopic;
-import com.github.restful.tool.utils.RequestUtil;
 import org.jdesktop.swingx.JXButton;
 import org.jetbrains.annotations.NotNull;
 
@@ -173,6 +174,9 @@ public class RightToolWindow extends JSplitPane {
         // 清除RestDetail中的Cache缓存
         RestDetailTopic restDetailTopic = project.getMessageBus().syncPublisher(RestDetailTopic.TOPIC);
         restDetailTopic.clearCache(null);
+
+        // 清除扫描的pom文件缓存
+        PomUtil.clearCaches();
     }
 
     private void setComponentDimension(@NotNull Dimension dimension, @NotNull JComponent... components) {

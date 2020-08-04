@@ -18,7 +18,6 @@ import com.intellij.lang.jvm.annotation.*;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiExpression;
@@ -109,30 +108,7 @@ public class RestUtil {
                     project, scope,
                     "server.servlet.context-path"
             );
-            @Language("RegExp") final String mavenPropReg = "@\\S+@";
-            @Nullable String mavenProp;
-            if (contextPath != null && (mavenProp = ReUtil.getGroup0(mavenPropReg, contextPath)) != null) {
-                Document pomDoc = getModulePomFile(((ModuleWithDependenciesScope) scope).getModule());
-                if (pomDoc != null) {
-                    Element properties = pomDoc.getRootElement().element("properties");
-                    if (properties != null) {
-                        Element propItemElement = properties.element(
-                                mavenProp.substring(mavenProp.indexOf("@") + 1, mavenProp.lastIndexOf("@"))
-                        );
-                        if (propItemElement != null) {
-                            String name = propItemElement.getData().toString().trim();
-                            mavenProp = getPomFileProperties(properties, name);
-                            // 如果<properties>找不到则到根标签<project>寻找
-                            mavenProp = getPomFileProject(pomDoc.getRootElement(), mavenProp);
-                            if (StringUtil.isEmptyOrSpaces(mavenProp)) {
-                                return null;
-                            }
-                        }
-                    }
-                }
-                contextPath = ReUtil.replaceAll(contextPath, mavenPropReg, mavenProp);
-            }
-            return contextPath;
+            return PomUtil.getContextPathWithPom(((ModuleWithDependenciesScope) scope).getModule(), contextPath);
         } catch (Exception ignore) {
             return null;
         }
