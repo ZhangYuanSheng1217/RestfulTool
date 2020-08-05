@@ -10,12 +10,10 @@
  */
 package com.github.restful.tool.utils;
 
-import cn.hutool.core.util.ReUtil;
 import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.utils.scanner.JaxrsHelper;
 import com.github.restful.tool.utils.scanner.SpringHelper;
 import com.intellij.lang.jvm.annotation.*;
-import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiAnnotation;
@@ -23,14 +21,9 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
-import org.dom4j.Document;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
-import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -125,78 +118,6 @@ public class RestUtil {
             return false;
         }
         return SpringHelper.hasRestful(psiClass) || JaxrsHelper.hasRestful(psiClass);
-    }
-
-    /**
-     * 获取properties-element的值
-     *
-     * @param element element
-     * @param name    name
-     * @return value
-     */
-    @NotNull
-    private static String getPomFileProperties(@Nullable Element element, String name) {
-        // maven element 的变量格式：${java.version}
-        @Language("RegExp") final String propReg = "\\$\\{[A-Za-z0-9.:-]+}";
-        if (name == null) {
-            return "";
-        }
-        if (element == null) {
-            return "";
-        }
-        String response = name;
-        for (String nameItem : ReUtil.findAll(propReg, response, 0)) {
-            Element itemElement = element.element(nameItem.substring(
-                    nameItem.indexOf("{") + 1,
-                    nameItem.indexOf("}")
-            ));
-            if (itemElement != null) {
-                String itemResult = itemElement.getData().toString().trim();
-                for (String itemName : ReUtil.findAll(propReg, itemResult, 0)) {
-                    itemResult = itemResult.replace(itemName, getPomFileProperties(element, itemName));
-                }
-                response = response.replace(nameItem, itemResult);
-            }
-        }
-        return response;
-    }
-
-    /**
-     * 获取project-element的值
-     *
-     * @param element element
-     * @param name    name
-     * @return value
-     */
-    @NotNull
-    private static String getPomFileProject(@Nullable Element element, String name) {
-        // maven element 的变量格式：${project.version}
-        @Language("RegExp") final String propReg = "\\$\\{[A-Za-z0-9.:-]+}";
-        if (name == null) {
-            return "";
-        }
-        if (element == null) {
-            return "";
-        }
-        String response = name;
-        for (String nameItem : ReUtil.findAll(propReg, response, 0)) {
-            String elementName = nameItem.substring(
-                    nameItem.indexOf("{") + 1,
-                    nameItem.indexOf("}")
-            );
-            if (elementName.toLowerCase().startsWith("project.")) {
-                elementName = elementName.substring(elementName.indexOf(".") + 1);
-            }
-            Element itemElement = element.element(elementName);
-            if (itemElement != null) {
-                String itemResult = itemElement.getData().toString().trim();
-                for (String itemName : ReUtil.findAll(propReg, itemResult, 0)) {
-                    itemResult = itemResult.replace(itemName, getPomFileProject(element, itemName));
-                }
-                response = response.replace(nameItem, itemResult);
-            }
-        }
-        return response;
     }
 
     @NotNull
@@ -301,30 +222,5 @@ public class RestUtil {
                     .forEach(annotations::add);
         }
         return annotations;
-    }
-
-    /**
-     * 通过绝对地址读取pom.xml文件并转换成Document
-     *
-     * @param module module
-     * @return XmlFile
-     */
-    @Nullable
-    private static Document getModulePomFile(@NotNull Module module) {
-        String pomFileName = "pom.xml";
-        try {
-            File moduleFile = new File(module.getModuleFilePath());
-            if (!moduleFile.exists()) {
-                throw new Exception();
-            }
-            File pomFile = new File(moduleFile.getParent(), pomFileName);
-            if (!pomFile.exists()) {
-                throw new Exception();
-            }
-            SAXReader reader = new SAXReader();
-            return reader.read(pomFile);
-        } catch (Exception ignore) {
-        }
-        return null;
     }
 }
