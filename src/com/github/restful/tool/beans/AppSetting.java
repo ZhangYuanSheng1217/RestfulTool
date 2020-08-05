@@ -53,10 +53,16 @@ public class AppSetting {
      */
     public boolean expandOfServiceTree;
 
+    /**
+     * HTTP工具中允许的重定向的最大次数，0 则不允许
+     */
+    public int redirectMaxCount;
+
     public void initValue() {
         this.scanServicesWithLibraryDefault = false;
         this.iconTypeScheme = IconTypeManager.getInstance("default").toString();
         this.expandOfServiceTree = true;
+        this.redirectMaxCount = 3;
     }
 
     public boolean isModified(@Nullable AppSetting setting) {
@@ -68,7 +74,8 @@ public class AppSetting {
                 || this.enableCacheOfRestDetail != setting.enableCacheOfRestDetail
                 || !this.lightStyleType.equals(setting.lightStyleType)
                 || !this.darkStyleType.equals(setting.darkStyleType)
-                || this.expandOfServiceTree != setting.expandOfServiceTree;
+                || this.expandOfServiceTree != setting.expandOfServiceTree
+                || this.redirectMaxCount != setting.redirectMaxCount;
     }
 
     public void applySetting(@Nullable AppSetting setting) {
@@ -81,5 +88,6 @@ public class AppSetting {
         this.lightStyleType = setting.lightStyleType;
         this.darkStyleType = setting.darkStyleType;
         this.expandOfServiceTree = setting.expandOfServiceTree;
+        this.redirectMaxCount = setting.redirectMaxCount;
     }
 }

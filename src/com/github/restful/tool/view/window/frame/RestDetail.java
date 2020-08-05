@@ -226,7 +226,14 @@ public class RestDetail extends JPanel {
             application.invokeLater(() -> responseView.setPlaceholder("Thread request are running..."));
             try {
                 HttpResponse execute = httpRequest.execute();
-                final String response = execute.body();
+                // 最大重定向的次数
+                final int redirectMaxCount = AppSettingsState.getInstance().getAppSetting().redirectMaxCount;
+                int redirectCount = 0;
+                while (redirectCount++ < redirectMaxCount && execute.getStatus() == HttpStatus.HTTP_MOVED_TEMP) {
+                    String redirect = execute.header(Header.LOCATION);
+                    httpRequest.setUrl(redirect);
+                    execute = httpRequest.execute();
+                }
 
                 @Language("RegExp") final String regJsonContext = "application/json";
                 @Language("RegExp") final String regHtml = "text/html";
@@ -235,20 +242,22 @@ public class RestDetail extends JPanel {
                 FileType fileType = JsonEditor.TEXT_FILE_TYPE;
                 // Content-Type
                 final String contentType = execute.header(Header.CONTENT_TYPE);
-                if (compileRegExp(regJsonContext).matcher(contentType).find()) {
-                    fileType = JsonEditor.JSON_FILE_TYPE;
-                } else if (compileRegExp(regHtml).matcher(contentType).find()) {
-                    fileType = JsonEditor.HTML_FILE_TYPE;
-                } else if (compileRegExp(regXml).matcher(contentType).find()) {
-                    fileType = JsonEditor.XML_FILE_TYPE;
+                if (contentType != null) {
+                    if (compileRegExp(regJsonContext).matcher(contentType).find()) {
+                        fileType = JsonEditor.JSON_FILE_TYPE;
+                    } else if (compileRegExp(regHtml).matcher(contentType).find()) {
+                        fileType = JsonEditor.HTML_FILE_TYPE;
+                    } else if (compileRegExp(regXml).matcher(contentType).find()) {
+                        fileType = JsonEditor.XML_FILE_TYPE;
+                    }
                 }
-                FileType finalFileType = fileType;
-                application.invokeLater(() -> responseView.setText(response, finalFileType));
+                final FileType finalFileType = fileType;
+                final String responseBody = execute.body();
+                application.invokeLater(() -> responseView.setText(responseBody, finalFileType));
             } catch (Exception e) {
                 final String response = String.format("%s", e);
                 application.invokeLater(() -> responseView.setText(response, JsonEditor.TEXT_FILE_TYPE));
             }
-            // String resultResponse = response;
             application.invokeLater(() -> responseView.setPlaceholder(null));
         };
         responseView.setText(null);

@@ -1,7 +1,7 @@
 <idea-plugin url="https://www.jetbrains.com/idea">
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.2.5</version>
+    <version>1.2.5.85</version>
     <vendor email="2862297923@qq.com" url="">ZhangYuanSheng</vendor>
 
     <!--suppress PluginXmlValidity -->
@@ -26,12 +26,10 @@
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
       <ul>
-        <li> 设置中增加`ServiceTree`是否默认展开 </li>
-        <li> 完善`ContextPath`的扫描方式 </li>
+        <li> Http工具增加重定向请求，设置中修改允许重定向的最大次数 </li>
       </ul>
       <ul>
-        <li> Add `Service Tree` in the settings to expand by default </li>
-        <li> Improve the scanning method of `Context Path` </li>
+        <li> Http tool adds redirect request, modify the maximum number of allowed redirection in settings </li>
       </ul>
     ]]>
     </change-notes>

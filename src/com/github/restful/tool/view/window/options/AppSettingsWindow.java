@@ -11,7 +11,9 @@
 package com.github.restful.tool.view.window.options;
 
 import com.github.restful.tool.beans.AppSetting;
+import com.github.restful.tool.view.components.editor.StyleType;
 import com.github.restful.tool.view.icon.IconType;
+import com.github.restful.tool.view.icon.IconTypeManager;
 import com.github.restful.tool.view.icon.PreviewIconType;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBCheckBox;
@@ -19,8 +21,6 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBEmptyBorder;
 import com.intellij.util.ui.JBUI;
-import com.github.restful.tool.view.components.editor.StyleType;
-import com.github.restful.tool.view.icon.IconTypeManager;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -47,6 +47,8 @@ public class AppSettingsWindow {
 
     private final JBCheckBox expandOfServiceTree;
 
+    private final ComboBox<Integer> selectRedirectMaxCount;
+
     public AppSettingsWindow() {
         globalScanServiceWithLib = new JBCheckBox("Scan service with library on application default (全局配置)");
 
@@ -58,6 +60,10 @@ public class AppSettingsWindow {
 
         lightStyleType = new ComboBox<>(StyleType.getLightStyles());
         darkStyleType = new ComboBox<>(StyleType.getDarkStyles());
+
+        selectRedirectMaxCount = new ComboBox<>(new Integer[]{
+                0, 3, 5, 10
+        });
 
         content = FormBuilder.createFormBuilder()
                 .addComponent(new SystemOptions().getContent())
@@ -90,6 +96,9 @@ public class AppSettingsWindow {
 
         setting.expandOfServiceTree = expandOfServiceTree.isSelected();
 
+        //noinspection ConstantConditions
+        setting.redirectMaxCount = (int) selectRedirectMaxCount.getSelectedItem();
+
         return setting;
     }
 
@@ -105,6 +114,8 @@ public class AppSettingsWindow {
         darkStyleType.setSelectedItem(StyleType.parse(setting.darkStyleType, true));
 
         expandOfServiceTree.setSelected(setting.expandOfServiceTree);
+
+        selectRedirectMaxCount.setSelectedItem(setting.redirectMaxCount);
     }
 
     private class SystemOptions extends OptionForm {
@@ -145,6 +156,11 @@ public class AppSettingsWindow {
 
             this.addOptionItem(enableCacheOfRestDetail);
             this.addOptionItem(getStyleTypeView(), 10);
+            this.addLabeledOptionItem(
+                    "The maximum number of redirects allowed in the HTTP Tool: ",
+                    selectRedirectMaxCount,
+                    10
+            );
         }
 
         @NotNull
