@@ -11,20 +11,17 @@
 package com.github.restful.tool.view.window.options;
 
 import com.github.restful.tool.beans.AppSetting;
-import com.github.restful.tool.view.components.editor.StyleType;
-import com.github.restful.tool.view.icon.IconType;
-import com.github.restful.tool.view.icon.IconTypeManager;
-import com.github.restful.tool.view.icon.PreviewIconType;
-import com.intellij.openapi.ui.ComboBox;
-import com.intellij.ui.components.JBCheckBox;
-import com.intellij.ui.components.JBLabel;
+import com.github.restful.tool.view.window.options.items.HttpToolOptions;
+import com.github.restful.tool.view.window.options.items.IconOptions;
+import com.github.restful.tool.view.window.options.items.SystemOptions;
 import com.intellij.util.ui.FormBuilder;
-import com.intellij.util.ui.JBEmptyBorder;
-import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author ZhangYuanSheng
@@ -36,41 +33,31 @@ public class AppSettingsWindow {
 
     private final JPanel content;
 
-    private final JBCheckBox globalScanServiceWithLib;
-
-    private final ComboBox<IconType> selectIconType;
-
-    private final JBCheckBox enableCacheOfRestDetail;
-
-    private final ComboBox<StyleType> lightStyleType;
-    private final ComboBox<StyleType> darkStyleType;
-
-    private final JBCheckBox expandOfServiceTree;
-
-    private final ComboBox<Integer> selectRedirectMaxCount;
+    private final List<SettingObserver> observerList;
 
     public AppSettingsWindow() {
-        globalScanServiceWithLib = new JBCheckBox("Scan service with library on application default (全局配置)");
+        observerList = new ArrayList<>(AppSetting.getSettingObservers());
 
-        selectIconType = new ComboBox<>(IconTypeManager.getIconTypes());
+        SystemOptions systemOptions = new SystemOptions();
+        IconOptions iconOptions = new IconOptions();
+        HttpToolOptions httpToolOptions = new HttpToolOptions();
 
-        enableCacheOfRestDetail = new JBCheckBox("Enable cache for Http Tool? (May increase memory footprint)");
-
-        expandOfServiceTree = new JBCheckBox("Whether to expand the ServiceTree by default?");
-
-        lightStyleType = new ComboBox<>(StyleType.getLightStyles());
-        darkStyleType = new ComboBox<>(StyleType.getDarkStyles());
-
-        selectRedirectMaxCount = new ComboBox<>(new Integer[]{
-                0, 3, 5, 10
-        });
+        Map<String, OptionForm> forms = new HashMap<>();
+        forms.put(SystemOptions.NAME, systemOptions);
+        forms.put(IconOptions.NAME, iconOptions);
+        forms.put(HttpToolOptions.NAME, httpToolOptions);
+        initSetting(forms);
 
         content = FormBuilder.createFormBuilder()
-                .addComponent(new SystemOptions().getContent())
-                .addComponent(new IconOptions().getContent(), VERTICAL_CLEARANCE)
-                .addComponent(new HttpToolOptions().getContent(), VERTICAL_CLEARANCE)
+                .addComponent(systemOptions.getContent())
+                .addComponent(iconOptions.getContent(), VERTICAL_CLEARANCE)
+                .addComponent(httpToolOptions.getContent(), VERTICAL_CLEARANCE)
                 .addComponentFillVertically(new JPanel(), VERTICAL_CLEARANCE)
                 .getPanel();
+    }
+
+    private void initSetting(@NotNull Map<String, OptionForm> forms) {
+        observerList.forEach(item -> item.applyComponent(forms));
     }
 
     public JPanel getContent() {
@@ -78,27 +65,13 @@ public class AppSettingsWindow {
     }
 
     public JComponent getPreferredFocusedComponent() {
-        return globalScanServiceWithLib;
+        return content;
     }
 
     @NotNull
     public AppSetting getAppSetting() {
         AppSetting setting = new AppSetting();
-        setting.scanServicesWithLibraryDefault = globalScanServiceWithLib.isSelected();
-        //noinspection ConstantConditions
-        setting.iconTypeScheme = IconTypeManager.getInstance(selectIconType.getSelectedItem()).toString();
-        setting.enableCacheOfRestDetail = enableCacheOfRestDetail.isSelected();
-
-        StyleType lightSelected = (StyleType) lightStyleType.getSelectedItem();
-        StyleType darkSelected = (StyleType) darkStyleType.getSelectedItem();
-        setting.lightStyleType = lightSelected == null ? StyleType.DEFAULT.name : lightSelected.name;
-        setting.darkStyleType = darkSelected == null ? StyleType.DARK.name : darkSelected.name;
-
-        setting.expandOfServiceTree = expandOfServiceTree.isSelected();
-
-        //noinspection ConstantConditions
-        setting.redirectMaxCount = (int) selectRedirectMaxCount.getSelectedItem();
-
+        observerList.forEach(item -> item.applySetting(setting));
         return setting;
     }
 
@@ -106,82 +79,6 @@ public class AppSettingsWindow {
         if (setting == null) {
             return;
         }
-        globalScanServiceWithLib.setSelected(setting.scanServicesWithLibraryDefault);
-        selectIconType.setSelectedItem(IconTypeManager.getInstance(setting.iconTypeScheme));
-        enableCacheOfRestDetail.setSelected(setting.enableCacheOfRestDetail);
-
-        lightStyleType.setSelectedItem(StyleType.parse(setting.lightStyleType, false));
-        darkStyleType.setSelectedItem(StyleType.parse(setting.darkStyleType, true));
-
-        expandOfServiceTree.setSelected(setting.expandOfServiceTree);
-
-        selectRedirectMaxCount.setSelectedItem(setting.redirectMaxCount);
-    }
-
-    private class SystemOptions extends OptionForm {
-
-        public SystemOptions() {
-            super("System");
-
-            this.addOptionItem(globalScanServiceWithLib);
-            this.addOptionItem(expandOfServiceTree);
-        }
-    }
-
-    private class IconOptions extends OptionForm {
-
-        public IconOptions() {
-            super("Icons");
-
-            this.addLabeledOptionItem("Select Icon: ", selectIconType);
-            this.addOptionItem(addIconsPreview());
-        }
-
-        @NotNull
-        private JPanel addIconsPreview() {
-            JPanel iconsPreview = new JPanel(new GridLayout(IconTypeManager.getIconTypes().length, 1));
-
-            for (IconType iconType : IconTypeManager.getIconTypes()) {
-                iconsPreview.add(new PreviewIconType(iconType));
-            }
-
-            return iconsPreview;
-        }
-    }
-
-    private class HttpToolOptions extends OptionForm {
-
-        public HttpToolOptions() {
-            super("Http Tool");
-
-            this.addOptionItem(enableCacheOfRestDetail);
-            this.addOptionItem(getStyleTypeView(), 10);
-            this.addLabeledOptionItem(
-                    "The maximum number of redirects allowed in the HTTP Tool: ",
-                    selectRedirectMaxCount,
-                    10
-            );
-        }
-
-        @NotNull
-        private JComponent getStyleTypeView() {
-            JPanel panel = new JPanel(new BorderLayout());
-
-            JComponent lightStylePane = FormBuilder.createFormBuilder()
-                    .addLabeledComponent("LightStyleType: ", AppSettingsWindow.this.lightStyleType)
-                    .getPanel();
-            JComponent darkStylePane = FormBuilder.createFormBuilder()
-                    .addLabeledComponent("DarkStyleType: ", darkStyleType)
-                    .getPanel();
-
-            panel.add(new JBLabel("Change JSON syntax highlighting scheme (Reopen the project to take effect)"), BorderLayout.NORTH);
-            panel.add(lightStylePane, BorderLayout.WEST);
-            panel.add(darkStylePane, BorderLayout.CENTER);
-
-            JBEmptyBorder emptyLeft = JBUI.Borders.emptyLeft(15);
-            lightStylePane.setBorder(emptyLeft);
-            darkStylePane.setBorder(emptyLeft);
-            return panel;
-        }
+        observerList.forEach(item -> item.loadSetting(setting));
     }
 }

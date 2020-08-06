@@ -33,28 +33,33 @@ public class OptionForm {
         formBuilder = FormBuilder.createFormBuilder();
     }
 
-    protected final void addOptionItem(@NotNull JComponent component) {
+    public final void addOptionItem(@NotNull JComponent component) {
         formBuilder.addComponent(component);
     }
 
-    protected final void addOptionItem(@NotNull JComponent component, int topInset) {
+    public final void addOptionItem(@NotNull JComponent component, int topInset) {
         formBuilder.addComponent(component, topInset);
     }
 
-    protected final void addLabeledOptionItem(@NotNull String name, @NotNull JComponent component) {
+    public final void addLabeledOptionItem(@NotNull String name, @NotNull JComponent component) {
         formBuilder.addLabeledComponent(name, component);
     }
 
-    protected final void addLabeledOptionItem(@NotNull String name, @NotNull JComponent component, int topInset) {
+    public final void addLabeledOptionItem(@NotNull String name, @NotNull JComponent component, int topInset) {
         formBuilder.addLabeledComponent(name, component, topInset);
     }
 
-    protected final void addLabeledOptionItem(@NotNull String name, @NotNull JComponent component, boolean labelOnTop) {
+    public final void addLabeledOptionItem(@NotNull String name, @NotNull JComponent component, boolean labelOnTop) {
         formBuilder.addLabeledComponent(name, component, labelOnTop);
     }
 
     public final JComponent getContent() {
         optionItem.add(formBuilder.getPanel(), BorderLayout.CENTER);
         return content;
+    }
+
+    @NotNull
+    public final String getName() {
+        return this.titleName.getText();
     }
 }
