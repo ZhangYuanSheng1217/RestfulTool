@@ -3,25 +3,20 @@
   FileName: AppSettingsComponent
   Author:   ZhangYuanSheng
   Date:     2020/5/27 18:06
-  Description: 
+  Description:
   History:
   <author>          <time>          <version>          <desc>
   作者姓名            修改时间           版本号              描述
  */
 package com.github.restful.tool.view.window.options;
 
-import com.github.restful.tool.beans.AppSetting;
-import com.github.restful.tool.view.window.options.items.HttpToolOptions;
-import com.github.restful.tool.view.window.options.items.IconOptions;
-import com.github.restful.tool.view.window.options.items.SystemOptions;
+import com.github.restful.tool.beans.settings.AppSetting;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author ZhangYuanSheng
@@ -32,32 +27,24 @@ public class AppSettingsWindow {
     public static final int VERTICAL_CLEARANCE = 30;
 
     private final JPanel content;
-
-    private final List<SettingObserver> observerList;
+    private final List<Option> optionList;
 
     public AppSettingsWindow() {
-        observerList = new ArrayList<>(AppSetting.getSettingObservers());
+        optionList = new ArrayList<>();
+        FormBuilder builder = FormBuilder.createFormBuilder();
 
-        SystemOptions systemOptions = new SystemOptions();
-        IconOptions iconOptions = new IconOptions();
-        HttpToolOptions httpToolOptions = new HttpToolOptions();
+        List<AppSetting.SettingItem> allSettingItems = AppSetting.getAllSettingItems();
+        for (int i = 0; i < allSettingItems.size(); i++) {
+            AppSetting.SettingItem item = allSettingItems.get(i);
+            if (i == 0) {
+                builder.addComponent(item.form.getContent());
+            } else {
+                builder.addComponent(item.form.getContent(), VERTICAL_CLEARANCE);
+            }
+            optionList.addAll(item.getOptions());
+        }
 
-        Map<String, OptionForm> forms = new HashMap<>();
-        forms.put(SystemOptions.NAME, systemOptions);
-        forms.put(IconOptions.NAME, iconOptions);
-        forms.put(HttpToolOptions.NAME, httpToolOptions);
-        initSetting(forms);
-
-        content = FormBuilder.createFormBuilder()
-                .addComponent(systemOptions.getContent())
-                .addComponent(iconOptions.getContent(), VERTICAL_CLEARANCE)
-                .addComponent(httpToolOptions.getContent(), VERTICAL_CLEARANCE)
-                .addComponentFillVertically(new JPanel(), VERTICAL_CLEARANCE)
-                .getPanel();
-    }
-
-    private void initSetting(@NotNull Map<String, OptionForm> forms) {
-        observerList.forEach(item -> item.applyComponent(forms));
+        content = builder.addComponentFillVertically(new JPanel(), VERTICAL_CLEARANCE).getPanel();
     }
 
     public JPanel getContent() {
@@ -71,7 +58,7 @@ public class AppSettingsWindow {
     @NotNull
     public AppSetting getAppSetting() {
         AppSetting setting = new AppSetting();
-        observerList.forEach(item -> item.applySetting(setting));
+        optionList.forEach(item -> item.applySetting(setting));
         return setting;
     }
 
@@ -79,6 +66,6 @@ public class AppSettingsWindow {
         if (setting == null) {
             return;
         }
-        observerList.forEach(item -> item.loadSetting(setting));
+        optionList.forEach(item -> item.showSetting(setting));
     }
 }

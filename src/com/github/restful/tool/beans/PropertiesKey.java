@@ -1,6 +1,6 @@
 package com.github.restful.tool.beans;
 
-import com.github.restful.tool.configuration.AppSettingsState;
+import com.github.restful.tool.beans.settings.AppSetting;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
@@ -23,14 +23,16 @@ public enum PropertiesKey {
     }
 
     public static boolean scanServiceWithLibrary(@NotNull Project project) {
-        return PropertiesComponent.getInstance(project).getBoolean(
+        PropertiesComponent instance = PropertiesComponent.getInstance(project);
+        String value = instance.getValue(
                 SCAN_SERVICE_WITH_LIB.value,
-                AppSettingsState.getInstance().getAppSetting().scanServicesWithLibraryDefault
+                AppSetting.SystemOptionForm.SCAN_WITH_LIBRARY.getData().toString()
         );
+        return Boolean.parseBoolean(value);
     }
 
     public static void scanServiceWithLibrary(@NotNull Project project, boolean flag) {
-        PropertiesComponent.getInstance(project).setValue(SCAN_SERVICE_WITH_LIB.value, flag);
+        PropertiesComponent.getInstance(project).setValue(SCAN_SERVICE_WITH_LIB.value, flag + "");
         topicNotice(project);
     }
 

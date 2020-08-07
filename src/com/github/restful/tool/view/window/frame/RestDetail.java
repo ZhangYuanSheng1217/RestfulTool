@@ -13,7 +13,7 @@ package com.github.restful.tool.view.window.frame;
 import cn.hutool.http.*;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.configuration.AppSettingsState;
+import com.github.restful.tool.beans.settings.AppSetting;
 import com.github.restful.tool.service.topic.RestDetailTopic;
 import com.github.restful.tool.utils.JsonUtil;
 import com.github.restful.tool.utils.RestUtil;
@@ -227,7 +227,7 @@ public class RestDetail extends JPanel {
             try {
                 HttpResponse execute = httpRequest.execute();
                 // 最大重定向的次数
-                final int redirectMaxCount = AppSettingsState.getInstance().getAppSetting().redirectMaxCount;
+                final int redirectMaxCount = AppSetting.HttpToolOptionForm.REDIRECT_MAX_COUNT.getData();
                 int redirectCount = 0;
                 while (redirectCount++ < redirectMaxCount && execute.getStatus() == HttpStatus.HTTP_MOVED_TEMP) {
                     String redirect = execute.header(Header.LOCATION);
@@ -360,7 +360,7 @@ public class RestDetail extends JPanel {
 
     @NotNull
     private String getCache(@NotNull String name, @NotNull Request request) {
-        boolean enable = AppSettingsState.getInstance().getAppSetting().enableCacheOfRestDetail;
+        boolean enable = AppSetting.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
         if (enable) {
             switch (name) {
                 case IDENTITY_HEAD:
@@ -375,7 +375,7 @@ public class RestDetail extends JPanel {
     }
 
     private void setCache(@NotNull String name, @NotNull Request request, @NotNull String cache) {
-        boolean enable = AppSettingsState.getInstance().getAppSetting().enableCacheOfRestDetail;
+        boolean enable = AppSetting.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
         if (enable) {
             switch (name) {
                 case IDENTITY_HEAD:

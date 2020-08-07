@@ -12,6 +12,7 @@ package com.github.restful.tool.view.window.options;
 
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,13 +24,18 @@ import java.awt.*;
 public class OptionForm {
 
     private final FormBuilder formBuilder;
-
+    private final int index;
     private JPanel content;
     private JLabel titleName;
     private JPanel optionItem;
 
     public OptionForm(@NotNull String titleName) {
+        this(titleName, 0);
+    }
+
+    public OptionForm(@NotNull String titleName, int index) {
         this.titleName.setText(titleName);
+        this.index = index;
         formBuilder = FormBuilder.createFormBuilder();
     }
 
@@ -37,7 +43,11 @@ public class OptionForm {
         formBuilder.addComponent(component);
     }
 
-    public final void addOptionItem(@NotNull JComponent component, int topInset) {
+    public final void addOptionItem(@NotNull JComponent component, @Nullable Integer topInset) {
+        if (topInset == null) {
+            formBuilder.addComponent(component);
+            return;
+        }
         formBuilder.addComponent(component, topInset);
     }
 
@@ -61,5 +71,9 @@ public class OptionForm {
     @NotNull
     public final String getName() {
         return this.titleName.getText();
+    }
+
+    public int getIndex() {
+        return index;
     }
 }

@@ -10,13 +10,12 @@
  */
 package com.github.restful.tool.view.window.frame;
 
-import com.github.restful.tool.beans.AppSetting;
 import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.configuration.AppSettingsState;
 import com.github.restful.tool.service.Notify;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.view.window.RestfulTreeCellRenderer;
+import com.github.restful.tool.beans.settings.AppSetting;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.JBPopupMenu;
@@ -98,8 +97,7 @@ public class ServiceTree extends JScrollPane {
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         model.setRoot(root);
 
-        AppSetting setting = AppSettingsState.getInstance().getAppSetting();
-        if (setting.expandOfServiceTree) {
+        if (AppSetting.SystemOptionForm.EXPAND_OF_SERVICE_TREE.getData()) {
             expandAll(new TreePath(tree.getModel().getRoot()), true);
         }
     }

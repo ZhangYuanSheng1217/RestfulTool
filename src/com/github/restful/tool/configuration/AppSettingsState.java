@@ -10,12 +10,12 @@
  */
 package com.github.restful.tool.configuration;
 
+import com.github.restful.tool.beans.settings.AppSetting;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-import com.github.restful.tool.beans.AppSetting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
  * @version 1.0
  */
 @State(
-        name = "core.configuration.AppSettingsState",
+        name = "com.github.restful.tool.configuration.AppSettingsState",
         storages = {
                 @Storage("SdkSettingsPlugin.xml")
         }
@@ -42,11 +42,11 @@ public class AppSettingsState implements PersistentStateComponent<AppSettingsSta
         return ServiceManager.getService(AppSettingsState.class);
     }
 
-    public boolean isModified(AppSetting setting) {
-        if (setting == null) {
+    public boolean isModified(AppSetting changedSetting) {
+        if (changedSetting == null) {
             return false;
         }
-        return this.setting.isModified(setting);
+        return this.setting.isModified(changedSetting);
     }
 
     @Nullable

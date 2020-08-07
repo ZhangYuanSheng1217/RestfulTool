@@ -29,7 +29,8 @@
         <li> Http工具增加重定向请求，设置中修改允许重定向的最大次数 </li>
       </ul>
       <ul>
-        <li> Http tool adds redirect request, modify the maximum number of allowed redirection in settings </li>
+        <li> 重构设置相关代码 </li>
+        <li> 重构设置相关代码 </li>
       </ul>
     ]]>
     </change-notes>
