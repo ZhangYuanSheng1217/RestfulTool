@@ -10,18 +10,18 @@
  */
 package com.github.restful.tool.utils.scanner;
 
-import com.github.restful.tool.utils.SystemUtil;
-import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
-import com.intellij.psi.impl.java.stubs.index.JavaAnnotationIndex;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.github.restful.tool.annotation.SpringHttpMethodAnnotation;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.utils.ProjectConfigUtil;
 import com.github.restful.tool.utils.RestUtil;
+import com.github.restful.tool.utils.SystemUtil;
+import com.intellij.lang.jvm.annotation.*;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.*;
+import com.intellij.psi.impl.java.stubs.index.JavaAnnotationIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -56,14 +56,9 @@ public class SpringHelper {
 
         PsiAnnotation psiAnnotation = RestUtil.getClassAnnotation(
                 psiClass,
-                SpringHttpMethodAnnotation.REQUEST_MAPPING.getQualifiedName()
+                SpringHttpMethodAnnotation.REQUEST_MAPPING.getQualifiedName(),
+                SpringHttpMethodAnnotation.REQUEST_MAPPING.getShortName()
         );
-        if (psiAnnotation == null) {
-            psiAnnotation = RestUtil.getClassAnnotation(
-                    psiClass,
-                    SpringHttpMethodAnnotation.REQUEST_MAPPING.getShortName()
-            );
-        }
         if (psiAnnotation != null) {
             parentRequests = getRequests(psiAnnotation, null);
         }
@@ -138,12 +133,18 @@ public class SpringHelper {
         if (annotation.getResolveScope().isSearchInLibraries()) {
             spring = SpringHttpMethodAnnotation.getByShortName(annotation.getQualifiedName());
         }
-        if (spring == null) {
-            return Collections.emptyList();
-        }
         Set<HttpMethod> methods = new HashSet<>();
-        methods.add(spring.getMethod());
         List<String> paths = new ArrayList<>();
+        CustomRefAnnotation refAnnotation = null;
+        if (spring == null) {
+            refAnnotation = findCustomAnnotation(annotation);
+            if (refAnnotation == null) {
+                return Collections.emptyList();
+            }
+            methods.addAll(refAnnotation.getMethods());
+        } else {
+            methods.add(spring.getMethod());
+        }
 
         // 是否为隐式的path（未定义value或者path）
         boolean hasImplicitPath = true;
@@ -197,7 +198,12 @@ public class SpringHelper {
         }
         if (hasImplicitPath) {
             if (psiMethod != null) {
-                paths.add("/");
+                List<String> loopPaths;
+                if (refAnnotation != null && !(loopPaths = refAnnotation.getPaths()).isEmpty()) {
+                    paths.addAll(loopPaths);
+                } else {
+                    paths.add("/");
+                }
             }
         }
 
@@ -234,6 +240,88 @@ public class SpringHelper {
         return requests;
     }
 
+    @Nullable
+    private static CustomRefAnnotation findCustomAnnotation(@NotNull PsiAnnotation psiAnnotation) {
+        PsiAnnotation qualifiedAnnotation = RestUtil.getQualifiedAnnotation(
+                psiAnnotation,
+                SpringHttpMethodAnnotation.REQUEST_MAPPING.getQualifiedName()
+        );
+        if (qualifiedAnnotation == null) {
+            return null;
+        }
+        CustomRefAnnotation otherAnnotation = new CustomRefAnnotation();
+
+        for (JvmAnnotationAttribute attribute : qualifiedAnnotation.getAttributes()) {
+            Object methodValues = getAnnotationValue(attribute, "method");
+            if (methodValues != null) {
+                List<?> methods = methodValues instanceof List ? ((List<?>) methodValues) : Collections.singletonList(methodValues);
+                if (methods.isEmpty()) {
+                    continue;
+                }
+                for (Object method : methods) {
+                    if (method == null) {
+                        continue;
+                    }
+                    otherAnnotation.addMethods(HttpMethod.parse(method));
+                }
+                continue;
+            }
+
+            Object pathValues = getAnnotationValue(attribute, "path", "value");
+            if (pathValues != null) {
+                List<?> paths = pathValues instanceof List ? ((List<?>) pathValues) : Collections.singletonList(pathValues);
+                if (!paths.isEmpty()) {
+                    for (Object path : paths) {
+                        if (path == null) {
+                            continue;
+                        }
+                        otherAnnotation.addPath((String) path);
+                    }
+                }
+            }
+        }
+        return otherAnnotation;
+    }
+
+    @Nullable
+    private static Object getAnnotationValue(@NotNull JvmAnnotationAttribute attribute, @NotNull String... attrNames) {
+        String attributeName = attribute.getAttributeName();
+        if (attrNames.length < 1) {
+            return null;
+        }
+        boolean matchAttrName = false;
+        for (String attrName : attrNames) {
+            if (attributeName.equals(attrName)) {
+                matchAttrName = true;
+                break;
+            }
+        }
+        if (!matchAttrName) {
+            return null;
+        }
+        JvmAnnotationAttributeValue attributeValue = attribute.getAttributeValue();
+        return getAttributeValue(attributeValue);
+    }
+
+    private static Object getAttributeValue(@Nullable JvmAnnotationAttributeValue attributeValue) {
+        if (attributeValue == null) {
+            return null;
+        }
+        if (attributeValue instanceof JvmAnnotationConstantValue) {
+            Object constantValue = ((JvmAnnotationConstantValue) attributeValue).getConstantValue();
+            return constantValue == null ? null : constantValue.toString();
+        } else if (attributeValue instanceof JvmAnnotationEnumFieldValue) {
+            return ((JvmAnnotationEnumFieldValue) attributeValue).getFieldName();
+        } else if (attributeValue instanceof JvmAnnotationArrayValue) {
+            List<String> values = new ArrayList<>();
+            for (JvmAnnotationAttributeValue value : ((JvmAnnotationArrayValue) attributeValue).getValues()) {
+                values.add((String) getAttributeValue(value));
+            }
+            return values;
+        }
+        return null;
+    }
+
     enum Control {
 
         /**
@@ -260,6 +348,39 @@ public class SpringHelper {
 
         public String getQualifiedName() {
             return qualifiedName;
+        }
+    }
+
+    private static class CustomRefAnnotation {
+
+        private final List<String> paths;
+        private final List<HttpMethod> methods;
+
+        public CustomRefAnnotation() {
+            this.paths = new ArrayList<>();
+            this.methods = new ArrayList<>();
+        }
+
+        public void addPath(@NotNull String... paths) {
+            if (paths.length < 1) {
+                return;
+            }
+            this.paths.addAll(Arrays.asList(paths));
+        }
+
+        public void addMethods(@NotNull HttpMethod... methods) {
+            if (methods.length < 1) {
+                return;
+            }
+            this.methods.addAll(Arrays.asList(methods));
+        }
+
+        public List<String> getPaths() {
+            return paths;
+        }
+
+        public List<HttpMethod> getMethods() {
+            return methods;
         }
     }
 }

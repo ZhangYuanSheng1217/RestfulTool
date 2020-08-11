@@ -16,10 +16,7 @@ import com.github.restful.tool.utils.scanner.SpringHelper;
 import com.intellij.lang.jvm.annotation.*;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiMethod;
+import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -185,10 +182,16 @@ public class RestUtil {
      * @return annotation
      */
     @Nullable
-    public static PsiAnnotation getClassAnnotation(@NotNull PsiClass psiClass, @NotNull String qualifiedName) {
-        PsiAnnotation annotation = psiClass.getAnnotation(qualifiedName);
-        if (annotation != null) {
-            return annotation;
+    public static PsiAnnotation getClassAnnotation(@NotNull PsiClass psiClass, @NotNull String... qualifiedName) {
+        if (qualifiedName.length < 1) {
+            return null;
+        }
+        PsiAnnotation annotation;
+        for (String name : qualifiedName) {
+            annotation = psiClass.getAnnotation(name);
+            if (annotation != null) {
+                return annotation;
+            }
         }
         List<PsiClass> classes = new ArrayList<>();
         classes.add(psiClass.getSuperClass());
@@ -222,5 +225,45 @@ public class RestUtil {
                     .forEach(annotations::add);
         }
         return annotations;
+    }
+
+    @Nullable
+    public static PsiAnnotation getQualifiedAnnotation(PsiAnnotation psiAnnotation, @NotNull String qualifiedName) {
+        final String targetAnn = "java.lang.annotation.Target";
+        final String documentedAnn = "java.lang.annotation.Documented";
+        final String retentionAnn = "java.lang.annotation.Retention";
+        if (psiAnnotation == null) {
+            return null;
+        }
+        String annotationQualifiedName = psiAnnotation.getQualifiedName();
+        if (qualifiedName.equals(annotationQualifiedName)) {
+            return psiAnnotation;
+        }
+        if (targetAnn.equals(annotationQualifiedName) || documentedAnn.equals(annotationQualifiedName) || retentionAnn.equals(annotationQualifiedName)) {
+            return null;
+        }
+        PsiJavaCodeReferenceElement element = psiAnnotation.getNameReferenceElement();
+        if (element == null) {
+            return null;
+        }
+        PsiElement resolve = element.resolve();
+        if (!(resolve instanceof PsiClass)) {
+            return null;
+        }
+        PsiClass psiClass = (PsiClass) resolve;
+        if (!psiClass.isAnnotationType()) {
+            return null;
+        }
+        PsiAnnotation annotation = psiClass.getAnnotation(qualifiedName);
+        if (annotation != null && qualifiedName.equals(annotation.getQualifiedName())) {
+            return annotation;
+        }
+        for (PsiAnnotation classAnnotation : psiClass.getAnnotations()) {
+            PsiAnnotation qualifiedAnnotation = getQualifiedAnnotation(classAnnotation, qualifiedName);
+            if (qualifiedAnnotation != null) {
+                return qualifiedAnnotation;
+            }
+        }
+        return null;
     }
 }
