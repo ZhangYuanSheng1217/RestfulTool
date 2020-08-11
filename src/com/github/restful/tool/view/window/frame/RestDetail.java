@@ -301,6 +301,12 @@ public class RestDetail extends JPanel {
 
                 if (headCache.containsKey(request)) {
                     reqHead = getCache(IDENTITY_HEAD, request);
+                } else {
+                    reqHead = String.format(
+                            "{\n  \"Content-Type\": \"%s\"\n}",
+                            AppSetting.HttpToolOptionForm.CONTENT_TYPE.getData().getValue()
+                    );
+                    setCache(IDENTITY_HEAD, request, reqHead);
                 }
 
                 if (bodyCache.containsKey(request)) {

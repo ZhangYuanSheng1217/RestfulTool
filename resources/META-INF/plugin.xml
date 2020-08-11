@@ -28,6 +28,7 @@
       <ul>
         <li> Http工具增加重定向请求，设置中修改允许重定向的最大次数 </li>
         <li> 增加`SpringMVC`自定义`RequestMapping`注解（`PostMapping`）识别 </li>
+        <li> 增加Http工具默认请求头设置 </li>
       </ul>
       <ul>
         <li> 重构设置相关代码 </li>

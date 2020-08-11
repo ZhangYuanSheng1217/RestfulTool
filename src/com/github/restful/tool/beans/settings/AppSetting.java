@@ -10,13 +10,13 @@
  */
 package com.github.restful.tool.beans.settings;
 
+import com.github.restful.tool.beans.ContentType;
 import com.github.restful.tool.beans.Key;
-import com.github.restful.tool.view.components.editor.StyleType;
 import com.github.restful.tool.view.icon.IconType;
 import com.github.restful.tool.view.icon.IconTypeManager;
 import com.github.restful.tool.view.icon.PreviewIconType;
-import com.github.restful.tool.view.window.options.OptionForm;
 import com.github.restful.tool.view.window.options.Option;
+import com.github.restful.tool.view.window.options.OptionForm;
 import com.github.restful.tool.view.window.options.template.ComboBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -217,19 +217,11 @@ public class AppSetting {
                 1
         );
 
-        public static final SettingKey<StyleType> EDITOR_STYLE_TYPE_LIGHT = SettingKey.create(
-                "Change JSON syntax highlighting scheme of light (Reopen the project to take effect): ",
-                StyleType.getLightStyles(),
+        public static final SettingKey<ContentType> CONTENT_TYPE = SettingKey.create(
+                "Please select the default Content-Type: ",
+                ContentType.values(),
                 0
         );
-
-        public static final SettingKey<StyleType> EDITOR_STYLE_TYPE_DARK = SettingKey.create(
-                "Change JSON syntax highlighting scheme of dark (Reopen the project to take effect): ",
-                StyleType.getDarkStyles(),
-                0
-        );
-
-        public static final SettingKey<Integer> EDITOR_STYLE_TYPE = null;
 
         public HttpToolOptionForm() {
             super("Http tools", 2);
