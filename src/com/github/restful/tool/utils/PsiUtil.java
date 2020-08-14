@@ -16,6 +16,7 @@ import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -139,6 +140,9 @@ public class PsiUtil {
         }
         if (qualifiedName.equals(Map.class.getName())) {
             return Collections.emptyMap();
+        }
+        if (qualifiedName.equals(Date.class.getName())) {
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
         }
 
         final String libPackage = "java.util(.concurrent)?.[a-zA-Z0-9]*";
