@@ -1,6 +1,5 @@
 package com.github.restful.tool.beans;
 
-import cn.hutool.core.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.Charset;
@@ -58,7 +57,7 @@ public enum ContentType {
      */
     @NotNull
     public static String build(@NotNull ContentType contentType, @NotNull Charset charset) {
-        return StrUtil.format("{};charset={}", contentType.getValue(), charset.name());
+        return String.format("%s,charset=%s", contentType.getValue(), charset.name());
     }
 
     /**

@@ -10,7 +10,6 @@
  */
 package com.github.restful.tool.utils;
 
-import cn.hutool.core.util.ReUtil;
 import com.intellij.openapi.module.Module;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -51,10 +50,10 @@ public class PomUtil {
             return null;
         }
         @Language("RegExp") final String mavenPropReg = "@[a-zA-Z0-9.:-]+@";
-        if (!ReUtil.contains(mavenPropReg, contextPath)) {
+        if (!RegUtil.contains(mavenPropReg, contextPath)) {
             return contextPath;
         }
-        List<String> list = ReUtil.findAll(mavenPropReg, contextPath, 0);
+        List<String> list = RegUtil.findAll(mavenPropReg, contextPath, 0);
         if (list == null || list.isEmpty()) {
             return contextPath;
         }
@@ -96,13 +95,13 @@ public class PomUtil {
         if (element == null) {
             return null;
         }
-        if (!ReUtil.contains(propReg, name)) {
+        if (!RegUtil.contains(propReg, name)) {
             return null;
         }
         String response = name;
 
         // 匹配的字段集合
-        List<String> matchList = ReUtil.findAll(propReg, response, 0);
+        List<String> matchList = RegUtil.findAll(propReg, response, 0);
         Map<String, String> elements = new HashMap<>(matchList.size());
         for (String nameItem : matchList) {
             // 获取nameItem的对应节点
@@ -114,8 +113,8 @@ public class PomUtil {
                 continue;
             }
             String elemData = itemElement.getData().toString().trim();
-            if (ReUtil.contains(propReg, elemData)) {
-                for (String itemName : ReUtil.findAll(propReg, elemData, 0)) {
+            if (RegUtil.contains(propReg, elemData)) {
+                for (String itemName : RegUtil.findAll(propReg, elemData, 0)) {
                     String replacement = getPomAttrOfProperties(element, itemName);
                     if (replacement == null) {
                         continue;
@@ -151,7 +150,7 @@ public class PomUtil {
             return null;
         }
         String response = name;
-        for (String nameItem : ReUtil.findAll(propReg, response, 0)) {
+        for (String nameItem : RegUtil.findAll(propReg, response, 0)) {
             String elementName = nameItem.substring(
                     nameItem.indexOf("{") + 1,
                     nameItem.indexOf("}")
@@ -162,7 +161,7 @@ public class PomUtil {
             Element itemElement = element.element(elementName);
             if (itemElement != null) {
                 String itemResult = itemElement.getData().toString().trim();
-                for (String itemName : ReUtil.findAll(propReg, itemResult, 0)) {
+                for (String itemName : RegUtil.findAll(propReg, itemResult, 0)) {
                     String replacement = getPomAttrOfProject(element, itemName);
                     if (replacement == null) {
                         continue;
