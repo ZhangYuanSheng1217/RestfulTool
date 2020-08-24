@@ -10,10 +10,10 @@
  */
 package com.github.restful.tool.view.window;
 
+import com.github.restful.tool.service.ToolWindowService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
-import com.github.restful.tool.service.RestfulToolService;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -24,6 +24,11 @@ public class RestfulToolWindowFactory implements ToolWindowFactory {
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        RestfulToolService.getInstance(project).setupImpl(toolWindow);
+        ToolWindowService.getInstance(project).init(toolWindow);
+    }
+
+    @Override
+    public boolean isApplicable(@NotNull Project project) {
+        return true;
     }
 }

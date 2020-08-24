@@ -10,6 +10,11 @@
  */
 package com.github.restful.tool.utils.scanner;
 
+import com.github.restful.tool.annotation.JaxrsHttpMethodAnnotation;
+import com.github.restful.tool.beans.HttpMethod;
+import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.utils.ProjectConfigUtil;
+import com.github.restful.tool.utils.RestUtil;
 import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
@@ -21,11 +26,6 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.xml.XmlTag;
-import com.github.restful.tool.annotation.JaxrsHttpMethodAnnotation;
-import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.utils.ProjectConfigUtil;
-import com.github.restful.tool.utils.RestUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -236,6 +236,40 @@ public class JaxrsHelper {
             }
         }
         return list;
+    }
+
+    /**
+     * 是否是Restful的项目
+     *
+     * @param project project
+     * @param module  module
+     * @return bool
+     */
+    public static boolean isRestfulProject(@NotNull final Project project, @NotNull final Module module) {
+        try {
+            JavaAnnotationIndex instance = JavaAnnotationIndex.getInstance();
+            Collection<PsiAnnotation> collection = instance.get(Control.Path.getName(), project, module.getModuleScope());
+            if (collection != null && !collection.isEmpty()) {
+                for (PsiAnnotation annotation : collection) {
+                    if (annotation == null) {
+                        continue;
+                    }
+                    if (Control.Path.getQualifiedName().equals(annotation.getQualifiedName())) {
+                        return true;
+                    }
+                }
+            }
+            XmlFile xmlFile = findConfigXmlFile(project, module);
+            if (xmlFile == null || xmlFile.getRootTag() == null) {
+                return false;
+            }
+            XmlTag[] tags = xmlFile.getRootTag().findSubTags("jaxrs:server");
+            if (tags.length > 0) {
+                return true;
+            }
+        } catch (Exception ignore) {
+        }
+        return false;
     }
 
     enum Control {

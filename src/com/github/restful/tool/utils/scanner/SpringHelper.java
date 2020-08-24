@@ -322,6 +322,44 @@ public class SpringHelper {
         return null;
     }
 
+    /**
+     * 是否是Restful的项目
+     *
+     * @param project project
+     * @param module  module
+     * @return bool
+     */
+    public static boolean isRestfulProject(@NotNull final Project project, @NotNull final Module module) {
+        try {
+            JavaAnnotationIndex instance = JavaAnnotationIndex.getInstance();
+            Set<PsiAnnotation> annotations = new HashSet<>(instance.get(Control.Controller.getName(), project, module.getModuleScope()));
+            if (!annotations.isEmpty()) {
+                for (PsiAnnotation annotation : annotations) {
+                    if (annotation == null) {
+                        continue;
+                    }
+                    if (Control.Controller.getQualifiedName().equals(annotation.getQualifiedName())) {
+                        return true;
+                    }
+                }
+            }
+            annotations.clear();
+            annotations.addAll(instance.get(Control.RestController.getName(), project, module.getModuleScope()));
+            if (!annotations.isEmpty()) {
+                for (PsiAnnotation annotation : annotations) {
+                    if (annotation == null) {
+                        continue;
+                    }
+                    if (Control.RestController.getQualifiedName().equals(annotation.getQualifiedName())) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
+        return false;
+    }
+
     enum Control {
 
         /**

@@ -16,18 +16,18 @@ import com.github.restful.tool.utils.scanner.SpringHelper;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiMethod;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author ZhangYuanSheng
  * @version 1.0
  */
 public class RequestUtil {
+
+    private static final Map<PsiMethod, List<Request>> REQUEST_CACHE = Custom.REQUEST_CACHE;
 
     /**
      * 获取所有的Request
@@ -50,6 +50,7 @@ public class RequestUtil {
     @NotNull
     public static Map<String, List<Request>> getAllRequests(@NotNull Project project, boolean hasEmpty) {
         Map<String, List<Request>> map = new HashMap<>();
+        REQUEST_CACHE.clear();
 
         Module[] modules = ModuleManager.getInstance(project).getModules();
         for (Module module : modules) {
@@ -58,6 +59,17 @@ public class RequestUtil {
                 continue;
             }
             map.put(module.getName(), requests);
+
+            requests.forEach(request -> {
+                List<Request> requestList;
+                if (REQUEST_CACHE.containsKey(request.getPsiMethod())) {
+                    requestList = REQUEST_CACHE.get(request.getPsiMethod());
+                } else {
+                    requestList = new ArrayList<>();
+                    REQUEST_CACHE.put(request.getPsiMethod(), requestList);
+                }
+                requestList.add(request);
+            });
         }
         return map;
     }
@@ -83,5 +95,19 @@ public class RequestUtil {
             return springRequestByModule;
         }
         return Collections.emptyList();
+    }
+
+    @NotNull
+    public static List<Request> getRequestFromLoaded(@NotNull PsiMethod psiMethod) {
+        if (!REQUEST_CACHE.containsKey(psiMethod)) {
+            return Collections.emptyList();
+        }
+        List<Request> requests = REQUEST_CACHE.get(psiMethod);
+        return requests == null ? Collections.emptyList() : requests;
+    }
+
+    private static class Custom {
+
+        public static final Map<PsiMethod, List<Request>> REQUEST_CACHE = new HashMap<>();
     }
 }

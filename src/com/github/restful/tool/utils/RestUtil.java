@@ -14,6 +14,8 @@ import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.utils.scanner.JaxrsHelper;
 import com.github.restful.tool.utils.scanner.SpringHelper;
 import com.intellij.lang.jvm.annotation.*;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
@@ -265,5 +267,25 @@ public class RestUtil {
             }
         }
         return null;
+    }
+
+    /**
+     * 是否是Restful的项目
+     *
+     * @param project project
+     * @return bool
+     */
+    public static boolean isRestfulProject(@NotNull Project project) {
+        try {
+            ModuleManager manager = ModuleManager.getInstance(project);
+            for (Module module : manager.getModules()) {
+                if (SpringHelper.isRestfulProject(project, module)
+                        || JaxrsHelper.isRestfulProject(project, module)) {
+                    return true;
+                }
+            }
+        } catch (Exception ignore) {
+        }
+        return false;
     }
 }

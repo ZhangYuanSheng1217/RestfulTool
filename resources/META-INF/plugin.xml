@@ -27,7 +27,7 @@
     <change-notes><![CDATA[
       <ul>
         <li> Http工具增加重定向请求，设置中修改允许重定向的最大次数 </li>
-        <li> 增加`SpringMVC`自定义`RequestMapping`注解（`PostMapping`）识别 </li>
+        <li> 增加`SpringMVC`自定义`RequestMapping`注解（`PostMapping等`）识别 </li>
         <li> 增加Http工具默认请求头设置 </li>
       </ul>
       <ul>
@@ -55,8 +55,8 @@
                                  id="com.github.restful.tool.configuration.AppSettingsConfigurable"
                                  dynamic="true"/>
 
-        <projectService serviceInterface="com.github.restful.tool.service.RestfulToolService"
-                        serviceImplementation="com.github.restful.tool.service.impl.RestfulToolServiceImpl"/>
+        <projectService serviceInterface="com.github.restful.tool.service.ToolWindowService"
+                        serviceImplementation="com.github.restful.tool.service.impl.ToolWindowServiceImpl"/>
 
         <projectService
                 serviceImplementation="com.github.restful.tool.view.search.GotoRequestConfiguration"/>
@@ -64,7 +64,8 @@
         <toolWindow id="RestfulTool" anchor="right"
                     factoryClass="com.github.restful.tool.view.window.RestfulToolWindowFactory"
                     order="last"
-                    doNotActivateOnStart="false" icon="/icons/service.png"/>
+                    doNotActivateOnStart="true" icon="/icons/service.png"
+                    canCloseContents="true"/>
 
         <projectService serviceInterface="com.github.restful.tool.service.Notify"
                         serviceImplementation="com.github.restful.tool.service.impl.NotificationImpl"/>

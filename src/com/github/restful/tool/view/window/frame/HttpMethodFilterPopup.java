@@ -10,6 +10,7 @@
  */
 package com.github.restful.tool.view.window.frame;
 
+import com.github.restful.tool.beans.HttpMethod;
 import com.intellij.ui.components.JBCheckBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,23 +24,23 @@ import java.util.List;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-class HttpMethodFilterPopup<T> extends JPopupMenu {
+public class HttpMethodFilterPopup extends JPopupMenu {
 
-    private final T[] values;
-    private final List<JCheckBox> checkBoxList = new ArrayList<>();
+    private final HttpMethod[] values;
+    private final List<JBCheckBox> checkBoxList = new ArrayList<>();
 
-    private T[] defaultValues;
+    private HttpMethod[] defaultValues;
 
     @Nullable
-    private ChangeCallback<T> changeCallback;
+    private ChangeCallback changeCallback;
     @Nullable
-    private ChangeAllCallback<T> changeAllCallback;
+    private ChangeAllCallback changeAllCallback;
 
-    public HttpMethodFilterPopup(T[] values) {
+    public HttpMethodFilterPopup(HttpMethod[] values) {
         this(values, values);
     }
 
-    public HttpMethodFilterPopup(@NotNull T[] values, T[] defaultValues) {
+    public HttpMethodFilterPopup(@NotNull HttpMethod[] values, HttpMethod[] defaultValues) {
         super();
         this.values = values;
         this.defaultValues = defaultValues;
@@ -52,25 +53,22 @@ class HttpMethodFilterPopup<T> extends JPopupMenu {
         JPanel buttonPane = new JPanel();
         this.setLayout(new BorderLayout());
 
-        for (T t : values) {
-            JCheckBox checkBox = new JBCheckBox(t.toString(), selected(t));
+        checkboxPane.setLayout(new GridLayout(values.length, 1, 3, 3));
+        for (HttpMethod method : values) {
+            JBCheckBox checkBox = new JBCheckBox(method.toString(), selected(method));
             checkBox.addActionListener(e -> {
                 if (changeCallback != null) {
-                    changeCallback.changed(checkBox, t);
+                    changeCallback.changed(checkBox, method);
                 }
             });
             checkBoxList.add(checkBox);
-        }
-
-        checkboxPane.setLayout(new GridLayout(checkBoxList.size(), 1, 3, 3));
-        for (JCheckBox box : checkBoxList) {
-            checkboxPane.add(box);
+            checkboxPane.add(checkBox);
         }
 
         JButton selectAll = new JButton("Select All");
         selectAll.addActionListener(e -> {
             if (getSelectedValues().length < checkBoxList.size()) {
-                List<T> changes = new ArrayList<>();
+                List<HttpMethod> changes = new ArrayList<>();
                 //检查其他的是否被选中乳沟没有就选中他们
                 for (int i = 0; i < checkBoxList.size(); i++) {
                     JCheckBox checkBox = checkBoxList.get(i);
@@ -94,8 +92,8 @@ class HttpMethodFilterPopup<T> extends JPopupMenu {
         this.add(buttonPane, BorderLayout.SOUTH);
     }
 
-    private boolean selected(T t) {
-        for (T defaultValue : defaultValues) {
+    private boolean selected(HttpMethod t) {
+        for (HttpMethod defaultValue : defaultValues) {
             if (defaultValue.equals(t)) {
                 return true;
             }
@@ -104,8 +102,8 @@ class HttpMethodFilterPopup<T> extends JPopupMenu {
     }
 
     @SuppressWarnings("all")
-    public T[] getSelectedValues() {
-        List<T> selectedValues = new ArrayList<>();
+    public HttpMethod[] getSelectedValues() {
+        List<HttpMethod> selectedValues = new ArrayList<>();
 
         for (int i = 0; i < checkBoxList.size(); i++) {
             if (checkBoxList.get(i).isSelected()) {
@@ -113,10 +111,10 @@ class HttpMethodFilterPopup<T> extends JPopupMenu {
             }
         }
 
-        return setDefaultValue((T[]) selectedValues.toArray());
+        return setDefaultValue(selectedValues.toArray(new HttpMethod[0]));
     }
 
-    public T[] setDefaultValue(@NotNull T[] defaultValues) {
+    public HttpMethod[] setDefaultValue(@NotNull HttpMethod[] defaultValues) {
         this.defaultValues = defaultValues;
         return this.defaultValues;
     }
@@ -127,33 +125,33 @@ class HttpMethodFilterPopup<T> extends JPopupMenu {
         setDefaultValue(getSelectedValues());
     }
 
-    public void setChangeCallback(@Nullable ChangeCallback<T> changeCallback) {
+    public void setChangeCallback(@Nullable ChangeCallback changeCallback) {
         this.changeCallback = changeCallback;
     }
 
-    public void setChangeAllCallback(@Nullable ChangeAllCallback<T> changeAllCallback) {
+    public void setChangeAllCallback(@Nullable ChangeAllCallback changeAllCallback) {
         this.changeAllCallback = changeAllCallback;
     }
 
-    public interface ChangeCallback<T> {
+    public interface ChangeCallback {
 
         /**
          * 更改回调
          *
          * @param checkBox 单选按钮
-         * @param t        数据
+         * @param method   数据
          */
-        void changed(@NotNull JCheckBox checkBox, @NotNull T t);
+        void changed(@NotNull JCheckBox checkBox, @NotNull HttpMethod method);
     }
 
-    public interface ChangeAllCallback<T> {
+    public interface ChangeAllCallback {
 
         /**
          * 更改回调
          *
          * @param selected 选中状态
-         * @param ts       数据
+         * @param methods  数据
          */
-        void changed(@NotNull List<T> ts, boolean selected);
+        void changed(@NotNull List<HttpMethod> methods, boolean selected);
     }
 }

@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 @State(
         name = "com.github.restful.tool.configuration.AppSettingsState",
         storages = {
-                @Storage("SdkSettingsPlugin.xml")
+                @Storage("RestfulToolSetting.xml")
         }
 )
 public class AppSettingsState implements PersistentStateComponent<AppSettingsState> {
