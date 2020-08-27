@@ -30,8 +30,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.tabs.JBTabs;
+import com.intellij.ui.tabs.TabInfo;
+import com.intellij.ui.tabs.impl.JBTabsImpl;
 import com.intellij.util.messages.MessageBusConnection;
 import org.intellij.lang.annotations.Language;
 import org.jdesktop.swingx.JXButton;
@@ -80,18 +82,21 @@ public class RestDetail extends JPanel {
     /**
      * 选项卡面板 - 请求信息
      */
-    private JTabbedPane tabbedPane;
+    private JBTabs tabs;
     /**
      * 文本域 - 请求头
      */
+    private TabInfo headTab;
     private JsonEditor requestHead;
     /**
      * 文本域 - 请求体
      */
+    private TabInfo bodyTab;
     private JsonEditor requestBody;
     /**
      * 标签 - 显示返回结果
      */
+    private TabInfo responseTab;
     private JsonEditor responseView;
 
     private DetailHandle callback;
@@ -138,19 +143,26 @@ public class RestDetail extends JPanel {
         sendRequest = new JXButton("send");
         panelInput.add(sendRequest, BorderLayout.EAST);
 
-        tabbedPane = new JBTabbedPane(JTabbedPane.TOP);
-        add(tabbedPane, BorderLayout.CENTER);
+        tabs = new JBTabsImpl(project);
 
         requestHead = new JsonEditor(project, JsonEditor.JSON_FILE_TYPE);
         requestHead.setName(IDENTITY_HEAD);
-        tabbedPane.addTab("head", requestHead);
+        headTab = new TabInfo(requestHead);
+        headTab.setText("head");
+        tabs.addTab(headTab);
 
         requestBody = new JsonEditor(project, JsonEditor.JSON_FILE_TYPE);
-        tabbedPane.addTab("body", requestBody);
         requestBody.setName(IDENTITY_BODY);
+        bodyTab = new TabInfo(requestBody);
+        bodyTab.setText("body");
+        tabs.addTab(bodyTab);
 
         responseView = new JsonEditor(project);
-        tabbedPane.addTab("response", responseView);
+        responseTab = new TabInfo(responseView);
+        responseTab.setText("response");
+        tabs.addTab(responseTab);
+
+        add(tabs.getComponent(), BorderLayout.CENTER);
     }
 
     /**
@@ -166,7 +178,7 @@ public class RestDetail extends JPanel {
             }
 
             // 选择Response页面
-            tabbedPane.setSelectedIndex(2);
+            tabs.select(responseTab, true);
             sendRequest(url);
         });
 
@@ -266,10 +278,12 @@ public class RestDetail extends JPanel {
 
     @Nullable
     private JsonEditor getCurrentTabbedOfRequest() {
-        Component component = tabbedPane.getSelectedComponent();
-        int selectedIndex = tabbedPane.getSelectedIndex();
-        // selectedIndex: [0: requestHead, 1: requestBody, 2: response]
-        if (selectedIndex < 2 && component instanceof JsonEditor) {
+        TabInfo tabInfo = tabs.getSelectedInfo();
+        if (tabInfo == null) {
+            return null;
+        }
+        Component component = tabInfo.getComponent();
+        if (component instanceof JsonEditor) {
             return (JsonEditor) component;
         }
         return null;
@@ -294,7 +308,7 @@ public class RestDetail extends JPanel {
                 );
 
                 // 选择Body页面
-                tabbedPane.setSelectedIndex(1);
+                tabs.select(bodyTab, false);
 
                 selItem = request.getMethod() == null || request.getMethod() == HttpMethod.REQUEST ?
                         HttpMethod.GET : request.getMethod();
