@@ -133,6 +133,16 @@ public class HttpMethodFilterPopup extends JPopupMenu {
         this.changeAllCallback = changeAllCallback;
     }
 
+    @Nullable
+    public ChangeCallback getChangeCallback() {
+        return changeCallback;
+    }
+
+    @Nullable
+    public ChangeAllCallback getChangeAllCallback() {
+        return changeAllCallback;
+    }
+
     public interface ChangeCallback {
 
         /**

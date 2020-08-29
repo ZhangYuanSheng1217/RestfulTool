@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class PsiUtil {
 
     /**
@@ -97,7 +96,7 @@ public class PsiUtil {
                 return hasResult;
             }
 
-            Map<String, Object> result = new HashMap<>();
+            Map<String, Object> result = new LinkedHashMap<>();
 
             List<FieldMethod> fieldMethods = PsiUtil.getFieldsMethod(psiClass);
             for (FieldMethod fieldMethod : fieldMethods) {
@@ -202,22 +201,18 @@ public class PsiUtil {
     }
 
     /**
-     * 获取 PsiClass 中定义的 Getter|Setter 方法，及对应的 Field（可能为空）
+     * (有序) 获取 PsiClass 中定义的 Getter|Setter 方法，及对应的 Field（可能为空）
      *
      * @param psiClass Class
-     * @return FieldsMethod
+     * @return FieldsMethods
      * @see PsiUtil.FieldMethod
      */
     @NotNull
     public static List<FieldMethod> getFieldsMethod(@NotNull PsiClass psiClass) {
-        Map<String, FieldMethod> map = new HashMap<>();
+        LinkedHashMap<String, FieldMethod> map = new LinkedHashMap<>();
 
-        // 读取定义为public的字段
+        // 读取字段
         for (PsiField field : psiClass.getAllFields()) {
-            if (!hasPublicModifier(field.getModifierList())) {
-                // 如果字段不是public则跳过
-                continue;
-            }
             if (hasStaticModifier(field.getModifierList()) || hasFinalModifier(field.getModifierList())) {
                 // 如果字段是static或final则跳过
                 continue;
@@ -232,6 +227,7 @@ public class PsiUtil {
             final String name = method.getName();
 
             if (name.length() < 4 || !(name.startsWith(prefixGet) || name.startsWith(prefixSet))) {
+                // 如果不是Getter|Setter方法则直接跳过
                 continue;
             }
 
@@ -240,13 +236,25 @@ public class PsiUtil {
                 continue;
             }
 
-            // 获取方法对应的字段
+            // 截取方法标示的字段名
             final String fieldName = name.substring(3, 4).toLowerCase() + name.substring(4);
             final FieldMethod fieldMethod;
             if (map.containsKey(fieldName)) {
                 fieldMethod = map.get(fieldName);
+                if (fieldMethod.getField() != null && hasPublicModifier(fieldMethod.getField().getModifierList())) {
+                    // 如果字段Field不为空切是public修饰则跳过检查Getter|Setter
+                    continue;
+                }
             } else {
-                fieldMethod = new FieldMethod(fieldName);
+                PsiField field = psiClass.findFieldByName(fieldName, true);
+                if (field == null
+                        // 如果是static属性
+                        || hasStaticModifier(field.getModifierList())
+                        // 如果是final属性
+                        || hasFinalModifier(field.getModifierList())) {
+                    continue;
+                }
+                fieldMethod = new FieldMethod(fieldName, field);
                 map.put(fieldName, fieldMethod);
             }
 
@@ -255,20 +263,9 @@ public class PsiUtil {
             } else {
                 fieldMethod.addFieldSetter(method);
             }
-            PsiField field = psiClass.findFieldByName(fieldMethod.getFieldName(), true);
-            if (field == null
-                    // 如果是静态属性
-                    || hasStaticModifier(field.getModifierList())
-                    // 如果是最终属性
-                    || hasFinalModifier(field.getModifierList())) {
-                continue;
-            }
-            fieldMethod.setField(field);
         }
 
-        List<FieldMethod> fieldMethods = new ArrayList<>();
-        map.forEach((fieldName, fieldMethod) -> fieldMethods.add(fieldMethod));
-        return fieldMethods;
+        return new ArrayList<>(map.values());
     }
 
     /**
@@ -347,7 +344,7 @@ public class PsiUtil {
          */
         private PsiMethod noParameterMethodOfGetter;
 
-        public FieldMethod() {
+        private FieldMethod() {
             fieldGetters = new ArrayList<>();
             fieldSetters = new ArrayList<>();
         }

@@ -10,15 +10,14 @@
  */
 package com.github.restful.tool.view.window;
 
-import com.github.restful.tool.view.icon.Icons;
-import com.intellij.ui.ColoredTreeCellRenderer;
-import com.intellij.ui.SimpleTextAttributes;
+import com.github.restful.tool.beans.ModuleTree;
 import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.view.window.frame.ServiceTree;
+import com.intellij.ui.ColoredTreeCellRenderer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  * @author ZhangYuanSheng
@@ -33,16 +32,18 @@ public class RestfulTreeCellRenderer extends ColoredTreeCellRenderer {
             boolean expanded,
             boolean leaf,
             int row, boolean hasFocus) {
-        Object obj = ((DefaultMutableTreeNode) value).getUserObject();
-        if (obj instanceof Request) {
-            Request node = (Request) obj;
-
-            setMethodTypeAndPath(node, selected);
-        } else if (obj instanceof String) {
-            append((String) obj, SimpleTextAttributes.GRAYED_BOLD_ATTRIBUTES);
-        } else if (obj instanceof Integer) {
-            setIcon(Icons.SERVICE);
-            append(String.format("Find %s services", obj));
+        if (value instanceof ServiceTree.ModuleNode) {
+            ServiceTree.ModuleNode node = (ServiceTree.ModuleNode) value;
+            ModuleTree data = node.getData();
+            setIcon(data.getIcon());
+            append(data.toString());
+        } else if (value instanceof ServiceTree.RequestNode) {
+            ServiceTree.RequestNode node = (ServiceTree.RequestNode) value;
+            Request data = node.getData();
+            setMethodTypeAndPath(data, selected);
+        } else if (value instanceof ServiceTree.TreeNode<?>) {
+            ServiceTree.TreeNode<?> node = (ServiceTree.TreeNode<?>) value;
+            append(node.toString());
         }
     }
 
@@ -55,6 +56,9 @@ public class RestfulTreeCellRenderer extends ColoredTreeCellRenderer {
         } else {
             setIcon(node.getIcon());
         }
-        append(node.getPath());
+        String path = node.getPath();
+        if (path != null) {
+            append(path);
+        }
     }
 }

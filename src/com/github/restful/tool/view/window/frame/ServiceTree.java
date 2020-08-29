@@ -10,18 +10,26 @@
  */
 package com.github.restful.tool.view.window.frame;
 
+import com.github.restful.tool.beans.ModuleTree;
 import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.beans.settings.AppSetting;
 import com.github.restful.tool.service.Notify;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.view.window.RestfulTreeCellRenderer;
-import com.github.restful.tool.beans.settings.AppSetting;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ui.configuration.ProjectSettingsService;
+import com.intellij.openapi.ui.JBMenuItem;
 import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.ui.TreeSpeedSearch;
-import org.jdesktop.swingx.JXTree;
+import com.intellij.ui.border.CustomLineBorder;
+import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.treeStructure.SimpleTree;
+import com.intellij.ui.treeStructure.Tree;
+import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +38,10 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -40,25 +51,24 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class ServiceTree extends JScrollPane {
+public class ServiceTree extends JBScrollPane {
 
     private final Project project;
 
     /**
      * 树 - service列表
      */
-    private final JTree tree;
+    private final Tree tree;
 
     @Nullable
     private ChooseRequestCallback chooseRequestCallback;
 
-    private boolean showPopupMenu = false;
-
     public ServiceTree(@NotNull Project project) {
         this.project = project;
-        tree = new JXTree();
+        tree = new SimpleTree();
 
-        this.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        this.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        this.setBorder(new CustomLineBorder(JBUI.insetsTop(1)));
 
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         model.setRoot(new DefaultMutableTreeNode());
@@ -67,9 +77,6 @@ public class ServiceTree extends JScrollPane {
         tree.setShowsRootHandles(false);
         this.setViewportView(tree);
 
-        // 快速搜索
-        new TreeSpeedSearch(tree);
-
         initEvent();
     }
 
@@ -77,41 +84,35 @@ public class ServiceTree extends JScrollPane {
      * 渲染Restful请求列表
      */
     public void renderRequestTree(@NotNull Map<String, List<Request>> allRequests) {
-        AtomicInteger controllerCount = new AtomicInteger();
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode(controllerCount.get());
+        AtomicInteger apiCount = new AtomicInteger();
+        TreeNode<String> root = new TreeNode<>("Not found any services");
 
         allRequests.forEach((itemName, requests) -> {
-            DefaultMutableTreeNode item = new DefaultMutableTreeNode(String.format(
-                    "[%d]%s",
-                    requests.size(),
-                    itemName
-            ));
+            if (requests == null || requests.isEmpty()) {
+                return;
+            }
+            ModuleNode moduleNode = new ModuleNode(new ModuleTree(itemName, requests.size()));
             requests.forEach(request -> {
-                item.add(new DefaultMutableTreeNode(request));
-                controllerCount.incrementAndGet();
+                moduleNode.add(new RequestNode(request));
+                apiCount.incrementAndGet();
             });
-            root.add(item);
+            root.add(moduleNode);
         });
 
-        root.setUserObject(controllerCount.get());
-        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        model.setRoot(root);
+        ((DefaultTreeModel) tree.getModel()).setRoot(root);
 
         if (AppSetting.SystemOptionForm.EXPAND_OF_SERVICE_TREE.getData()) {
             expandAll(new TreePath(tree.getModel().getRoot()), true);
         }
+
+        // api数量小于1才显示根节点
+        tree.firePropertyChange(JTree.ROOT_VISIBLE_PROPERTY, tree.isRootVisible(), apiCount.get() < 1);
+        // api数量小于1则不可点击
+        tree.setEnabled(apiCount.get() > 0);
     }
 
     public void setChooseRequestCallback(@Nullable ChooseRequestCallback chooseRequestCallback) {
         this.chooseRequestCallback = chooseRequestCallback;
-    }
-
-    public void showPopupMenu() {
-        this.showPopupMenu = true;
-    }
-
-    public void hidePopupMenu() {
-        this.showPopupMenu = false;
     }
 
     private void initEvent() {
@@ -130,10 +131,14 @@ public class ServiceTree extends JScrollPane {
 
         // RequestTree子项双击监听
         tree.addMouseListener(new MouseAdapter() {
+
+            private JPopupMenu modulePopupMenu;
+            private JPopupMenu requestItemPopupMenu;
+
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (SwingUtilities.isLeftMouseButton(e)) {
-                    final int doubleClick = 2;
+                final int doubleClick = 2;
+                if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount() > 0 && e.getClickCount() % doubleClick == 0) {
                     Request node = getTreeNodeRequest(tree);
                     if (node != null && e.getClickCount() == doubleClick) {
                         node.navigate(true);
@@ -141,27 +146,79 @@ public class ServiceTree extends JScrollPane {
                 }
             }
 
-            /**
-             * 右键菜单
-             */
             @Override
-            public void mouseReleased(MouseEvent e) {
-                if (showPopupMenu && SwingUtilities.isRightMouseButton(e)) {
-                    TreePath path = tree.getPathForLocation(e.getX(), e.getY());
-                    tree.setSelectionPath(path);
-
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
                     Request request = getTreeNodeRequest(tree);
-                    if (request == null) {
+                    if (request != null) {
+                        showPopupMenu(e, getRequestItemPopupMenu(request));
                         return;
                     }
 
-                    Rectangle pathBounds = tree.getUI().getPathBounds(tree, path);
-                    if (pathBounds != null && pathBounds.contains(e.getX(), e.getY())) {
-                        popupMenu(tree, request, e.getX(), pathBounds.y + pathBounds.height);
+                    ModuleTree moduleTree = getTreeNodeModuleTree(tree);
+                    if (moduleTree != null) {
+                        showPopupMenu(e, getModulePopupMenu(moduleTree));
                     }
                 }
             }
+
+            private JPopupMenu getModulePopupMenu(@NotNull ModuleTree moduleTree) {
+                if (modulePopupMenu != null) {
+                    return modulePopupMenu;
+                }
+                JBMenuItem moduleSetting = new JBMenuItem("Open module setting", AllIcons.General.Settings);
+                moduleSetting.addActionListener(action -> {
+                    Module module = ModuleManager.getInstance(project).findModuleByName(moduleTree.getModuleName());
+                    if (module == null) {
+                        return;
+                    }
+                    // 打开当前项目模块设置
+                    ProjectSettingsService.getInstance(project).openModuleSettings(module);
+                });
+                return (modulePopupMenu = generatePopupMenu(moduleSetting));
+            }
+
+            private JPopupMenu getRequestItemPopupMenu(@NotNull Request request) {
+                if (requestItemPopupMenu != null) {
+                    return requestItemPopupMenu;
+                }
+
+                // navigation
+                JMenuItem navigation = new JBMenuItem("Navigate to method", AllIcons.Nodes.Method);
+                navigation.addActionListener(actionEvent -> request.navigate(true));
+
+                // Copy full url
+                JMenuItem copyFullUrl = new JBMenuItem("Copy full url", AllIcons.Actions.Copy);
+                copyFullUrl.addActionListener(actionEvent -> {
+                    GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
+                    String contextPath = RestUtil.scanContextPath(project, scope);
+                    SystemUtil.Clipboard.copy(SystemUtil.buildUrl(
+                            RestUtil.scanListenerProtocol(project, scope),
+                            RestUtil.scanListenerPort(project, scope),
+                            contextPath,
+                            request.getPath()));
+                    Notify.getInstance(project).info("Copy full path success.");
+                });
+
+                // Copy api path
+                JMenuItem copyApiPath = new JBMenuItem("Copy api path", AllIcons.Actions.Copy);
+                copyApiPath.addActionListener(actionEvent -> {
+                    GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
+                    String contextPath = RestUtil.scanContextPath(project, scope);
+                    SystemUtil.Clipboard.copy(
+                            (contextPath == null || "null".equals(contextPath) ? "" : contextPath) +
+                                    request.getPath()
+                    );
+                    Notify.getInstance(project).info("Copy api success.");
+                });
+                return (requestItemPopupMenu = generatePopupMenu(
+                        navigation,
+                        null,
+                        copyFullUrl, copyApiPath
+                ));
+            }
         });
+
         // 按回车键跳转到对应方法
         tree.addKeyListener(new KeyAdapter() {
             @Override
@@ -190,53 +247,17 @@ public class ServiceTree extends JScrollPane {
         return null;
     }
 
-    /**
-     * 显示右键菜单
-     *
-     * @param tree    tree
-     * @param request request
-     * @param x       横坐标
-     * @param y       纵坐标
-     */
-    private void popupMenu(@NotNull JTree tree, @NotNull Request request, int x, int y) {
-        JBPopupMenu menu = new JBPopupMenu();
-        ActionListener actionListener = actionEvent -> {
-            String copy;
-            GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
-            String contextPath = RestUtil.scanContextPath(project, scope);
-            switch (((JMenuItem) actionEvent.getSource()).getMnemonic()) {
-                case 0:
-                    copy = SystemUtil.buildUrl(
-                            RestUtil.scanListenerProtocol(project, scope),
-                            RestUtil.scanListenerPort(project, scope),
-                            contextPath,
-                            request.getPath()
-                    );
-                    break;
-                case 1:
-                    copy = (contextPath == null || "null".equals(contextPath) ? "" : contextPath) +
-                            request.getPath();
-                    break;
-                default:
-                    return;
-            }
-            SystemUtil.Clipboard.copy(copy);
-            Notify.getInstance(project).info("Copy path success.");
-        };
-
-        // Copy full url
-        JMenuItem copyFullUrl = new JMenuItem("Copy full url", AllIcons.Actions.Copy);
-        copyFullUrl.setMnemonic(0);
-        copyFullUrl.addActionListener(actionListener);
-        menu.add(copyFullUrl);
-
-        // Copy api path
-        JMenuItem copyApiPath = new JMenuItem("Copy api path", AllIcons.Actions.Copy);
-        copyApiPath.setMnemonic(1);
-        copyApiPath.addActionListener(actionListener);
-        menu.add(copyApiPath);
-
-        menu.show(tree, x, y);
+    @Nullable
+    private ModuleTree getTreeNodeModuleTree(@NotNull JTree tree) {
+        DefaultMutableTreeNode mutableTreeNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+        if (mutableTreeNode == null) {
+            return null;
+        }
+        Object userObject = mutableTreeNode.getUserObject();
+        if (!(userObject instanceof ModuleTree)) {
+            return null;
+        }
+        return (ModuleTree) userObject;
     }
 
     /**
@@ -263,6 +284,35 @@ public class ServiceTree extends JScrollPane {
         }
     }
 
+    @NotNull
+    private JPopupMenu generatePopupMenu(@NotNull JComponent... items) {
+        JBPopupMenu menu = new JBPopupMenu();
+        for (int i = 0; i < items.length; i++) {
+            JComponent item = items[i];
+            if (item != null) {
+                if (item instanceof JMenuItem) {
+                    ((JMenuItem) item).setMnemonic(i);
+                }
+                menu.add(item);
+            } else {
+                menu.addSeparator();
+            }
+        }
+        return menu;
+    }
+
+    /**
+     * 显示右键菜单
+     */
+    private void showPopupMenu(@NotNull MouseEvent event, @NotNull JPopupMenu menu) {
+        TreePath path = tree.getPathForLocation(event.getX(), event.getY());
+        tree.setSelectionPath(path);
+        Rectangle rectangle = tree.getUI().getPathBounds(tree, path);
+        if (rectangle != null && rectangle.contains(event.getX(), event.getY())) {
+            menu.show(tree, event.getX(), rectangle.y + rectangle.height);
+        }
+    }
+
     interface ChooseRequestCallback {
 
         /**
@@ -271,5 +321,33 @@ public class ServiceTree extends JScrollPane {
          * @param request request
          */
         void choose(@Nullable Request request);
+    }
+
+    public static class TreeNode<T> extends DefaultMutableTreeNode {
+
+        private final T data;
+
+        public TreeNode(T data) {
+            super(data);
+            this.data = data;
+        }
+
+        public T getData() {
+            return data;
+        }
+    }
+
+    public static class ModuleNode extends TreeNode<ModuleTree> {
+
+        public ModuleNode(ModuleTree data) {
+            super(data);
+        }
+    }
+
+    public static class RequestNode extends TreeNode<Request> {
+
+        public RequestNode(Request data) {
+            super(data);
+        }
     }
 }

@@ -10,8 +10,8 @@
  */
 package com.github.restful.tool.actions;
 
+import com.github.restful.tool.view.window.RestfulToolWindowFactory;
 import com.github.restful.tool.view.window.frame.RightToolWindow;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.DumbAwareAction;
 import org.jetbrains.annotations.NotNull;
@@ -22,16 +22,12 @@ import org.jetbrains.annotations.NotNull;
  */
 public class RefreshAction extends DumbAwareAction {
 
-    private final RightToolWindow toolWindow;
-
-    public RefreshAction(RightToolWindow toolWindow) {
-        this.toolWindow = toolWindow;
-        this.getTemplatePresentation().setIcon(AllIcons.Actions.Refresh);
-        this.getTemplatePresentation().setText("Refresh");
-    }
-
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
+        RightToolWindow toolWindow = RestfulToolWindowFactory.getToolWindow(e.getProject());
+        if (toolWindow == null) {
+            return;
+        }
         toolWindow.refreshRequestTree();
     }
 }

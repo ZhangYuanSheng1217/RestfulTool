@@ -1,17 +1,18 @@
 package com.github.restful.tool.actions.copy;
 
 import com.github.restful.tool.actions.EditorOption;
+import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.service.Notify;
+import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.service.Notify;
-import com.github.restful.tool.utils.RestUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -113,33 +114,44 @@ public interface CopyOption extends EditorOption {
         if (requests.isEmpty()) {
             return;
         }
-        StringBuilder paths = new StringBuilder();
+        if (requests.size() == 1) {
+            copyPath(psiMethod, requests.get(0), full);
+            return;
+        }
+        JBPopupFactory.getInstance()
+                .createPopupChooserBuilder(requests)
+                .setItemChosenCallback(selected -> copyPath(psiMethod, selected, full))
+                .setTitle("Which One?")
+                .setAdText(JBPopupFactory.ActionSelectionAid.SPEEDSEARCH.name())
+                .setNamerForFiltering(String::toString)
+                .createPopup()
+                .showInBestPositionFor(e.getDataContext());
+    }
+
+    /**
+     * copy
+     *
+     * @param psiMethod psiMethod
+     * @param path      path
+     * @param fullPath  full path?
+     */
+    default void copyPath(@NotNull PsiMethod psiMethod, @NotNull final String path, boolean fullPath) {
+        Project project = psiMethod.getProject();
         String contextPath = RestUtil.scanContextPath(project, psiMethod.getResolveScope());
-        if (!full) {
-            for (int i = 0; i < requests.size(); i++) {
-                if (i > 0) {
-                    paths.append("\n");
-                }
-                paths.append(contextPath == null || "null".equals(contextPath) ? "" : contextPath)
-                        .append(requests.get(i));
-            }
+        if (!fullPath) {
+            SystemUtil.Clipboard.copy((contextPath == null || "null".equals(contextPath) ? "" : contextPath) + path);
+            Notify.getInstance(project).info("Copy api success.");
         } else {
             GlobalSearchScope scope = psiMethod.getResolveScope();
             String protocol = RestUtil.scanListenerProtocol(project, scope);
             int port = RestUtil.scanListenerPort(project, scope);
-            for (int i = 0; i < requests.size(); i++) {
-                if (i > 0) {
-                    paths.append("\n");
-                }
-                paths.append(SystemUtil.buildUrl(
-                        protocol,
-                        port,
-                        contextPath,
-                        requests.get(i)
-                ));
-            }
+            SystemUtil.Clipboard.copy(SystemUtil.buildUrl(
+                    protocol,
+                    port,
+                    contextPath,
+                    path
+            ));
+            Notify.getInstance(project).info("Copy full path success.");
         }
-        SystemUtil.Clipboard.copy(paths.toString());
-        Notify.getInstance(project).info("Copy path success.");
     }
 }

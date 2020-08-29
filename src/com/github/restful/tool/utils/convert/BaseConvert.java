@@ -7,7 +7,7 @@ import com.intellij.psi.impl.source.tree.java.PsiLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -120,9 +120,8 @@ public abstract class BaseConvert<V> {
             return Collections.emptyMap();
         }
 
-        Map<String, V> map = new HashMap<>();
+        Map<String, V> map = new LinkedHashMap<>();
         for (PsiParameter parameter : parameterList.getParameters()) {
-            PsiAnnotation[] parameterAnnotations = parameter.getAnnotations();
             String parameterName = parameter.getName();
             PsiType parameterType = parameter.getType();
 
@@ -157,7 +156,7 @@ public abstract class BaseConvert<V> {
     }
 
     /**
-     * get method'param to convert show String
+     * get method params to convert show String
      *
      * @return str
      */

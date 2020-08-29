@@ -11,12 +11,15 @@
 package com.github.restful.tool.actions;
 
 import com.github.restful.tool.beans.PropertiesKey;
+import com.github.restful.tool.view.window.RestfulToolWindowFactory;
 import com.github.restful.tool.view.window.frame.RightToolWindow;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.ToggleAction;
 import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author ZhangYuanSheng
@@ -24,23 +27,29 @@ import org.jetbrains.annotations.NotNull;
  */
 public class WithLibraryAction extends ToggleAction implements DumbAware {
 
-    private final RightToolWindow toolWindow;
-
-    public WithLibraryAction(@NotNull RightToolWindow toolWindow) {
-        this.toolWindow = toolWindow;
-
-        this.getTemplatePresentation().setIcon(AllIcons.ObjectBrowser.ShowLibraryContents);
-        this.getTemplatePresentation().setText("Enable Library Scanning");
-    }
+    private RightToolWindow toolWindow;
 
     @Override
     public boolean isSelected(@NotNull AnActionEvent e) {
-        return PropertiesKey.scanServiceWithLibrary(toolWindow.getProject());
+        return PropertiesKey.scanServiceWithLibrary(e.getRequiredData(CommonDataKeys.PROJECT));
     }
 
     @Override
     public void setSelected(@NotNull AnActionEvent e, boolean state) {
-        PropertiesKey.scanServiceWithLibrary(toolWindow.getProject(), state);
-        toolWindow.refreshRequestTree();
+        Project project = e.getProject();
+        if (project == null) {
+            return;
+        }
+        PropertiesKey.scanServiceWithLibrary(project, state);
+        if (getToolWindow(project) != null) {
+            toolWindow.refreshRequestTree();
+        }
+    }
+
+    private RightToolWindow getToolWindow(@Nullable Project project) {
+        if (toolWindow != null) {
+            return toolWindow;
+        }
+        return (toolWindow = RestfulToolWindowFactory.getToolWindow(project));
     }
 }
