@@ -13,7 +13,7 @@ package com.github.restful.tool.view.window.frame;
 import cn.hutool.http.*;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.beans.settings.AppSetting;
+import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.service.topic.RestDetailTopic;
 import com.github.restful.tool.utils.JsonUtil;
 import com.github.restful.tool.utils.RestUtil;
@@ -83,10 +83,6 @@ public class RestDetail extends JPanel {
      * 选项卡面板 - 请求信息
      */
     private JBTabs tabs;
-    /**
-     * 文本域 - 请求头
-     */
-    private TabInfo headTab;
     private JsonEditor requestHead;
     /**
      * 文本域 - 请求体
@@ -147,7 +143,8 @@ public class RestDetail extends JPanel {
 
         requestHead = new JsonEditor(project, JsonEditor.JSON_FILE_TYPE);
         requestHead.setName(IDENTITY_HEAD);
-        headTab = new TabInfo(requestHead);
+
+        TabInfo headTab = new TabInfo(requestHead);
         headTab.setText("head");
         tabs.addTab(headTab);
 
@@ -239,7 +236,7 @@ public class RestDetail extends JPanel {
             try {
                 HttpResponse execute = httpRequest.execute();
                 // 最大重定向的次数
-                final int redirectMaxCount = AppSetting.HttpToolOptionForm.REDIRECT_MAX_COUNT.getData();
+                final int redirectMaxCount = Settings.HttpToolOptionForm.REDIRECT_MAX_COUNT.getData();
                 int redirectCount = 0;
                 while (redirectCount++ < redirectMaxCount && execute.getStatus() == HttpStatus.HTTP_MOVED_TEMP) {
                     String redirect = execute.header(Header.LOCATION);
@@ -318,7 +315,7 @@ public class RestDetail extends JPanel {
                 } else {
                     reqHead = String.format(
                             "{\n  \"Content-Type\": \"%s\"\n}",
-                            AppSetting.HttpToolOptionForm.CONTENT_TYPE.getData().getValue()
+                            Settings.HttpToolOptionForm.CONTENT_TYPE.getData().getValue()
                     );
                     setCache(IDENTITY_HEAD, request, reqHead);
                 }
@@ -380,7 +377,7 @@ public class RestDetail extends JPanel {
 
     @NotNull
     private String getCache(@NotNull String name, @NotNull Request request) {
-        boolean enable = AppSetting.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
+        boolean enable = Settings.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
         if (enable) {
             switch (name) {
                 case IDENTITY_HEAD:
@@ -395,7 +392,7 @@ public class RestDetail extends JPanel {
     }
 
     private void setCache(@NotNull String name, @NotNull Request request, @NotNull String cache) {
-        boolean enable = AppSetting.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
+        boolean enable = Settings.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
         if (enable) {
             switch (name) {
                 case IDENTITY_HEAD:

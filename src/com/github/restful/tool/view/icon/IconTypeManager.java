@@ -79,11 +79,11 @@ public final class IconTypeManager {
                 return ICON_TYPES.get(iconType.toString());
             }
         }
-        String scheme = obj instanceof String ? ((String) obj) : obj.toString();
-        if (!ICON_TYPES.containsKey(scheme)) {
-            return ICON_TYPES.get(DEFAULT_ICON_SCHEME);
+        String scheme = Objects.toString(obj);
+        if (ICON_TYPES.containsKey(scheme)) {
+            return ICON_TYPES.get(scheme);
         }
-        return ICON_TYPES.get(scheme);
+        return ICON_TYPES.get(DEFAULT_ICON_SCHEME);
     }
 
     /**

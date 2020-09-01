@@ -28,7 +28,9 @@
       <ul>
         <li> changed UI Component for ServiceTree </li>
         <li> Support parameters are displayed in order </li>
-        <li> fix some bugs </li>
+        <li> Increase container port and context path settings </li>
+        <li> Fix failure to save global settings </li>
+        <li> Fix some bugs </li>
       </ul>
     ]]>
     </change-notes>
@@ -45,11 +47,11 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService
-                serviceImplementation="com.github.restful.tool.configuration.AppSettingsState"/>
+                serviceImplementation="com.github.restful.tool.configuration.RestfulSetting"/>
 
         <applicationConfigurable parentId="tools"
-                                 instance="com.github.restful.tool.configuration.AppSettingsConfigurable"
-                                 id="com.github.restful.tool.configuration.AppSettingsConfigurable"
+                                 instance="com.github.restful.tool.configuration.RestfulSettingConfigurable"
+                                 id="com.github.restful.tool.configuration.RestfulSettingConfigurable"
                                  dynamic="true"/>
 
         <projectService serviceInterface="com.github.restful.tool.service.ToolWindowService"

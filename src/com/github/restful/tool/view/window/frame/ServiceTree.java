@@ -12,7 +12,7 @@ package com.github.restful.tool.view.window.frame;
 
 import com.github.restful.tool.beans.ModuleTree;
 import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.beans.settings.AppSetting;
+import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.service.Notify;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
@@ -101,7 +101,7 @@ public class ServiceTree extends JBScrollPane {
 
         ((DefaultTreeModel) tree.getModel()).setRoot(root);
 
-        if (AppSetting.SystemOptionForm.EXPAND_OF_SERVICE_TREE.getData()) {
+        if (Settings.SystemOptionForm.EXPAND_OF_SERVICE_TREE.getData()) {
             expandAll(new TreePath(tree.getModel().getRoot()), true);
         }
 

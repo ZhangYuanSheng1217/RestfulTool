@@ -11,7 +11,7 @@
 package com.github.restful.tool.view.window.options.template;
 
 import com.github.restful.tool.view.window.options.Option;
-import com.github.restful.tool.beans.settings.AppSetting;
+import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.beans.settings.SettingKey;
 import com.intellij.ui.components.JBCheckBox;
 import org.jetbrains.annotations.Nls;
@@ -42,12 +42,12 @@ public class CheckBox extends JBCheckBox implements Option {
     }
 
     @Override
-    public void showSetting(@NotNull AppSetting setting) {
+    public void showSetting(@NotNull Settings setting) {
         this.setSelected(setting.getData(this.key));
     }
 
     @Override
-    public void applySetting(@NotNull AppSetting setting) {
+    public void applySetting(@NotNull Settings setting) {
         setting.putData(this.key, this.isSelected());
     }
 

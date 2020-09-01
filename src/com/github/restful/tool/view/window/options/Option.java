@@ -10,7 +10,7 @@
  */
 package com.github.restful.tool.view.window.options;
 
-import com.github.restful.tool.beans.settings.AppSetting;
+import com.github.restful.tool.beans.settings.Settings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,14 +27,14 @@ public interface Option {
      *
      * @param setting 设置信息
      */
-    void showSetting(@NotNull AppSetting setting);
+    void showSetting(@NotNull Settings setting);
 
     /**
      * 应用设置
      *
      * @param setting 设置信息
      */
-    void applySetting(@NotNull AppSetting setting);
+    void applySetting(@NotNull Settings setting);
 
     /**
      * 获取顶部间距
@@ -55,8 +55,7 @@ public interface Option {
          * @param component 组件
          * @return true: 启用 | false: 执行原本逻辑
          */
-        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-        boolean showSetting(@NotNull AppSetting setting, @NotNull T component);
+        boolean showSetting(@NotNull Settings setting, @NotNull T component);
 
         /**
          * 应用设置
@@ -65,8 +64,7 @@ public interface Option {
          * @param component 组件
          * @return true: 启用 | false: 执行原本逻辑
          */
-        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-        boolean applySetting(@NotNull AppSetting setting, @NotNull T component);
+        boolean applySetting(@NotNull Settings setting, @NotNull T component);
 
         /**
          * 获取顶部间距

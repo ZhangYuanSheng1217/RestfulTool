@@ -10,7 +10,7 @@
  */
 package com.github.restful.tool.view.window.options;
 
-import com.github.restful.tool.beans.settings.AppSetting;
+import com.github.restful.tool.beans.settings.Settings;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,20 +22,20 @@ import java.util.List;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class AppSettingsWindow {
+public class RestfulSettingWindow {
 
     public static final int VERTICAL_CLEARANCE = 30;
 
     private final JPanel content;
     private final List<Option> optionList;
 
-    public AppSettingsWindow() {
+    public RestfulSettingWindow() {
         optionList = new ArrayList<>();
         FormBuilder builder = FormBuilder.createFormBuilder();
 
-        List<AppSetting.SettingItem> allSettingItems = AppSetting.getAllSettingItems();
+        List<Settings.SettingItem> allSettingItems = Settings.getAllSettingItems();
         for (int i = 0; i < allSettingItems.size(); i++) {
-            AppSetting.SettingItem item = allSettingItems.get(i);
+            Settings.SettingItem item = allSettingItems.get(i);
             if (i == 0) {
                 builder.addComponent(item.form.getContent());
             } else {
@@ -56,13 +56,13 @@ public class AppSettingsWindow {
     }
 
     @NotNull
-    public AppSetting getAppSetting() {
-        AppSetting setting = new AppSetting();
+    public Settings getAppSetting() {
+        Settings setting = new Settings();
         optionList.forEach(item -> item.applySetting(setting));
         return setting;
     }
 
-    public void setAppSetting(AppSetting setting) {
+    public void setAppSetting(Settings setting) {
         if (setting == null) {
             return;
         }

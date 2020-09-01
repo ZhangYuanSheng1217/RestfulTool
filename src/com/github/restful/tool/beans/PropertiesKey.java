@@ -1,6 +1,6 @@
 package com.github.restful.tool.beans;
 
-import com.github.restful.tool.beans.settings.AppSetting;
+import com.github.restful.tool.beans.settings.Settings;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ public enum PropertiesKey {
         PropertiesComponent instance = PropertiesComponent.getInstance(project);
         String value = instance.getValue(
                 SCAN_SERVICE_WITH_LIB.value,
-                AppSetting.SystemOptionForm.SCAN_WITH_LIBRARY.getData().toString()
+                Settings.SystemOptionForm.SCAN_WITH_LIBRARY.getData().toString()
         );
         return Boolean.parseBoolean(value);
     }

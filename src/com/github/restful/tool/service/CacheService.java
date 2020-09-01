@@ -1,6 +1,6 @@
 package com.github.restful.tool.service;
 
-import com.github.restful.tool.beans.settings.AppSetting;
+import com.github.restful.tool.beans.settings.Settings;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +32,7 @@ public interface CacheService<K, V> {
      * @return enable-cache
      */
     default boolean enableCache(@NotNull Project project) {
-        return AppSetting.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
+        return Settings.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
     }
 
     /**

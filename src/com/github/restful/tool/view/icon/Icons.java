@@ -11,7 +11,7 @@
 package com.github.restful.tool.view.icon;
 
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.beans.settings.AppSetting;
+import com.github.restful.tool.beans.settings.Settings;
 import com.intellij.ui.IconManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,7 +43,7 @@ public class Icons {
     }
 
     public static Icon getMethodIcon(@Nullable HttpMethod method, boolean selected) {
-        IconType iconType = AppSetting.IconTypeOptionForm.ICON_TYPE_SCHEME.getData();
+        IconType iconType = Settings.IconTypeOptionForm.ICON_TYPE_SCHEME.getData();
         method = method == null ? HttpMethod.REQUEST : method;
         if (selected) {
             return iconType.getSelectIcon(method);

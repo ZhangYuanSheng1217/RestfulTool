@@ -10,7 +10,7 @@
  */
 package com.github.restful.tool.configuration;
 
-import com.github.restful.tool.beans.settings.AppSetting;
+import com.github.restful.tool.beans.settings.Settings;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
@@ -23,26 +23,23 @@ import org.jetbrains.annotations.Nullable;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-@State(
-        name = "com.github.restful.tool.configuration.AppSettingsState",
-        storages = {
-                @Storage("RestfulToolSetting.xml")
-        }
-)
-public class AppSettingsState implements PersistentStateComponent<AppSettingsState> {
+@State(name = "RestfulSetting", storages = @Storage(RestfulSetting.IDE))
+public class RestfulSetting implements PersistentStateComponent<RestfulSetting> {
 
-    private final AppSetting setting;
+    public static final String IDE = "RestfulToolSetting.xml";
 
-    public AppSettingsState() {
-        this.setting = new AppSetting();
+    private final Settings setting;
+
+    public RestfulSetting() {
+        this.setting = new Settings();
         this.setting.initValue();
     }
 
-    public static AppSettingsState getInstance() {
-        return ServiceManager.getService(AppSettingsState.class);
+    public static RestfulSetting getInstance() {
+        return ServiceManager.getService(RestfulSetting.class);
     }
 
-    public boolean isModified(AppSetting changedSetting) {
+    public boolean isModified(Settings changedSetting) {
         if (changedSetting == null) {
             return false;
         }
@@ -51,21 +48,21 @@ public class AppSettingsState implements PersistentStateComponent<AppSettingsSta
 
     @Nullable
     @Override
-    public AppSettingsState getState() {
+    public RestfulSetting getState() {
         return this;
     }
 
     @Override
-    public void loadState(@NotNull AppSettingsState state) {
+    public void loadState(@NotNull RestfulSetting state) {
         XmlSerializerUtil.copyBean(state, this);
     }
 
     @NotNull
-    public AppSetting getAppSetting() {
+    public Settings getAppSetting() {
         return this.setting;
     }
 
-    public void setAppSetting(AppSetting setting) {
+    public void setAppSetting(Settings setting) {
         this.setting.applySetting(setting);
     }
 }

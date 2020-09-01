@@ -11,7 +11,7 @@
 package com.github.restful.tool.view.window.options.template;
 
 import com.github.restful.tool.view.window.options.Option;
-import com.github.restful.tool.beans.settings.AppSetting;
+import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.beans.settings.SettingKey;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -54,12 +54,12 @@ public class ComboBox<T> extends JPanel implements Option {
     }
 
     @Override
-    public void showSetting(@NotNull AppSetting setting) {
+    public void showSetting(@NotNull Settings setting) {
         setSelectItem(setting.getData(this.key));
     }
 
     @Override
-    public void applySetting(@NotNull AppSetting setting) {
+    public void applySetting(@NotNull Settings setting) {
         T selectedItem = getSelectItem();
         if (selectedItem == null) {
             return;

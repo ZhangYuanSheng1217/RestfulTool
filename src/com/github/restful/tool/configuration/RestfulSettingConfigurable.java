@@ -11,7 +11,7 @@
 package com.github.restful.tool.configuration;
 
 import com.github.restful.tool.utils.Constants;
-import com.github.restful.tool.view.window.options.AppSettingsWindow;
+import com.github.restful.tool.view.window.options.RestfulSettingWindow;
 import com.intellij.openapi.options.Configurable;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
@@ -22,9 +22,9 @@ import javax.swing.*;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class AppSettingsConfigurable implements Configurable {
+public class RestfulSettingConfigurable implements Configurable {
 
-    private AppSettingsWindow settingsComponent;
+    private RestfulSettingWindow settingsComponent;
 
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
@@ -40,23 +40,23 @@ public class AppSettingsConfigurable implements Configurable {
     @Nullable
     @Override
     public JComponent createComponent() {
-        settingsComponent = new AppSettingsWindow();
+        settingsComponent = new RestfulSettingWindow();
         return settingsComponent.getContent();
     }
 
     @Override
     public boolean isModified() {
-        return AppSettingsState.getInstance().isModified(settingsComponent.getAppSetting());
+        return RestfulSetting.getInstance().isModified(settingsComponent.getAppSetting());
     }
 
     @Override
     public void apply() {
-        AppSettingsState.getInstance().setAppSetting(settingsComponent.getAppSetting());
+        RestfulSetting.getInstance().setAppSetting(settingsComponent.getAppSetting());
     }
 
     @Override
     public void reset() {
-        AppSettingsState settings = AppSettingsState.getInstance();
+        RestfulSetting settings = RestfulSetting.getInstance();
         settingsComponent.setAppSetting(settings.getAppSetting());
     }
 

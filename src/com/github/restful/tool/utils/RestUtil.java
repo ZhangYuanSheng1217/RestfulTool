@@ -49,7 +49,7 @@ public class RestUtil {
         try {
             String value = ProjectConfigUtil.getApplicationConfig(
                     project, scope,
-                    "server.port"
+                    ProjectConfigUtil.SERVER_PORT
             );
             if (value == null || "".equals((value = value.trim()))) {
                 throw new NumberFormatException();
@@ -94,11 +94,10 @@ public class RestUtil {
      */
     @Nullable
     public static String scanContextPath(@NotNull Project project, @NotNull GlobalSearchScope scope) {
-        // server.servlet.context-path
         try {
             String contextPath = ProjectConfigUtil.getApplicationConfig(
                     project, scope,
-                    "server.servlet.context-path"
+                    ProjectConfigUtil.SERVER_SERVLET_CONTEXT_PATH
             );
             return PomUtil.getContextPathWithPom(((ModuleWithDependenciesScope) scope).getModule(), contextPath);
         } catch (Exception ignore) {

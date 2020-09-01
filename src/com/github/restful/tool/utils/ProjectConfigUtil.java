@@ -11,6 +11,7 @@
 package com.github.restful.tool.utils;
 
 import com.github.restful.tool.beans.PropertiesKey;
+import com.github.restful.tool.beans.settings.Settings;
 import com.intellij.lang.properties.PropertiesFileType;
 import com.intellij.lang.properties.psi.PropertiesFile;
 import com.intellij.openapi.module.Module;
@@ -36,6 +37,15 @@ import java.util.List;
  * @version 1.0
  */
 public class ProjectConfigUtil {
+
+    /**
+     * 端口
+     */
+    public static final String SERVER_PORT = "server.port";
+    /**
+     * 上下文路径
+     */
+    public static final String SERVER_SERVLET_CONTEXT_PATH = "server.servlet.context-path";
 
     /**
      * 获取bootstrap配置的kv值
@@ -83,6 +93,15 @@ public class ProjectConfigUtil {
                                               @NotNull String propName) {
         PsiFile conf = getScanConfigurationFile(project, scope, null);
         if (conf == null) {
+            if (SERVER_PORT.equals(propName)) {
+                return String.valueOf(Settings.HttpToolOptionForm.CONTAINER_PORT.getData());
+            } else if (SERVER_SERVLET_CONTEXT_PATH.equals(propName)) {
+                String contextPath = Settings.HttpToolOptionForm.CONTAINER_CONTEXT.getData();
+                if ("/".equals(contextPath)) {
+                    return null;
+                }
+                return contextPath;
+            }
             return null;
         }
         String bootstrapConfigValue = getBootstrapConfig(project, scope, propName);

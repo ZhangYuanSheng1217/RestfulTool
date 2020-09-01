@@ -1,6 +1,7 @@
 package com.github.restful.tool.beans;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.Charset;
 
@@ -84,5 +85,18 @@ public enum ContentType {
     @NotNull
     public String toString(Charset charset) {
         return build(this, charset);
+    }
+
+    @NotNull
+    public static ContentType find(@Nullable String contentType) {
+        if (contentType == null) {
+            return FORM_URLENCODED;
+        }
+        for (ContentType type : values()) {
+            if (type.getValue().equals(contentType)) {
+                return type;
+            }
+        }
+        return FORM_URLENCODED;
     }
 }

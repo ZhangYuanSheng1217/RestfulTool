@@ -12,12 +12,13 @@ package com.github.restful.tool.beans.settings;
 
 import com.github.restful.tool.beans.ContentType;
 import com.github.restful.tool.beans.Key;
+import com.github.restful.tool.utils.xml.converter.BaseConverter;
+import com.github.restful.tool.utils.xml.converter.IntegerConverter;
 import com.github.restful.tool.view.icon.IconType;
 import com.github.restful.tool.view.icon.IconTypeManager;
 import com.github.restful.tool.view.icon.PreviewIconType;
 import com.github.restful.tool.view.window.options.Option;
 import com.github.restful.tool.view.window.options.OptionForm;
-import com.github.restful.tool.view.window.options.template.ComboBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,12 +33,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class AppSetting {
+public class Settings {
 
     /**
      * 数据存储
      */
-    private final Map<String, Object> properties = new HashMap<>();
+    @NotNull
+    public Map<String, String> properties = new HashMap<>();
 
     /**
      * 获取所以设置项
@@ -49,7 +51,7 @@ public class AppSetting {
         List<SettingItem> options = new CopyOnWriteArrayList<>();
 
         try {
-            Class<? extends AppSetting> clazz = AppSetting.class;
+            Class<? extends Settings> clazz = Settings.class;
             for (Class<?> declaredClass : clazz.getDeclaredClasses()) {
                 if (!declaredClass.getSuperclass().equals(OptionForm.class)) {
                     continue;
@@ -83,27 +85,29 @@ public class AppSetting {
         return options;
     }
 
-    public void applySetting(@Nullable AppSetting setting) {
+    public void applySetting(@Nullable Settings setting) {
         if (setting == null) {
             return;
         }
         setting.properties.forEach(this.properties::put);
     }
 
-    public <T> T getData(@NotNull Key<T> key) {
-        //noinspection unchecked
-        return (T) this.properties.getOrDefault(key.getName(), key.getDefaultData());
+    public <T> T getData(@NotNull SettingKey<T> key) {
+        if (this.properties.containsKey(key.getName())) {
+            return key.getConverter().fromString(this.properties.get(key.getName()));
+        }
+        return key.getDefaultData();
     }
 
-    public <T> void putData(@NotNull Key<T> key, @NotNull T value) {
-        this.properties.put(key.getName(), value);
+    public <T> void putData(@NotNull SettingKey<T> key, @NotNull T value) {
+        this.properties.put(key.getName(), key.getConverter().toString(value));
     }
 
-    public boolean isModified(AppSetting changedSetting) {
+    public boolean isModified(Settings changedSetting) {
         if (changedSetting == null) {
             return false;
         }
-        for (Map.Entry<String, Object> entry : changedSetting.properties.entrySet()) {
+        for (Map.Entry<String, String> entry : changedSetting.properties.entrySet()) {
             if (!Objects.equals(entry.getValue(), this.properties.get(entry.getKey()))) {
                 return true;
             }
@@ -113,7 +117,7 @@ public class AppSetting {
 
     public void initValue() {
         for (Key<?> key : Key.getAllKeys().values()) {
-            this.properties.put(key.getName(), key.getDefaultData());
+            this.properties.put(key.getName(), key.getDefaultData().toString());
         }
     }
 
@@ -143,12 +147,12 @@ public class AppSetting {
 
     public static class SystemOptionForm extends OptionForm {
 
-        public static final SettingKey<Boolean> SCAN_WITH_LIBRARY = SettingKey.create(
+        public static final SettingKey<Boolean> SCAN_WITH_LIBRARY = SettingKey.createCheckBox(
                 "Scan service with library on application default (全局配置)",
                 false
         );
 
-        public static final SettingKey<Boolean> EXPAND_OF_SERVICE_TREE = SettingKey.create(
+        public static final SettingKey<Boolean> EXPAND_OF_SERVICE_TREE = SettingKey.createCheckBox(
                 "Whether to expand the ServiceTree by default?",
                 false
         );
@@ -160,28 +164,13 @@ public class AppSetting {
 
     public static class IconTypeOptionForm extends OptionForm {
 
-        public static final SettingKey<IconType> ICON_TYPE_SCHEME = SettingKey.create(
-                "Select Icon: ",
+        public static final SettingKey<IconType> ICON_TYPE_SCHEME = SettingKey.createComboBox(
+                "Select Icon Scheme: ",
                 IconTypeManager.getIconTypes(),
-                new Option.Custom<ComboBox<IconType>>() {
+                new BaseConverter<IconType>() {
                     @Override
-                    public boolean showSetting(@NotNull AppSetting setting, @NotNull ComboBox<IconType> component) {
-                        IconType selectItem = component.getSelectItem();
-                        if (selectItem == null) {
-                            return false;
-                        }
-                        setting.putData(component.key, IconTypeManager.getInstance(selectItem));
-                        return true;
-                    }
-
-                    @Override
-                    public boolean applySetting(@NotNull AppSetting setting, @NotNull ComboBox<IconType> component) {
-                        IconType selectedItem = component.getSelectItem();
-                        if (selectedItem == null) {
-                            return false;
-                        }
-                        setting.putData(component.key, IconTypeManager.getInstance(selectedItem));
-                        return true;
+                    public IconType fromString(@NotNull String value) {
+                        return IconTypeManager.getInstance(value);
                     }
                 },
                 new JComponent[]{addIconsPreview()},
@@ -206,21 +195,59 @@ public class AppSetting {
 
     public static class HttpToolOptionForm extends OptionForm {
 
-        public static final SettingKey<Boolean> ENABLE_CACHE_OF_REST_DETAIL = SettingKey.create(
+        public static final SettingKey<Boolean> ENABLE_CACHE_OF_REST_DETAIL = SettingKey.createCheckBox(
                 "Enable cache for Http Tool? (May increase memory footprint)",
                 true
         );
 
-        public static final SettingKey<Integer> REDIRECT_MAX_COUNT = SettingKey.create(
+        public static final SettingKey<Integer> REDIRECT_MAX_COUNT = SettingKey.createComboBox(
                 "The maximum number of redirects allowed in the HTTP Tool: ",
                 new Integer[]{0, 3, 5, 10},
+                new IntegerConverter(),
                 1
         );
 
-        public static final SettingKey<ContentType> CONTENT_TYPE = SettingKey.create(
+        public static final SettingKey<ContentType> CONTENT_TYPE = SettingKey.createComboBox(
                 "Please select the default Content-Type: ",
                 ContentType.values(),
+                new BaseConverter<ContentType>() {
+                    @Override
+                    public ContentType fromString(@NotNull String value) {
+                        return ContentType.find(value);
+                    }
+                },
                 0
+        );
+
+        public static final SettingKey<String> CONTAINER_CONTEXT = SettingKey.createInputString(
+                "Select the default Context Path of the container(Must start with'/' and cannot end with'/'): ",
+                "/",
+                data -> {
+                    if (data == null || data.length() < 1) {
+                        return false;
+                    }
+                    data = data.trim();
+                    final String fix = "/";
+                    if (data.length() == 1) {
+                        return fix.equals(data);
+                    } else {
+                        if (data.contains(fix + fix)) {
+                            return false;
+                        }
+                        return data.startsWith(fix) && !data.endsWith(fix);
+                    }
+                }
+        );
+
+        public static final SettingKey<Integer> CONTAINER_PORT = SettingKey.createInputNumber(
+                "Select the default port of the container(0-65535): ",
+                8080,
+                data -> {
+                    if (data == null) {
+                        return false;
+                    }
+                    return data >= 0 && data <= 65535;
+                }
         );
 
         public HttpToolOptionForm() {

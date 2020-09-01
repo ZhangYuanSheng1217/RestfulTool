@@ -23,7 +23,7 @@ import java.util.Map;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class DefaultIconType implements IconType {
+public class DefaultIconType extends IconType {
 
     public static final Icon REQUEST = Icons.load("/icons/method/default/Request.png");
     public static final Icon GET = Icons.load("/icons/method/default/GET.png");

@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public interface IconType {
+public abstract class IconType {
 
     /**
      * 默认显示
@@ -31,7 +31,7 @@ public interface IconType {
      * @return default
      */
     @NotNull
-    Icon getDefaultIcon(HttpMethod method);
+    public abstract Icon getDefaultIcon(HttpMethod method);
 
     /**
      * 选中图标
@@ -40,7 +40,7 @@ public interface IconType {
      * @return select
      */
     @NotNull
-    Icon getSelectIcon(HttpMethod method);
+    public abstract Icon getSelectIcon(HttpMethod method);
 
     /**
      * 获取默认图标列表
@@ -48,7 +48,7 @@ public interface IconType {
      * @return list
      */
     @NotNull
-    List<PreviewIcon> getDefaultIcons();
+    public abstract List<PreviewIcon> getDefaultIcons();
 
     /**
      * 获取选中图标列表
@@ -56,7 +56,7 @@ public interface IconType {
      * @return list
      */
     @NotNull
-    List<PreviewIcon> getSelectIcons();
+    public abstract List<PreviewIcon> getSelectIcons();
 
     /**
      * 图标名
@@ -65,14 +65,14 @@ public interface IconType {
      */
     @Override
     @NotNull
-    String toString();
+    public abstract String toString();
 
     /**
      * 获取排序后的图标列表
      *
      * @return list
      */
-    default List<PreviewIcon> getSortDefaultIcons() {
+    public List<PreviewIcon> getSortDefaultIcons() {
         return this.getDefaultIcons().stream().sorted(new IconComparator()).collect(Collectors.toList());
     }
 
@@ -81,8 +81,17 @@ public interface IconType {
      *
      * @return list
      */
-    default List<PreviewIcon> getSortSelectIcons() {
+    public List<PreviewIcon> getSortSelectIcons() {
         return this.getSelectIcons().stream().sorted(new IconComparator()).collect(Collectors.toList());
+    }
+
+    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        return toString().equals(obj.toString());
     }
 }
 
