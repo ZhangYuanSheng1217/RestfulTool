@@ -11,8 +11,10 @@
 package com.github.restful.tool.view.search;
 
 import com.github.restful.tool.beans.HttpMethod;
+import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.view.icon.Icons;
 import com.intellij.featureStatistics.FeatureUsageTracker;
+import com.intellij.icons.AllIcons;
 import com.intellij.ide.actions.GotoActionBase;
 import com.intellij.ide.util.gotoByName.ChooseByNameFilter;
 import com.intellij.ide.util.gotoByName.ChooseByNameItemProvider;
@@ -39,6 +41,12 @@ import java.util.List;
  * @version 1.0
  */
 public class GotoRequestAction extends GotoActionBase implements DumbAware {
+
+    public GotoRequestAction() {
+        getTemplatePresentation().setText(Bundle.getString("action.Search.text"));
+        getTemplatePresentation().setDescription(Bundle.getString("action.Search.description"));
+        getTemplatePresentation().setIcon(AllIcons.Actions.Search);
+    }
 
     @Override
     protected void gotoActionPerformed(@NotNull AnActionEvent e) {
@@ -79,7 +87,7 @@ public class GotoRequestAction extends GotoActionBase implements DumbAware {
         GotoRequestProvider provider = new GotoRequestProvider(getPsiContext(e));
         showNavigationPopup(
                 e, model, callback,
-                "Request Mapping Url matching pattern",
+                Bundle.getString("search.FindUsagesTitle"),
                 true,
                 true,
                 (ChooseByNameItemProvider) provider

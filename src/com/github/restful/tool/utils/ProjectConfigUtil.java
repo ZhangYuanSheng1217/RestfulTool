@@ -187,8 +187,8 @@ public class ProjectConfigUtil {
                 }
             }
         } catch (NoClassDefFoundError e) {
-            DumbService.getInstance(project).showDumbModeNotification(String.format(
-                    "IDE is missing the corresponding package file: %s",
+            DumbService.getInstance(project).showDumbModeNotification(Bundle.getString(
+                    "notify.error.class.def.notfound",
                     e.getMessage()
             ));
         }

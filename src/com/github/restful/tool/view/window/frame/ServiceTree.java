@@ -14,6 +14,7 @@ import com.github.restful.tool.beans.ModuleTree;
 import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.service.Notify;
+import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.view.window.RestfulTreeCellRenderer;
@@ -85,7 +86,7 @@ public class ServiceTree extends JBScrollPane {
      */
     public void renderRequestTree(@NotNull Map<String, List<Request>> allRequests) {
         AtomicInteger apiCount = new AtomicInteger();
-        TreeNode<String> root = new TreeNode<>("Not found any services");
+        TreeNode<String> root = new TreeNode<>(Bundle.getString("service.tree.NotFoundAny"));
 
         allRequests.forEach((itemName, requests) -> {
             if (requests == null || requests.isEmpty()) {
@@ -166,7 +167,7 @@ public class ServiceTree extends JBScrollPane {
                 if (modulePopupMenu != null) {
                     return modulePopupMenu;
                 }
-                JBMenuItem moduleSetting = new JBMenuItem("Open module setting", AllIcons.General.Settings);
+                JBMenuItem moduleSetting = new JBMenuItem(Bundle.getString("action.OpenModuleSetting.text"), AllIcons.General.Settings);
                 moduleSetting.addActionListener(action -> {
                     Module module = ModuleManager.getInstance(project).findModuleByName(moduleTree.getModuleName());
                     if (module == null) {
@@ -184,11 +185,11 @@ public class ServiceTree extends JBScrollPane {
                 }
 
                 // navigation
-                JMenuItem navigation = new JBMenuItem("Navigate to method", AllIcons.Nodes.Method);
+                JMenuItem navigation = new JBMenuItem(Bundle.getString("action.NavigateToMethod.text"), AllIcons.Nodes.Method);
                 navigation.addActionListener(actionEvent -> request.navigate(true));
 
                 // Copy full url
-                JMenuItem copyFullUrl = new JBMenuItem("Copy full url", AllIcons.Actions.Copy);
+                JMenuItem copyFullUrl = new JBMenuItem(Bundle.getString("action.CopyFullPath.text"), AllIcons.Actions.Copy);
                 copyFullUrl.addActionListener(actionEvent -> {
                     GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
                     String contextPath = RestUtil.scanContextPath(project, scope);
@@ -197,11 +198,11 @@ public class ServiceTree extends JBScrollPane {
                             RestUtil.scanListenerPort(project, scope),
                             contextPath,
                             request.getPath()));
-                    Notify.getInstance(project).info("Copy full path success.");
+                    Notify.getInstance(project).info(Bundle.getString("action.CopyFullPath.success"));
                 });
 
                 // Copy api path
-                JMenuItem copyApiPath = new JBMenuItem("Copy api path", AllIcons.Actions.Copy);
+                JMenuItem copyApiPath = new JBMenuItem(Bundle.getString("action.CopyApi.text"), AllIcons.Actions.Copy);
                 copyApiPath.addActionListener(actionEvent -> {
                     GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
                     String contextPath = RestUtil.scanContextPath(project, scope);
@@ -209,7 +210,7 @@ public class ServiceTree extends JBScrollPane {
                             (contextPath == null || "null".equals(contextPath) ? "" : contextPath) +
                                     request.getPath()
                     );
-                    Notify.getInstance(project).info("Copy api success.");
+                    Notify.getInstance(project).info(Bundle.getString("action.CopyApi.success"));
                 });
                 return (requestItemPopupMenu = generatePopupMenu(
                         navigation,

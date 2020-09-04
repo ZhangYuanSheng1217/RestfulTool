@@ -10,8 +10,10 @@
  */
 package com.github.restful.tool.actions;
 
+import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.view.window.RestfulToolWindowFactory;
 import com.github.restful.tool.view.window.frame.RightToolWindow;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.DumbAwareAction;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +23,11 @@ import org.jetbrains.annotations.NotNull;
  * @version 1.0
  */
 public class RefreshAction extends DumbAwareAction {
+
+    public RefreshAction() {
+        getTemplatePresentation().setText(Bundle.getString("action.Refresh.text"));
+        getTemplatePresentation().setIcon(AllIcons.Actions.Refresh);
+    }
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {

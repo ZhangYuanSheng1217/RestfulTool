@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RightToolWindow extends JPanel {
 
     public static final Map<HttpMethod, Boolean> METHOD_CHOOSE_MAP;
-    private static final double WINDOW_WEIGHT = 0.55D;
+    private static final float DEFAULT_PROPORTION = 0.5F;
 
     static {
         HttpMethod[] values = HttpMethod.values();
@@ -62,7 +62,7 @@ public class RightToolWindow extends JPanel {
         actionToolbar.setTargetComponent(this);
         this.add(actionToolbar.getComponent(), BorderLayout.NORTH);
 
-        JBSplitter splitter = new JBSplitter(true, RightToolWindow.class.getName(), 0.5F);
+        JBSplitter splitter = new JBSplitter(true, RightToolWindow.class.getName(), DEFAULT_PROPORTION);
         splitter.setFirstComponent(this.serviceTree);
         splitter.setSecondComponent(this.restDetail);
         this.add(splitter, BorderLayout.CENTER);

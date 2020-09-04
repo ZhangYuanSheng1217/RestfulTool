@@ -10,6 +10,9 @@
  */
 package com.github.restful.tool.actions.dialog;
 
+import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.utils.Bundle;
+import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.view.window.frame.ServiceTree;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -18,8 +21,6 @@ import com.intellij.openapi.ui.popup.ComponentPopupBuilder;
 import com.intellij.openapi.ui.popup.JBPopup;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.psi.PsiClass;
-import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.utils.RestUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -38,6 +39,8 @@ public class CurrClassTreeAction extends AnAction implements TreeOption {
 
     public CurrClassTreeAction() {
         this.requests = new HashMap<>(1);
+        getTemplatePresentation().setText(Bundle.getString("action.ShowCurrClassServiceTree.text"));
+        getTemplatePresentation().setDescription(Bundle.getString("action.ShowCurrClassServiceTree.description"));
     }
 
     @Override

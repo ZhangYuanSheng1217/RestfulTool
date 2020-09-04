@@ -1,36 +1,45 @@
 <idea-plugin url="https://www.jetbrains.com/idea">
     <id>cn.cloud.auto.restful.tool</id>
     <name>RestfulTool</name>
-    <version>1.2.6</version>
+    <version>1.2.6.EAP</version>
     <vendor email="2862297923@qq.com" url="">ZhangYuanSheng</vendor>
 
     <!--suppress PluginXmlValidity -->
     <description><![CDATA[
-      A set of auxiliary tools for Restful service development.<br>
-        1.Provides a display window of Services tree;<br>
-        2.Click the URL to jump directly to the corresponding method definition;<br>
-        3.A simple http request tool;<br>
-        4.Support Spring system (Spring MVC / Spring Boot)<br>
-        4.Support JAX-RS<br>
-        5.Support `Navigate-> Request Service` search Mapping (Ctrl + Alt + /)<br>
-      <br>
-      一套 Restful 服务开发辅助工具集。<br>
-        1.提供了一个 Services tree 的显示窗口;<br>
-        2.点击 URL 直接跳转到对应的方法定义;<br>
-        3.一个简单的 http 请求工具;<br>
-        4.支持 Spring 体系 (Spring MVC / Spring Boot);<br>
-        4.支持 JAX-RS;<br>
-        5.支持 `Navigate -> Request Service` 搜索 Mapping (Ctrl + Alt + /)<br>
+    <a href="https://gitee.com/zys981029/RestfulTool">Gitee</a> |
+    <a href="https://github.com/ZhangYuanSheng1217/RestfulTool">Github</a>
+
+    <ul>
+        <li>
+            <b>A set of auxiliary tools for Restful service development</b>
+            <ol>
+                <li>Provides a display window of Services tree</li>
+                <li>Double click the URL to jump directly to the corresponding method definition</li>
+                <li>A simple http request tool</li>
+                <li>Support Spring system (Spring MVC / Spring Boot)</li>
+                <li>Support JAX-RS</li>
+                <li>Support `Navigate-> Request Service` search Mapping (Ctrl + Alt + /)</li>
+            </ol>
+        </li>
+        <br>
+        <li>
+            <b>一套 Restful 服务开发辅助工具集</b>
+            <ol>
+                <li>提供了一个 Services tree 的显示窗口</li>
+                <li>双击 URL 直接跳转到对应的方法定义</li>
+                <li>一个简单的 http 请求工具</li>
+                <li>支持 Spring 体系 (Spring MVC / Spring Boot)</li>
+                <li>支持 JAX-RS</li>
+                <li>支持 `Navigate -> Request Service` 搜索 Mapping (Ctrl + Alt + /)</li>
+            </ol>
+        </li>
+    </ul>
     ]]></description>
 
     <!--suppress PluginXmlValidity -->
     <change-notes><![CDATA[
       <ul>
-        <li> changed UI Component for ServiceTree </li>
-        <li> Support parameters are displayed in order </li>
-        <li> Increase container port and context path settings </li>
-        <li> Fix failure to save global settings </li>
-        <li> Fix some bugs </li>
+        <li> 增加中文显示 </li>
       </ul>
     ]]>
     </change-notes>
@@ -52,7 +61,9 @@
         <applicationConfigurable parentId="tools"
                                  instance="com.github.restful.tool.configuration.RestfulSettingConfigurable"
                                  id="com.github.restful.tool.configuration.RestfulSettingConfigurable"
-                                 dynamic="true"/>
+                                 dynamic="true"
+                                 bundle="messages.RestfulToolBundle"
+                                 key="setting.configurable.displayName"/>
 
         <projectService serviceInterface="com.github.restful.tool.service.ToolWindowService"
                         serviceImplementation="com.github.restful.tool.service.impl.ToolWindowServiceImpl"/>
@@ -63,7 +74,7 @@
         <toolWindow id="RestfulTool" anchor="right"
                     factoryClass="com.github.restful.tool.view.window.RestfulToolWindowFactory"
                     order="last"
-                    doNotActivateOnStart="true" icon="/icons/service.png"
+                    doNotActivateOnStart="true" icon="/icons/service.svg"
                     canCloseContents="true"/>
 
         <projectService serviceInterface="com.github.restful.tool.service.Notify"
@@ -75,53 +86,38 @@
 
     <actions>
         <action id="Tool.GotoRequestService"
-                class="com.github.restful.tool.view.search.GotoRequestAction"
-                text="Request _Service" description="Goto request service"
-                icon="AllIcons.Actions.Search">
+                class="com.github.restful.tool.view.search.GotoRequestAction">
             <add-to-group group-id="GoToTargetEx" anchor="first"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt SLASH"/>
         </action>
+
         <action id="RestfulTool.action.OptionForEditor-CurrentClassTree"
-                class="com.github.restful.tool.actions.dialog.CurrClassTreeAction"
-                text="Show Current Class RESTFul">
+                class="com.github.restful.tool.actions.dialog.CurrClassTreeAction">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </action>
-        <group id="RestfulTool.action.OptionForEditors" icon="/icons/service.png"
-               text="Restful Options"
+        <group id="RestfulTool.action.OptionForEditors"
                class="com.github.restful.tool.actions.copy.OptionForEditorGroups">
             <add-to-group group-id="EditorPopupMenu" anchor="after"
                           relative-to-action="RestfulTool.action.OptionForEditor-CurrentClassTree"/>
             <action id="RestfulTool.action.OptionForEditor-CopyApiPath"
-                    class="com.github.restful.tool.actions.copy.CopyApiAction"
-                    text="Copy API Path"/>
+                    class="com.github.restful.tool.actions.copy.CopyApiAction"/>
             <action id="RestfulTool.action.OptionForEditor-CopyFullPath"
-                    class="com.github.restful.tool.actions.copy.CopyFullAction"
-                    text="Copy Full Path"/>
+                    class="com.github.restful.tool.actions.copy.CopyFullAction"/>
         </group>
 
-        <group id="RestfulTool.Toolbar"
-               text="Restful Tool's ToolWindow Toolbar">
+        <group id="RestfulTool.Toolbar">
 
-            <action class="com.github.restful.tool.actions.RefreshAction" text="Refresh"
-                    icon="AllIcons.Actions.Refresh"/>
+            <action class="com.github.restful.tool.actions.RefreshAction"/>
 
             <reference ref="Tool.GotoRequestService"/>
 
             <separator text="separator"/>
 
-            <action class="com.github.restful.tool.actions.ScanFilterAction" text="Method Filter"
-                    icon="AllIcons.General.Filter"/>
+            <action class="com.github.restful.tool.actions.ScanFilterAction"/>
 
-            <action class="com.github.restful.tool.actions.WithLibraryAction"
-                    text="Enable Library Scanning"
-                    icon="AllIcons.ObjectBrowser.ShowLibraryContents"/>
+            <action class="com.github.restful.tool.actions.WithLibraryAction"/>
 
         </group>
     </actions>
-
-    <projectListeners>
-        <listener class="com.github.restful.tool.service.impl.ToolWindowListenerImpl"
-                  topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
-    </projectListeners>
 
 </idea-plugin>

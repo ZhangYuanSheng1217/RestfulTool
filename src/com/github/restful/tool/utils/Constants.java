@@ -31,11 +31,6 @@ public final class Constants {
         /**
          * 插件名
          */
-        public static final String NAME = "RestfulTool";
-
-        /**
-         * 设置名
-         */
-        public static final String SETTING = "Restful Tool";
+        public static final String NAME = Bundle.getString("plugin.name");
     }
 }
