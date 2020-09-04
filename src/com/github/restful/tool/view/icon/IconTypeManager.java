@@ -31,6 +31,8 @@ public final class IconTypeManager {
 
     public static final String DEFAULT_ICON_SCHEME = "default";
     private static final String ICON_SCHEME_PATH = "icons/method/";
+    private static final String PREFIX_SELECT = "_select";
+
     private static final Map<String, IconType> ICON_TYPES = new HashMap<>();
 
     static {
@@ -197,10 +199,10 @@ public final class IconTypeManager {
         for (String iconPath : icons) {
             String fileName = iconPath.substring(iconPath.indexOf("/") + 1, iconPath.lastIndexOf("."));
             Icon icon = Icons.load("/" + ICON_SCHEME_PATH + iconPath);
-            if (fileName.contains("_select")) {
+            if (fileName.contains(PREFIX_SELECT)) {
                 // select
                 selectedIcons.put(
-                        HttpMethod.parse(fileName.replace("_select", "")),
+                        HttpMethod.parse(fileName.replace(PREFIX_SELECT, "")),
                         icon
                 );
             } else {

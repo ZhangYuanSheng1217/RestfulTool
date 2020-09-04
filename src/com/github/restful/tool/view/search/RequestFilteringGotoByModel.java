@@ -10,6 +10,8 @@
  */
 package com.github.restful.tool.view.search;
 
+import com.github.restful.tool.beans.HttpMethod;
+import com.github.restful.tool.utils.Bundle;
 import com.intellij.ide.IdeBundle;
 import com.intellij.ide.util.gotoByName.CustomMatcherModel;
 import com.intellij.ide.util.gotoByName.FilteringGotoByModel;
@@ -17,7 +19,6 @@ import com.intellij.navigation.ChooseByNameContributor;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
-import com.github.restful.tool.beans.HttpMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +46,7 @@ public class RequestFilteringGotoByModel
 
     @Override
     public String getPromptText() {
-        return "Enter service API";
+        return Bundle.getString("search.view.Title");
     }
 
     @NotNull

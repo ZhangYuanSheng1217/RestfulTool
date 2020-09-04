@@ -15,6 +15,7 @@ import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.service.topic.RestDetailTopic;
+import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.utils.JsonUtil;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
@@ -136,7 +137,7 @@ public class RestDetail extends JPanel {
         panelInput.add(requestUrl);
         requestUrl.setColumns(45);
 
-        sendRequest = new JXButton("send");
+        sendRequest = new JXButton(Bundle.getString("http.tool.button.send"));
         panelInput.add(sendRequest, BorderLayout.EAST);
 
         tabs = new JBTabsImpl(project);
@@ -145,18 +146,18 @@ public class RestDetail extends JPanel {
         requestHead.setName(IDENTITY_HEAD);
 
         TabInfo headTab = new TabInfo(requestHead);
-        headTab.setText("head");
+        headTab.setText(Bundle.getString("http.tool.tab.head"));
         tabs.addTab(headTab);
 
         requestBody = new JsonEditor(project, JsonEditor.JSON_FILE_TYPE);
         requestBody.setName(IDENTITY_BODY);
         bodyTab = new TabInfo(requestBody);
-        bodyTab.setText("body");
+        bodyTab.setText(Bundle.getString("http.tool.tab.body"));
         tabs.addTab(bodyTab);
 
         responseView = new JsonEditor(project);
         responseTab = new TabInfo(responseView);
-        responseTab.setText("response");
+        responseTab.setText(Bundle.getString("http.tool.tab.response"));
         tabs.addTab(responseTab);
 
         add(tabs.getComponent(), BorderLayout.CENTER);
@@ -194,7 +195,7 @@ public class RestDetail extends JPanel {
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
                 JsonEditor editor = getCurrentTabbedOfRequest();
-                if (editor != null) {
+                if (editor != null && chooseRequest != null) {
                     String name = editor.getName();
                     String text = editor.getText();
                     setCache(name, chooseRequest, text);
@@ -232,7 +233,7 @@ public class RestDetail extends JPanel {
 
         Runnable command = () -> {
             Application application = ApplicationManager.getApplication();
-            application.invokeLater(() -> responseView.setPlaceholder("Thread request are running..."));
+            application.invokeLater(() -> responseView.setPlaceholder(Bundle.getString("http.tool.running.http")));
             try {
                 HttpResponse execute = httpRequest.execute();
                 // 最大重定向的次数

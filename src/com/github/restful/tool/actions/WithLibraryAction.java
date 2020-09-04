@@ -11,8 +11,10 @@
 package com.github.restful.tool.actions;
 
 import com.github.restful.tool.beans.PropertiesKey;
+import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.view.window.RestfulToolWindowFactory;
 import com.github.restful.tool.view.window.frame.RightToolWindow;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.ToggleAction;
@@ -28,6 +30,11 @@ import org.jetbrains.annotations.Nullable;
 public class WithLibraryAction extends ToggleAction implements DumbAware {
 
     private RightToolWindow toolWindow;
+
+    public WithLibraryAction() {
+        getTemplatePresentation().setText(Bundle.getString("action.WithLibrary.text"));
+        getTemplatePresentation().setIcon(AllIcons.ObjectBrowser.ShowLibraryContents);
+    }
 
     @Override
     public boolean isSelected(@NotNull AnActionEvent e) {

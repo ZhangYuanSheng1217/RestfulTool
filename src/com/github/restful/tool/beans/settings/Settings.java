@@ -12,6 +12,7 @@ package com.github.restful.tool.beans.settings;
 
 import com.github.restful.tool.beans.ContentType;
 import com.github.restful.tool.beans.Key;
+import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.utils.xml.converter.BaseConverter;
 import com.github.restful.tool.utils.xml.converter.IntegerConverter;
 import com.github.restful.tool.view.icon.IconType;
@@ -148,24 +149,24 @@ public class Settings {
     public static class SystemOptionForm extends OptionForm {
 
         public static final SettingKey<Boolean> SCAN_WITH_LIBRARY = SettingKey.createCheckBox(
-                "Scan service with library on application default (全局配置)",
+                Bundle.getString("setting.system.ScanServiceWithLibraryOnApplicationDefault"),
                 false
         );
 
         public static final SettingKey<Boolean> EXPAND_OF_SERVICE_TREE = SettingKey.createCheckBox(
-                "Whether to expand the ServiceTree by default?",
+                Bundle.getString("setting.system.WhetherToExpandTheServiceTreeByDefault"),
                 false
         );
 
         public SystemOptionForm() {
-            super("System", 0);
+            super(Bundle.getString("setting.system"), 0);
         }
     }
 
     public static class IconTypeOptionForm extends OptionForm {
 
         public static final SettingKey<IconType> ICON_TYPE_SCHEME = SettingKey.createComboBox(
-                "Select Icon Scheme: ",
+                Bundle.getString("setting.iconsType.SelectIconScheme"),
                 IconTypeManager.getIconTypes(),
                 new BaseConverter<IconType>() {
                     @Override
@@ -178,7 +179,7 @@ public class Settings {
         );
 
         public IconTypeOptionForm() {
-            super("Icons Type", 1);
+            super(Bundle.getString("setting.iconsType"), 1);
         }
 
         @NotNull
@@ -196,19 +197,19 @@ public class Settings {
     public static class HttpToolOptionForm extends OptionForm {
 
         public static final SettingKey<Boolean> ENABLE_CACHE_OF_REST_DETAIL = SettingKey.createCheckBox(
-                "Enable cache for Http Tool? (May increase memory footprint)",
+                Bundle.getString("setting.httpTools.EnableCacheForHttpTool"),
                 true
         );
 
         public static final SettingKey<Integer> REDIRECT_MAX_COUNT = SettingKey.createComboBox(
-                "The maximum number of redirects allowed in the HTTP Tool: ",
+                Bundle.getString("setting.httpTools.TheMaximumNumberOfRedirectsAllowed"),
                 new Integer[]{0, 3, 5, 10},
                 new IntegerConverter(),
                 1
         );
 
         public static final SettingKey<ContentType> CONTENT_TYPE = SettingKey.createComboBox(
-                "Please select the default Content-Type: ",
+                Bundle.getString("setting.httpTools.DefaultContentType"),
                 ContentType.values(),
                 new BaseConverter<ContentType>() {
                     @Override
@@ -220,7 +221,7 @@ public class Settings {
         );
 
         public static final SettingKey<String> CONTAINER_CONTEXT = SettingKey.createInputString(
-                "Select the default Context Path of the container(Must start with'/' and cannot end with'/'): ",
+                Bundle.getString("setting.httpTools.DefaultContextPathOfTheContainer"),
                 "/",
                 data -> {
                     if (data == null || data.length() < 1) {
@@ -240,7 +241,7 @@ public class Settings {
         );
 
         public static final SettingKey<Integer> CONTAINER_PORT = SettingKey.createInputNumber(
-                "Select the default port of the container(0-65535): ",
+                Bundle.getString("setting.httpTools.DefaultPortOfTheContainer"),
                 8080,
                 data -> {
                     if (data == null) {
@@ -251,7 +252,7 @@ public class Settings {
         );
 
         public HttpToolOptionForm() {
-            super("Http tools", 2);
+            super(Bundle.getString("setting.httpTools"), 2);
         }
     }
 }

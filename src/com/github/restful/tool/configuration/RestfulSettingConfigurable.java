@@ -10,7 +10,7 @@
  */
 package com.github.restful.tool.configuration;
 
-import com.github.restful.tool.utils.Constants;
+import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.view.window.options.RestfulSettingWindow;
 import com.intellij.openapi.options.Configurable;
 import org.jetbrains.annotations.Nls;
@@ -29,7 +29,7 @@ public class RestfulSettingConfigurable implements Configurable {
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
     public String getDisplayName() {
-        return Constants.Application.SETTING;
+        return Bundle.getString("setting.configurable.displayName");
     }
 
     @Override

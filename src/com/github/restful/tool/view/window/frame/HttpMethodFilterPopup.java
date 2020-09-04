@@ -11,6 +11,7 @@
 package com.github.restful.tool.view.window.frame;
 
 import com.github.restful.tool.beans.HttpMethod;
+import com.github.restful.tool.utils.Bundle;
 import com.intellij.ui.components.JBCheckBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -65,7 +66,7 @@ public class HttpMethodFilterPopup extends JPopupMenu {
             checkboxPane.add(checkBox);
         }
 
-        JButton selectAll = new JButton("Select All");
+        JButton selectAll = new JButton(Bundle.getString("other.SelectAll"));
         selectAll.addActionListener(e -> {
             if (getSelectedValues().length < checkBoxList.size()) {
                 List<HttpMethod> changes = new ArrayList<>();
@@ -84,7 +85,7 @@ public class HttpMethodFilterPopup extends JPopupMenu {
         });
         buttonPane.add(selectAll);
 
-        JButton close = new JButton("Close");
+        JButton close = new JButton(Bundle.getString("other.Close"));
         close.addActionListener(e -> this.setVisible(false));
         buttonPane.add(close);
 

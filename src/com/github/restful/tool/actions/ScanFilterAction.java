@@ -11,9 +11,11 @@
 package com.github.restful.tool.actions;
 
 import com.github.restful.tool.beans.HttpMethod;
+import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.view.window.RestfulToolWindowFactory;
 import com.github.restful.tool.view.window.frame.HttpMethodFilterPopup;
 import com.github.restful.tool.view.window.frame.RightToolWindow;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
@@ -42,6 +44,9 @@ public class ScanFilterAction extends DumbAwareAction {
             }
             refreshTree();
         });
+
+        getTemplatePresentation().setText(Bundle.getString("action.ScanFilter.text"));
+        getTemplatePresentation().setIcon(AllIcons.General.Filter);
     }
 
     @Override

@@ -24,8 +24,6 @@ import javax.swing.*;
  */
 public class Icons {
 
-    public static final Icon SERVICE = load("/icons/service.png");
-
     @NotNull
     public static Icon load(@NotNull String path) {
         return IconManager.getInstance().getIcon(path, Icons.class);

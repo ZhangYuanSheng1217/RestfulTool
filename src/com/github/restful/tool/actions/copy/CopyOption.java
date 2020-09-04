@@ -3,6 +3,7 @@ package com.github.restful.tool.actions.copy;
 import com.github.restful.tool.actions.EditorOption;
 import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.service.Notify;
+import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -121,7 +122,7 @@ public interface CopyOption extends EditorOption {
         JBPopupFactory.getInstance()
                 .createPopupChooserBuilder(requests)
                 .setItemChosenCallback(selected -> copyPath(psiMethod, selected, full))
-                .setTitle("Which One?")
+                .setTitle(Bundle.getString("other.prompt.multiItem.selectOne"))
                 .setAdText(JBPopupFactory.ActionSelectionAid.SPEEDSEARCH.name())
                 .setNamerForFiltering(String::toString)
                 .createPopup()
@@ -140,7 +141,7 @@ public interface CopyOption extends EditorOption {
         String contextPath = RestUtil.scanContextPath(project, psiMethod.getResolveScope());
         if (!fullPath) {
             SystemUtil.Clipboard.copy((contextPath == null || "null".equals(contextPath) ? "" : contextPath) + path);
-            Notify.getInstance(project).info("Copy api success.");
+            Notify.getInstance(project).info(Bundle.getString("action.CopyApi.success"));
         } else {
             GlobalSearchScope scope = psiMethod.getResolveScope();
             String protocol = RestUtil.scanListenerProtocol(project, scope);
@@ -151,7 +152,7 @@ public interface CopyOption extends EditorOption {
                     contextPath,
                     path
             ));
-            Notify.getInstance(project).info("Copy full path success.");
+            Notify.getInstance(project).info(Bundle.getString("action.CopyFullPath.success"));
         }
     }
 }

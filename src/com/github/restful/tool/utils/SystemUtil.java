@@ -25,6 +25,8 @@ import java.awt.datatransfer.Transferable;
  */
 public class SystemUtil {
 
+    private static final String SLASH = "/";
+
     /**
      * 生成url
      *
@@ -41,11 +43,11 @@ public class SystemUtil {
         if (port != null) {
             url.append(":").append(port);
         }
-        if (contextPath != null && !"null".equals(contextPath) && contextPath.startsWith("/")) {
+        if (contextPath != null && !"null".equals(contextPath) && contextPath.startsWith(SLASH)) {
             url.append(contextPath);
         }
-        if (!path.startsWith("/")) {
-            url.append("/");
+        if (!path.startsWith(SLASH)) {
+            url.append(SLASH);
         }
         url.append(path);
         return url.toString();
@@ -61,7 +63,7 @@ public class SystemUtil {
     @Contract(pure = true)
     public static String formatPath(@Nullable Object path) {
         if (path == null) {
-            return "/";
+            return SLASH;
         }
         String currPath;
         if (path instanceof String) {
@@ -69,10 +71,10 @@ public class SystemUtil {
         } else {
             currPath = path.toString();
         }
-        if (currPath.startsWith("/")) {
+        if (currPath.startsWith(SLASH)) {
             return currPath;
         }
-        return "/" + currPath;
+        return SLASH + currPath;
     }
 
     /**
