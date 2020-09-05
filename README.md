@@ -37,15 +37,10 @@
 >       - change: `Setting` > `keymap` > `Plug-ins` > `RestfulTool`
 > * view
 >   - `right tool window` > `RestfulTool`
-> - ![gif](resources/tips/images/tip.gif)
+> - ![gif](src/main/resources/tips/images/tip.gif)
 
 ****
 #### Fork
-> - If something goes wrong, please add the following lib to Platform SDK
->   - `.\plugins\properties\lib\properties.jar`
->   - `.\plugins\yaml\lib\yaml.jar`
->
->
 > - Add adapter icon scheme
 >   - Put the 16 x 16 svg icon file into `/icons/method/{iconThemeName}`
 >   - Icon naming method (only supports png | svg format):<br/>

@@ -37,15 +37,10 @@
 >       - 更换：`Setting` > `keymap` > `Plug-ins` > `RestfulTool`
 > * 视图
 >   - `right tool window(右侧工具栏)` > `RestfulTool`
-> - ![gif](resources/tips/images/tip.gif)
+> - ![gif](src/main/resources/tips/images/tip.gif)
 
 ****
 #### Fork
-> - 如果运行出现问题，请在Platform SDK中增加以下lib
->   - `.\plugins\properties\lib\properties.jar`
->   - `.\plugins\yaml\lib\yaml.jar`
->
->
 > - 增加适配图标
 >   - 将16x16的svg图标文件放入`/icons/method/{图标主题名}`
 >   - 图标命名方式（只支持 png | svg 格式）:<br/>
