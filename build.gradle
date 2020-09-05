@@ -21,6 +21,7 @@ dependencies {
 }
 
 intellij {
+    updateSinceUntilBuild false
     version '2020.2'
     pluginName 'RestfulTool'
 
