@@ -160,4 +160,7 @@ fabric.properties
 hs_err_pid*
 
 test/
-!/RestfulTool.zip
+/build/
+/.gradle/
+/pluginIcon.ai
+/pluginIcon.png
