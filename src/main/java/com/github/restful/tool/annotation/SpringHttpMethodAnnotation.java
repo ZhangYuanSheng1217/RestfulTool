@@ -47,7 +47,12 @@ public enum SpringHttpMethodAnnotation {
     /**
      * RequestBody
      */
-    REQUEST_BODY("org.springframework.web.bind.annotation.RequestBody", null);
+    REQUEST_BODY("org.springframework.web.bind.annotation.RequestBody", null),
+
+    /**
+     * RequestHeader
+     */
+    REQUEST_HEADER("org.springframework.web.bind.annotation.RequestHeader", null);
 
     private final String qualifiedName;
     private final HttpMethod method;

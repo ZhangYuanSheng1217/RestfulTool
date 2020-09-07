@@ -125,6 +125,11 @@ public abstract class BaseConvert<V> {
             String parameterName = parameter.getName();
             PsiType parameterType = parameter.getType();
 
+            if (parameter.getAnnotation(SpringHttpMethodAnnotation.REQUEST_HEADER.getQualifiedName()) != null) {
+                // 如果参数注解带 @RequestHeader 则直接跳过
+                continue;
+            }
+
             // 如果存在 @RequestParam 注解则获取其注解
             PsiAnnotation annotation = parameter.getAnnotation(SpringHttpMethodAnnotation.REQUEST_PARAM.getQualifiedName());
             if (annotation != null) {
