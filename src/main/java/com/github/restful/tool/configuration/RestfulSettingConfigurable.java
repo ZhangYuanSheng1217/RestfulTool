@@ -13,7 +13,6 @@ package com.github.restful.tool.configuration;
 import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.view.window.options.RestfulSettingWindow;
 import com.intellij.openapi.options.Configurable;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -26,7 +25,10 @@ public class RestfulSettingConfigurable implements Configurable {
 
     private RestfulSettingWindow settingsComponent;
 
-    @Nls(capitalization = Nls.Capitalization.Title)
+    /**
+     * issue: 导入Kotlin插件后编译错误, Nls位置不在org.jetbrains.annotations
+     * `@Nls(capitalization = Nls.Capitalization.Title)`
+     */
     @Override
     public String getDisplayName() {
         return Bundle.getString("setting.configurable.displayName");

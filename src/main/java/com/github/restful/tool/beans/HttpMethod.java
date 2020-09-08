@@ -71,6 +71,7 @@ public enum HttpMethod {
         return Arrays.stream(HttpMethod.values()).filter(method -> !method.equals(HttpMethod.REQUEST)).toArray(HttpMethod[]::new);
     }
 
+    @NotNull
     public static HttpMethod parse(@Nullable Object method) {
         try {
             assert method != null;

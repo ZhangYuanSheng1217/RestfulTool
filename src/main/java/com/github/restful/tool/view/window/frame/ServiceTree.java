@@ -191,7 +191,7 @@ public class ServiceTree extends JBScrollPane {
                 // Copy full url
                 JMenuItem copyFullUrl = new JBMenuItem(Bundle.getString("action.CopyFullPath.text"), AllIcons.Actions.Copy);
                 copyFullUrl.addActionListener(actionEvent -> {
-                    GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
+                    GlobalSearchScope scope = request.getPsiElement().getResolveScope();
                     String contextPath = RestUtil.scanContextPath(project, scope);
                     SystemUtil.Clipboard.copy(SystemUtil.buildUrl(
                             RestUtil.scanListenerProtocol(project, scope),
@@ -204,7 +204,7 @@ public class ServiceTree extends JBScrollPane {
                 // Copy api path
                 JMenuItem copyApiPath = new JBMenuItem(Bundle.getString("action.CopyApi.text"), AllIcons.Actions.Copy);
                 copyApiPath.addActionListener(actionEvent -> {
-                    GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
+                    GlobalSearchScope scope = request.getPsiElement().getResolveScope();
                     String contextPath = RestUtil.scanContextPath(project, scope);
                     SystemUtil.Clipboard.copy(
                             (contextPath == null || "null".equals(contextPath) ? "" : contextPath) +

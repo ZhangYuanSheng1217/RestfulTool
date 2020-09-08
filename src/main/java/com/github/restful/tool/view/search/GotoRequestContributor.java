@@ -10,12 +10,12 @@
  */
 package com.github.restful.tool.view.search;
 
+import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.utils.RequestUtil;
 import com.intellij.navigation.ChooseByNameContributor;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
-import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.utils.RequestUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ public class GotoRequestContributor implements ChooseByNameContributor {
 
         itemList = new ArrayList<>(requests.size());
         requests.stream().map(request -> new RestServiceItem(
-                request.getPsiMethod(),
+                request.getPsiElement(),
                 request.getMethod(),
                 request.getPath()
         )).forEach(restServiceItem -> {

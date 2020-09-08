@@ -1,11 +1,11 @@
 package com.github.restful.tool.service.impl;
 
+import com.github.restful.tool.service.Notify;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
-import com.github.restful.tool.service.Notify;
 import org.jetbrains.annotations.NotNull;
 
 /**
