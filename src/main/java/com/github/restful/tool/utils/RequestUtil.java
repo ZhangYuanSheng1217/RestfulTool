@@ -16,6 +16,7 @@ import com.github.restful.tool.utils.scanner.SpringHelper;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiMethod;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,7 +28,7 @@ import java.util.*;
  */
 public class RequestUtil {
 
-    private static final Map<PsiMethod, List<Request>> REQUEST_CACHE = Custom.REQUEST_CACHE;
+    private static final Map<NavigatablePsiElement, List<Request>> REQUEST_CACHE = Custom.REQUEST_CACHE;
 
     /**
      * 获取所有的Request
@@ -62,11 +63,11 @@ public class RequestUtil {
 
             requests.forEach(request -> {
                 List<Request> requestList;
-                if (REQUEST_CACHE.containsKey(request.getPsiMethod())) {
-                    requestList = REQUEST_CACHE.get(request.getPsiMethod());
+                if (REQUEST_CACHE.containsKey(request.getPsiElement())) {
+                    requestList = REQUEST_CACHE.get(request.getPsiElement());
                 } else {
                     requestList = new ArrayList<>();
-                    REQUEST_CACHE.put(request.getPsiMethod(), requestList);
+                    REQUEST_CACHE.put(request.getPsiElement(), requestList);
                 }
                 requestList.add(request);
             });
@@ -108,6 +109,6 @@ public class RequestUtil {
 
     private static class Custom {
 
-        public static final Map<PsiMethod, List<Request>> REQUEST_CACHE = new HashMap<>();
+        public static final Map<NavigatablePsiElement, List<Request>> REQUEST_CACHE = new HashMap<>();
     }
 }

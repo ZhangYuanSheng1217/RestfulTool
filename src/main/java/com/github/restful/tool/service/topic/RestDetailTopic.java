@@ -1,7 +1,7 @@
 package com.github.restful.tool.service.topic;
 
-import com.intellij.util.messages.Topic;
 import com.github.restful.tool.beans.Request;
+import com.intellij.util.messages.Topic;
 import org.jetbrains.annotations.Nullable;
 
 /**

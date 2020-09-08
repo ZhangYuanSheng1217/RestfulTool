@@ -10,9 +10,9 @@
  */
 package com.github.restful.tool.view.window.options.template;
 
-import com.github.restful.tool.view.window.options.Option;
-import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.beans.settings.SettingKey;
+import com.github.restful.tool.beans.settings.Settings;
+import com.github.restful.tool.view.window.options.Option;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

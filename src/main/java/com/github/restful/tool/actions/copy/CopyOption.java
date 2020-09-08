@@ -78,7 +78,10 @@ public interface CopyOption extends EditorOption {
     default List<String> getRequestPath(@NotNull PsiMethod psiMethod) {
         Set<String> paths = new HashSet<>();
         for (Request request : RestUtil.getCurrClassRequests(psiMethod.getContainingClass())) {
-            if (request.getPsiMethod().equals(psiMethod)) {
+            if (!(request.getPsiElement() instanceof PsiMethod)) {
+                continue;
+            }
+            if (request.getPsiElement().equals(psiMethod)) {
                 paths.add(request.getPath());
             }
         }

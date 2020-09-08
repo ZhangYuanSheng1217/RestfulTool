@@ -1,7 +1,7 @@
 package com.github.restful.tool.service.impl;
 
-import com.intellij.openapi.project.Project;
 import com.github.restful.tool.service.CacheService;
+import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;

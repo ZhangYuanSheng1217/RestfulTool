@@ -29,7 +29,9 @@ import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiInvalidElementAccessException;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.tabs.JBTabs;
@@ -297,7 +299,7 @@ public class RestDetail extends JPanel {
 
         try {
             if (request != null) {
-                GlobalSearchScope scope = request.getPsiMethod().getResolveScope();
+                GlobalSearchScope scope = request.getPsiElement().getResolveScope();
                 reqUrl = SystemUtil.buildUrl(
                         RestUtil.scanListenerProtocol(project, scope),
                         RestUtil.scanListenerPort(project, scope),
@@ -324,7 +326,11 @@ public class RestDetail extends JPanel {
                 if (bodyCache.containsKey(request)) {
                     reqBody = getCache(IDENTITY_BODY, request);
                 } else {
-                    convert.setPsiMethod(request.getPsiMethod());
+                    NavigatablePsiElement psiElement = request.getPsiElement();
+                    if (psiElement instanceof PsiMethod) {
+                        convert.setPsiMethod((PsiMethod) psiElement);
+                    }
+                    // TODO Kotlin Function args parse
                     reqBody = convert.formatString();
                     setCache(IDENTITY_BODY, request, reqBody);
                 }

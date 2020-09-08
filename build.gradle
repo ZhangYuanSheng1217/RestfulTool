@@ -37,11 +37,11 @@ publishPlugin {
 }
 
 group 'cn.cloud.auto.restful.tool'
-version '1.2.7'
+version '1.2.8'
 patchPluginXml {
     changeNotes """
         <ul>
-            <li>增加中文显示</li>
+            <li>新增Kotlin支持</li>
         </ul>
     """
 }

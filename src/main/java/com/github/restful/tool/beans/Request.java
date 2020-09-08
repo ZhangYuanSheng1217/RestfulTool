@@ -11,7 +11,7 @@
 package com.github.restful.tool.beans;
 
 import com.github.restful.tool.view.icon.Icons;
-import com.intellij.psi.PsiMethod;
+import com.intellij.psi.NavigatablePsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +24,7 @@ import java.util.Objects;
  */
 public class Request {
 
-    private final PsiMethod psiMethod;
+    private final NavigatablePsiElement psiElement;
     @Nullable
     private HttpMethod method;
     @Nullable
@@ -32,21 +32,21 @@ public class Request {
     @NotNull
     private Icon icon = Icons.getMethodIcon(null);
 
-    public Request(HttpMethod method, @Nullable String path, @Nullable PsiMethod psiMethod) {
+    public Request(HttpMethod method, @Nullable String path, @Nullable NavigatablePsiElement psiElement) {
         this.setMethod(method);
         if (path != null) {
             this.setPath(path);
         }
-        this.psiMethod = psiMethod;
+        this.psiElement = psiElement;
     }
 
-    public PsiMethod getPsiMethod() {
-        return psiMethod;
+    public NavigatablePsiElement getPsiElement() {
+        return psiElement;
     }
 
     public void navigate(boolean requestFocus) {
-        if (psiMethod != null) {
-            psiMethod.navigate(requestFocus);
+        if (psiElement != null) {
+            psiElement.navigate(requestFocus);
         }
     }
 
@@ -84,7 +84,7 @@ public class Request {
     }
 
     public void setParent(@NotNull Request parent) {
-        if (this.method == null && parent.getMethod() != null) {
+        if ((this.method == null || this.method == HttpMethod.REQUEST) && parent.getMethod() != null) {
             this.setMethod(parent.getMethod());
         }
         String parentPath = parent.getPath();
@@ -97,7 +97,7 @@ public class Request {
 
     @NotNull
     public Request copyWithParent(@Nullable Request parent) {
-        Request request = new Request(this.method, this.path, this.psiMethod);
+        Request request = new Request(this.method, this.path, this.psiElement);
         if (parent != null) {
             request.setParent(parent);
         }
@@ -115,7 +115,7 @@ public class Request {
 
         Request request = (Request) o;
 
-        if (!psiMethod.equals(request.psiMethod)) {
+        if (!psiElement.equals(request.psiElement)) {
             return false;
         }
         if (method != request.method) {
@@ -129,7 +129,7 @@ public class Request {
 
     @Override
     public int hashCode() {
-        int result = psiMethod.hashCode();
+        int result = psiElement.hashCode();
         result = 31 * result + (method != null ? method.hashCode() : 0);
         result = 31 * result + (path != null ? path.hashCode() : 0);
         result = 31 * result + icon.hashCode();

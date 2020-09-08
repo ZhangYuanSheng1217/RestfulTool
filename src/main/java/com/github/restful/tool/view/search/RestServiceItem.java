@@ -1,6 +1,9 @@
 package com.github.restful.tool.view.search;
 
+import com.github.restful.tool.beans.HttpMethod;
+import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
+import com.github.restful.tool.view.icon.Icons;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.module.Module;
@@ -12,12 +15,11 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.codeStyle.MinusculeMatcher;
 import com.intellij.psi.codeStyle.NameUtil;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.utils.RestUtil;
-import com.github.restful.tool.view.icon.Icons;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.kotlin.psi.KtClass;
+import org.jetbrains.kotlin.psi.KtNamedFunction;
 
 import javax.swing.*;
 
@@ -77,12 +79,19 @@ public class RestServiceItem implements NavigationItem {
                     PsiClass psiClass = psiMethod.getContainingClass();
                     if (psiClass != null) {
                         location = psiClass.getName();
-                        location += "#" + psiMethod.getName();
-                        location = "(" + location + ") in ";
-                        location += psiMethod.getResolveScope().getDisplayName();
                     }
+                    location += "#" + psiMethod.getName();
+                    location = "Java: (" + location + ")";
+                } else if (psiElement instanceof KtNamedFunction) {
+                    KtNamedFunction function = (KtNamedFunction) psiElement;
+                    location = ((KtClass) function.getParent().getParent()).getName();
+                    location += "#" + function.getName();
+                    location = "Kotlin: (" + location + ")";
                 }
 
+                if (psiElement != null) {
+                    location += " in " + psiElement.getResolveScope().getDisplayName();
+                }
                 return location;
             }
 

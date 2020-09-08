@@ -45,6 +45,9 @@ public class SpringHelper {
         for (PsiClass controllerClass : controllers) {
             moduleList.addAll(getRequests(controllerClass));
         }
+
+        moduleList.addAll(KotlinUtil.getKotlinRequests(project, module));
+
         return moduleList;
     }
 
