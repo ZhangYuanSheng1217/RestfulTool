@@ -79,8 +79,7 @@ public class JsonEditor extends EditorTextField {
 
     @Override
     public void setFileType(@NotNull FileType fileType) {
-        super.setFileType(fileType);
-        setDocument(createDocument(null, fileType));
+        setNewDocumentAndFileType(fileType, createDocument(getText(), fileType));
     }
 
     @Override

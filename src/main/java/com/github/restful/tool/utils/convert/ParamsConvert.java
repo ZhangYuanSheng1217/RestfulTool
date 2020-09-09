@@ -44,9 +44,11 @@ public class ParamsConvert {
     public void setPsiElement(@NotNull NavigatablePsiElement psiElement) throws PsiUnSupportException {
         if (psiElement instanceof PsiMethod) {
             this.psiMethod = (PsiMethod) psiElement;
+            this.function = null;
             return;
         } else if (psiElement instanceof KtNamedFunction) {
             this.function = (KtNamedFunction) psiElement;
+            this.psiMethod = null;
             return;
         }
         throw new PsiUnSupportException(psiElement);

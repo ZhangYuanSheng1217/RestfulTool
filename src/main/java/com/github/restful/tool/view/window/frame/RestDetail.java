@@ -25,15 +25,18 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.fileTypes.impl.FileTypeRenderer;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.tabs.JBTabs;
 import com.intellij.ui.tabs.TabInfo;
 import com.intellij.ui.tabs.impl.JBTabsImpl;
 import com.intellij.util.messages.MessageBusConnection;
+import com.intellij.util.ui.JBUI;
 import org.intellij.lang.annotations.Language;
 import org.jdesktop.swingx.JXButton;
 import org.jetbrains.annotations.NotNull;
@@ -61,11 +64,14 @@ public class RestDetail extends JPanel {
     private static final String IDENTITY_HEAD = "HEAD";
     private static final String IDENTITY_BODY = "BODY";
 
+    public static final FileType DEFAULT_FILE_TYPE = JsonEditor.TEXT_FILE_TYPE;
+
     private final Project project;
     private final ThreadPoolExecutor poolExecutor;
     private final ParamsConvert convert;
     private final Map<Request, String> headCache;
     private final Map<Request, String> bodyCache;
+    private final Map<Request, FileType> bodyTextTypeCache;
     /**
      * 下拉框 - 选择选择请求方法
      */
@@ -88,6 +94,7 @@ public class RestDetail extends JPanel {
      */
     private TabInfo bodyTab;
     private JsonEditor requestBody;
+    private ComboBox<FileType> requestBodyFileType;
     /**
      * 标签 - 显示返回结果
      */
@@ -114,6 +121,7 @@ public class RestDetail extends JPanel {
 
         this.headCache = new HashMap<>();
         this.bodyCache = new HashMap<>();
+        this.bodyTextTypeCache = new HashMap<>();
 
         initView();
 
@@ -139,16 +147,34 @@ public class RestDetail extends JPanel {
 
         tabs = new JBTabsImpl(project);
 
-        requestHead = new JsonEditor(project, JsonEditor.JSON_FILE_TYPE);
+        requestHead = new JsonEditor(project, DEFAULT_FILE_TYPE);
         requestHead.setName(IDENTITY_HEAD);
 
         TabInfo headTab = new TabInfo(requestHead);
         headTab.setText(Bundle.getString("http.tool.tab.head"));
         tabs.addTab(headTab);
 
-        requestBody = new JsonEditor(project, JsonEditor.JSON_FILE_TYPE);
+        JPanel bodyFileTypePanel = new JPanel(new BorderLayout());
+        bodyFileTypePanel.add(new JBLabel(Bundle.message("other.restDetail.chooseBodyFileType")), BorderLayout.WEST);
+        requestBodyFileType = new ComboBox<>(new FileType[]{
+                JsonEditor.TEXT_FILE_TYPE,
+                JsonEditor.JSON_FILE_TYPE,
+                JsonEditor.HTML_FILE_TYPE,
+                JsonEditor.XML_FILE_TYPE
+        });
+        requestBodyFileType.setFocusable(false);
+        bodyFileTypePanel.add(requestBodyFileType, BorderLayout.CENTER);
+        bodyFileTypePanel.setBorder(JBUI.Borders.emptyLeft(3));
+
+        requestBody = new JsonEditor(project, DEFAULT_FILE_TYPE);
         requestBody.setName(IDENTITY_BODY);
-        bodyTab = new TabInfo(requestBody);
+
+        JPanel requestBodyPanel = new JPanel(new BorderLayout());
+        requestBodyPanel.add(bodyFileTypePanel, BorderLayout.NORTH);
+        requestBodyPanel.add(requestBody, BorderLayout.CENTER);
+        // 设置JsonEditor为JPanel的下一个焦点
+        requestBodyPanel.putClientProperty("nextFocus", requestBody);
+        bodyTab = new TabInfo(requestBodyPanel);
         bodyTab.setText(Bundle.getString("http.tool.tab.body"));
         tabs.addTab(bodyTab);
 
@@ -177,14 +203,27 @@ public class RestDetail extends JPanel {
             sendRequest(url);
         });
 
+        requestBodyFileType.setSelectedItem(getCacheType());
+        requestBodyFileType.setRenderer(new FileTypeRenderer());
+        requestBodyFileType.addItemListener(e -> {
+            Object selectedObject = e.getItemSelectable().getSelectedObjects()[0];
+            if (selectedObject instanceof FileType) {
+                FileType fileType = (FileType) selectedObject;
+                requestBody.setFileType(fileType);
+                setCacheType(fileType);
+            }
+        });
+
         MessageBusConnection messageBusConnection = project.getMessageBus().connect();
         messageBusConnection.subscribe(RestDetailTopic.TOPIC, request -> {
             if (request != null) {
                 headCache.remove(request);
                 bodyCache.remove(request);
+                bodyTextTypeCache.remove(request);
             } else {
                 headCache.clear();
                 bodyCache.clear();
+                bodyTextTypeCache.clear();
             }
         });
 
@@ -286,6 +325,8 @@ public class RestDetail extends JPanel {
 
     public void chooseRequest(@Nullable Request request) {
         this.chooseRequest = request;
+        this.requestBodyFileType.setSelectedItem(getCacheType());
+        this.requestHead.setFileType(request == null ? DEFAULT_FILE_TYPE : JsonEditor.JSON_FILE_TYPE);
 
         HttpMethod selItem = HttpMethod.GET;
         String reqUrl = null;
@@ -406,6 +447,28 @@ public class RestDetail extends JPanel {
                 default:
                     break;
             }
+        }
+    }
+
+    @NotNull
+    public FileType getCacheType() {
+        if (chooseRequest == null) {
+            return DEFAULT_FILE_TYPE;
+        }
+        boolean enable = Settings.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
+        if (enable) {
+            return bodyTextTypeCache.getOrDefault(chooseRequest, JsonEditor.JSON_FILE_TYPE);
+        }
+        return DEFAULT_FILE_TYPE;
+    }
+
+    public void setCacheType(@NotNull FileType fileType) {
+        if (chooseRequest == null) {
+            return;
+        }
+        boolean enable = Settings.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
+        if (enable) {
+            bodyTextTypeCache.put(chooseRequest, fileType);
         }
     }
 
