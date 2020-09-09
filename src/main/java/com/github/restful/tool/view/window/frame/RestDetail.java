@@ -16,11 +16,9 @@ import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.service.topic.RestDetailTopic;
 import com.github.restful.tool.utils.Bundle;
-import com.github.restful.tool.utils.JsonUtil;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
-import com.github.restful.tool.utils.convert.BaseConvert;
-import com.github.restful.tool.utils.convert.JsonConvert;
+import com.github.restful.tool.utils.convert.ParamsConvert;
 import com.github.restful.tool.view.components.editor.JsonEditor;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
@@ -29,9 +27,7 @@ import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiInvalidElementAccessException;
-import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.tabs.JBTabs;
@@ -67,7 +63,7 @@ public class RestDetail extends JPanel {
 
     private final Project project;
     private final ThreadPoolExecutor poolExecutor;
-    private final BaseConvert<?> convert;
+    private final ParamsConvert convert;
     private final Map<Request, String> headCache;
     private final Map<Request, String> bodyCache;
     /**
@@ -114,8 +110,7 @@ public class RestDetail extends JPanel {
                 new LinkedBlockingQueue<>(8),
                 new ThreadPoolExecutor.DiscardOldestPolicy()
         );
-        // this.convert = new DefaultConvert();
-        this.convert = new JsonConvert();
+        this.convert = new ParamsConvert();
 
         this.headCache = new HashMap<>();
         this.bodyCache = new HashMap<>();
@@ -326,11 +321,7 @@ public class RestDetail extends JPanel {
                 if (bodyCache.containsKey(request)) {
                     reqBody = getCache(IDENTITY_BODY, request);
                 } else {
-                    NavigatablePsiElement psiElement = request.getPsiElement();
-                    if (psiElement instanceof PsiMethod) {
-                        convert.setPsiMethod((PsiMethod) psiElement);
-                    }
-                    // TODO Kotlin Function args parse
+                    convert.setPsiElement(request.getPsiElement());
                     reqBody = convert.formatString();
                     setCache(IDENTITY_BODY, request, reqBody);
                 }
@@ -361,25 +352,23 @@ public class RestDetail extends JPanel {
     }
 
     private HttpRequest getHttpRequest(@NotNull HttpMethod method, @NotNull String url, String head, String body) {
-        HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url);
+        HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url).timeout(REQUEST_TIMEOUT);
         if (head != null && !"".equals(head.trim())) {
             convert.formatMap(head).forEach((s, o) -> request.header(s, (String) o));
         }
         if (body != null && !"".equals(body.trim())) {
-            Map<String, ?> formatMap = convert.formatMap(body);
-            if (!convert.isRaw()) {
-                formatMap.forEach(request::form);
+            Map<String, Object> formData = convert.formatMap(body);
+            if (formData != null && !convert.isRaw()) {
+                formData.forEach(request::form);
             } else {
-                String requestBody;
-                if (convert.isBasicDataTypes()) {
-                    requestBody = (String) formatMap.get(convert.getBasicDataParamName());
-                } else {
-                    requestBody = JsonUtil.formatJson(formatMap);
+                String bodyData = formData != null ? convert.formatString(formData) : body;
+                if (formData != null && convert.isBasicDataTypes()) {
+                    bodyData = (String) formData.get(convert.getBasicDataParamName());
                 }
-                request.body(requestBody, "application/json");
+                request.body(bodyData, "application/json");
             }
         }
-        return request.timeout(REQUEST_TIMEOUT);
+        return request;
     }
 
     @NotNull
