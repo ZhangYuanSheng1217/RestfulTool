@@ -38,11 +38,11 @@ publishPlugin {
 }
 
 group 'cn.cloud.auto.restful.tool'
-version '1.2.8'
+version '1.2.8.109'
 patchPluginXml {
     changeNotes """
         <ul>
-            <li>Add Kotlin support</li>
+            <li>Add method parameter analysis of Kotlin function</li>
         </ul>
     """
 }

@@ -269,6 +269,74 @@ public class PsiUtil {
     }
 
     /**
+     * 是否是基本数据类型
+     *
+     * @param type java.lang.String | java.lang.Integer | char | int
+     * @return boolean
+     */
+    public static boolean isBasicDataTypes(String type) {
+        if (type == null) {
+            return false;
+        }
+        final String[] classes = new String[]{
+                String.class.getName(),
+                Boolean.class.getName(),
+                Byte.class.getName(),
+                Character.class.getName(),
+                Double.class.getName(),
+                Float.class.getName(),
+                Integer.class.getName(),
+                Long.class.getName(),
+                Short.class.getName(),
+                "boolean",
+                "byte",
+                "char",
+                "double",
+                "float",
+                "int",
+                "long",
+                "short",
+        };
+        for (String clazz : classes) {
+            if (clazz.equals(type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 是否是Kotlin中的基本数据类型
+     *
+     * @param type java.lang.String | java.lang.Integer | char | int
+     * @return boolean
+     */
+    public static boolean isKotlinBasicDataTypes(String type) {
+        if (type == null) {
+            return false;
+        }
+        final String[] classes = new String[]{
+                "Boolean",
+                "Byte",
+                "Int",
+                "Short",
+                "Long",
+                "Float",
+                "Double",
+                "Char",
+                "Number",
+                "Array",
+                "String"
+        };
+        for (String clazz : classes) {
+            if (clazz.equals(type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 是否是公共(public)方法
      *
      * @param target PsiModifierList的实现类
