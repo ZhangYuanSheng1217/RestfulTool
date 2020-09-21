@@ -65,7 +65,7 @@
         <toolWindow id="RestfulTool" anchor="right"
                     factoryClass="com.github.restful.tool.view.window.RestfulToolWindowFactory"
                     order="last"
-                    doNotActivateOnStart="true" icon="/icons/service.svg"
+                    doNotActivateOnStart="true" icon="AllIcons.Toolwindows.WebToolWindow"
                     canCloseContents="true"/>
 
         <projectService serviceInterface="com.github.restful.tool.service.Notify"

@@ -34,15 +34,15 @@ intellij {
 publishPlugin {
     // 发布插件，token在`https://plugins.jetbrains.com/author/me/tokens`申请
     token System.getenv("IDEA.Plugin.RestfulTool.Token")
-    channels 'beta'
+//    channels 'beta'
 }
 
 group 'cn.cloud.auto.restful.tool'
-version '1.2.8.109'
+version '1.2.8.219'
 patchPluginXml {
     changeNotes """
         <ul>
-            <li>Add method parameter analysis of Kotlin function</li>
+            <li>Change ToolWindow Icon</li>
         </ul>
     """
 }
