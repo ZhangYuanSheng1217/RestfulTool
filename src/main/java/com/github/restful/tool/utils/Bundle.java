@@ -10,7 +10,9 @@
  */
 package com.github.restful.tool.utils;
 
-import com.intellij.DynamicBundle;
+import com.intellij.AbstractBundle;
+import com.intellij.ide.plugins.PluginManager;
+import com.intellij.openapi.extensions.PluginId;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -20,16 +22,27 @@ import org.jetbrains.annotations.PropertyKey;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-@SuppressWarnings("MissingRecentApi")
-public class Bundle extends DynamicBundle {
+public class Bundle extends AbstractBundle {
 
     @NonNls
     public static final String BUNDLE = "messages.RestfulToolBundle";
+    @NonNls
+    public static final String BUNDLE_ZH = "messages.RestfulToolBundleZh";
 
-    private static final Bundle INSTANCE = new Bundle();
+    @NotNull
+    private static final Bundle INSTANCE;
 
-    private Bundle() {
-        super(BUNDLE);
+    static {
+        final String chineseLanguagePlugin = "com.intellij.zh";
+        if (PluginManager.isPluginInstalled(PluginId.getId(chineseLanguagePlugin))) {
+            INSTANCE = new Bundle(BUNDLE_ZH);
+        } else {
+            INSTANCE = new Bundle(BUNDLE);
+        }
+    }
+
+    private Bundle(@NonNls String resource) {
+        super(resource);
     }
 
     @Nls

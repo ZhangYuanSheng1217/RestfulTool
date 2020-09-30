@@ -34,7 +34,7 @@ intellij {
 publishPlugin {
     // 发布插件，token在`https://plugins.jetbrains.com/author/me/tokens`申请
     token System.getenv("IDEA.Plugin.RestfulTool.Token")
-//    channels 'beta'
+    channels 'beta'
 }
 
 group 'cn.cloud.auto.restful.tool'
@@ -43,6 +43,9 @@ patchPluginXml {
     changeNotes """
         <ul>
             <li>Adapt to IDEA 2020.3</li>
+            <li>
+            安装插件<a href='https://plugins.jetbrains.com/plugin/13710-chinese-simplified-language-pack-eap'>Chinese (Simplified) Language Pack EAP</a>自动显示中文
+            </li>
         </ul>
     """
 }
