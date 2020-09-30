@@ -38,11 +38,11 @@ publishPlugin {
 }
 
 group 'cn.cloud.auto.restful.tool'
-version '1.2.8.219'
+version '1.2.9'
 patchPluginXml {
     changeNotes """
         <ul>
-            <li>Change ToolWindow Icon</li>
+            <li>Adapt to IDEA 2020.3</li>
         </ul>
     """
 }
