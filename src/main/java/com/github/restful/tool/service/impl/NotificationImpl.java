@@ -2,7 +2,6 @@ package com.github.restful.tool.service.impl;
 
 import com.github.restful.tool.service.Notify;
 import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
@@ -19,7 +18,7 @@ public class NotificationImpl implements Notify {
     private final Project project;
 
     public NotificationImpl(@NotNull Project project) {
-        this.NOTIFICATION_GROUP = new NotificationGroup("RestfulTool Notification", NotificationDisplayType.BALLOON, true);
+        this.NOTIFICATION_GROUP = NotificationGroup.findRegisteredGroup("RestfulTool.Notify");
         this.project = project;
     }
 
