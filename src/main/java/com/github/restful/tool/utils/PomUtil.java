@@ -11,7 +11,7 @@
 package com.github.restful.tool.utils;
 
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.module.ModuleUtil;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -40,11 +40,7 @@ public class PomUtil {
             POM_CACHES.clear();
         } else {
             for (Module module : modules) {
-                VirtualFile virtualFile = module.getModuleFile();
-                if (virtualFile == null) {
-                    continue;
-                }
-                POM_CACHES.remove(virtualFile.getPath());
+                POM_CACHES.remove(ModuleUtil.getModuleDirPath(module));
             }
         }
     }
@@ -188,11 +184,7 @@ public class PomUtil {
     @Nullable
     private static Document getPomDocument(@NotNull Module module) {
         final String pomFileName = "pom.xml";
-        VirtualFile virtualFile = module.getModuleFile();
-        if (virtualFile == null) {
-            return null;
-        }
-        final String moduleFilePath = virtualFile.getPath();
+        final String moduleFilePath = ModuleUtil.getModuleDirPath(module);
         if (POM_CACHES.containsKey(moduleFilePath)) {
             return POM_CACHES.get(moduleFilePath);
         }
@@ -201,7 +193,7 @@ public class PomUtil {
             if (!moduleFile.exists()) {
                 throw new Exception();
             }
-            File pomFile = new File(moduleFile.getParent(), pomFileName);
+            File pomFile = new File(moduleFile, pomFileName);
             if (!pomFile.exists()) {
                 throw new Exception();
             }

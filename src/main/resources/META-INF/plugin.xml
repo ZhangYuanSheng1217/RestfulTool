@@ -73,6 +73,8 @@
 
         <projectService serviceInterface="com.github.restful.tool.service.CacheService"
                         serviceImplementation="com.github.restful.tool.service.impl.CacheServiceImpl"/>
+
+        <notificationGroup displayType="balloon" id="RestfulTool.Notify" toolWindowId="RestfulTool"/>
     </extensions>
 
     <actions>
