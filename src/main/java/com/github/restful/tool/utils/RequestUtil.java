@@ -84,18 +84,20 @@ public class RequestUtil {
      */
     @NotNull
     public static List<Request> getModuleRequests(@NotNull Project project, @NotNull Module module) {
+        List<Request> requests = new ArrayList<>();
+
         // JAX-RS方式
         List<Request> jaxrsRequestByModule = JaxrsHelper.getJaxrsRequestByModule(project, module);
         if (!jaxrsRequestByModule.isEmpty()) {
-            return jaxrsRequestByModule;
+            requests.addAll(jaxrsRequestByModule);
         }
 
         // Spring RESTFul方式
         List<Request> springRequestByModule = SpringHelper.getSpringRequestByModule(project, module);
         if (!springRequestByModule.isEmpty()) {
-            return springRequestByModule;
+            requests.addAll(springRequestByModule);
         }
-        return Collections.emptyList();
+        return requests;
     }
 
     @NotNull
