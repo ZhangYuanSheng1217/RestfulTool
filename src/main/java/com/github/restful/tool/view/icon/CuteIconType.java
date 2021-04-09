@@ -14,9 +14,9 @@ package com.github.restful.tool.view.icon;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class DefaultIconType extends AbstractIconType {
+public class CuteIconType extends AbstractIconType {
 
-    public DefaultIconType() {
-        super("default", "png");
+    protected CuteIconType() {
+        super("cute", "svg");
     }
 }

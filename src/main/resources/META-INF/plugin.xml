@@ -74,7 +74,7 @@
         <projectService serviceInterface="com.github.restful.tool.service.CacheService"
                         serviceImplementation="com.github.restful.tool.service.impl.CacheServiceImpl"/>
 
-        <notificationGroup displayType="balloon" id="RestfulTool.Notify" toolWindowId="RestfulTool"/>
+        <notificationGroup displayType="BALLOON" id="RestfulTool.Notify" toolWindowId="RestfulTool"/>
     </extensions>
 
     <actions>
@@ -104,7 +104,7 @@
 
             <reference ref="Tool.GotoRequestService"/>
 
-            <separator text="separator"/>
+            <separator text="Separator"/>
 
             <action class="com.github.restful.tool.actions.ScanFilterAction"/>
 
