@@ -21,13 +21,17 @@ public abstract class AbstractIconType extends IconType {
     private final Map<HttpMethod, Icon> selectIcons;
 
     protected AbstractIconType(@NotNull String name, @NotNull String suffix) {
+        this(name, "_select", suffix);
+    }
+
+    protected AbstractIconType(@NotNull String name, @NotNull String selectSuffix, @NotNull String suffix) {
         this.name = name;
         this.defaultIcons = new HashMap<>(HttpMethod.values().length);
         this.selectIcons = new HashMap<>(HttpMethod.values().length);
 
         for (HttpMethod httpMethod : HttpMethod.values()) {
             String iconPath = String.format("/icons/method/%s/%s.%s", name, httpMethod.name(), suffix);
-            String iconSelectPath = String.format("/icons/method/%s/%s_select.%s", name, httpMethod.name(), suffix);
+            String iconSelectPath = String.format("/icons/method/%s/%s%s.%s", name, httpMethod.name(), selectSuffix, suffix);
             Icon defaultIcon = Icons.load(iconPath);
             defaultIcons.put(httpMethod, defaultIcon);
             Icon selectIcon;

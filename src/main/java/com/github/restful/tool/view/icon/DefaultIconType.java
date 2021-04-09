@@ -17,6 +17,6 @@ package com.github.restful.tool.view.icon;
 public class DefaultIconType extends AbstractIconType {
 
     public DefaultIconType() {
-        super("default", "png");
+        super("default", "", "png");
     }
 }
