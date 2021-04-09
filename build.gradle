@@ -2,8 +2,8 @@ plugins {
     // Java support
     id "java"
     // Kotlin support
-    id "org.jetbrains.kotlin.jvm" version "1.4.10"
-    id 'org.jetbrains.intellij' version '0.5.0'
+    id "org.jetbrains.kotlin.jvm" version "1.4.21"
+    id 'org.jetbrains.intellij' version '0.7.2'
 }
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
@@ -11,24 +11,13 @@ targetCompatibility = JavaVersion.VERSION_1_8
 repositories {
     mavenCentral()
     jcenter()
-    maven {
-        url "https://cache-redirector.jetbrains.com/jetbrains.bintray.com/intellij-plugin-service"
-    }
-    maven {
-        url "https://cache-redirector.jetbrains.com/repo1.maven.org/maven2"
-    }
-    maven {
-        url "https://cache-redirector.jetbrains.com/jcenter.bintray.com"
-    }
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     //noinspection SpellCheckingInspection
-    implementation('cn.hutool:hutool-core:5.3.9')
-    //noinspection SpellCheckingInspection
-    implementation('cn.hutool:hutool-http:5.3.9')
+    implementation('cn.hutool:hutool-all:5.3.9')
 
     implementation('dom4j:dom4j:1.6.1')
 }
@@ -38,10 +27,10 @@ intellij {
     type 'IC'
 //    version '2020.2'
 //    version 'LATEST-EAP-SNAPSHOT'
-    version '203.4449.2-EAP-SNAPSHOT'
+    version '2021.1'
     pluginName 'RestfulTool'
 
-    plugins 'java', 'properties', 'yaml', 'Kotlin'
+    plugins = ['java', 'properties', 'yaml', 'Kotlin']
 }
 
 publishPlugin {
@@ -51,14 +40,18 @@ publishPlugin {
 }
 
 group 'cn.cloud.auto.restful.tool'
-version '1.2.9'
+version '1.3.0'
 patchPluginXml {
     changeNotes """
         <ul>
-            <li>Adapt to IDEA 2020.3</li>
-            <li>
-            安装插件<a href='https://plugins.jetbrains.com/plugin/13710-chinese-simplified-language-pack-eap'>Chinese (Simplified) Language Pack EAP</a>自动显示中文
-            </li>
+            <li>Support 2021.1</li>
+            <li>Fix some bugs</li>
         </ul>
     """
+}
+
+//编译JAVA文件时采用UTF-8
+//noinspection GroovyAssignabilityCheck
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
 }
