@@ -2,11 +2,11 @@ plugins {
     // Java support
     id "java"
     // Kotlin support
-    id "org.jetbrains.kotlin.jvm" version "1.4.21"
+    id "org.jetbrains.kotlin.jvm" version "1.4.32"
     id 'org.jetbrains.intellij' version '0.7.2'
 }
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_1_10
+targetCompatibility = JavaVersion.VERSION_1_10
 
 repositories {
     mavenCentral()
@@ -23,7 +23,7 @@ dependencies {
 }
 
 intellij {
-    updateSinceUntilBuild false
+    updateSinceUntilBuild true
     type 'IC'
 //    version '2020.2'
 //    version 'LATEST-EAP-SNAPSHOT'
@@ -35,17 +35,17 @@ intellij {
 
 publishPlugin {
     // 发布插件，token在`https://plugins.jetbrains.com/author/me/tokens`申请
-    token System.getenv("IDEA.Plugin.RestfulTool.Token")
-    channels 'beta'
+    token System.getenv("IdeaToken")
+    // channels 'beta'
+    channels 'stable'
 }
 
 group 'cn.cloud.auto.restful.tool'
-version '1.3.0'
+version '1.3.1'
 patchPluginXml {
     changeNotes """
         <ul>
-            <li>Support 2021.1</li>
-            <li>Fix some bugs</li>
+            <li>Updated to IDEA 2021.1</li>
         </ul>
     """
 }

@@ -52,7 +52,7 @@ public class RequestFilteringGotoByModel
     @NotNull
     @Override
     public String getNotInMessage() {
-        return IdeBundle.message("label.no.matches.found.in.project", getProject().getName());
+        return IdeBundle.message("label.no.matches.found", getProject().getName());
     }
 
     @NotNull
@@ -78,7 +78,7 @@ public class RequestFilteringGotoByModel
 
     @NotNull
     @Override
-    public String[] getSeparators() {
+    public String @NotNull [] getSeparators() {
         return new String[]{"/", "?"};
     }
 

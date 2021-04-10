@@ -12,6 +12,7 @@ package com.github.restful.tool.utils;
 
 import com.github.restful.tool.beans.PropertiesKey;
 import com.github.restful.tool.beans.settings.Settings;
+import com.github.restful.tool.service.Notify;
 import com.intellij.lang.properties.PropertiesFileType;
 import com.intellij.lang.properties.psi.PropertiesFile;
 import com.intellij.openapi.module.Module;
@@ -61,8 +62,8 @@ public class ProjectConfigUtil {
                                             @NotNull String propName) {
         final String bootstrapName = "bootstrap";
         final String[] bootstrapNames = {
+                bootstrapName + "." + YAMLFileType.DEFAULT_EXTENSION,
                 bootstrapName + "." + PropertiesFileType.DEFAULT_EXTENSION,
-                bootstrapName + "." + YAMLFileType.DEFAULT_EXTENSION
         };
 
         PsiFile psiFile = null;
@@ -91,8 +92,14 @@ public class ProjectConfigUtil {
     public static String getApplicationConfig(@NotNull Project project,
                                               @NotNull GlobalSearchScope scope,
                                               @NotNull String propName) {
+        String bootstrapConfigValue = getBootstrapConfig(project, scope, propName);
+        if (bootstrapConfigValue != null) {
+            return bootstrapConfigValue;
+        }
         PsiFile conf = getScanConfigurationFile(project, scope, null);
         if (conf == null) {
+            Notify.getInstance(project).warning(Bundle.getString("notify.error.config.def.notfound", propName));
+
             if (SERVER_PORT.equals(propName)) {
                 return String.valueOf(Settings.HttpToolOptionForm.CONTAINER_PORT.getData());
             } else if (SERVER_SERVLET_CONTEXT_PATH.equals(propName)) {
@@ -103,10 +110,6 @@ public class ProjectConfigUtil {
                 return contextPath;
             }
             return null;
-        }
-        String bootstrapConfigValue = getBootstrapConfig(project, scope, propName);
-        if (bootstrapConfigValue != null) {
-            return bootstrapConfigValue;
         }
         if (conf instanceof PropertiesFile) {
             // application.properties
@@ -180,7 +183,7 @@ public class ProjectConfigUtil {
                                                    @NotNull String qualifiedName) {
         try {
             PsiFile[] files = FilenameIndex.getFilesByName(project, qualifiedName, scope);
-
+            // TODO: 有可能出现无法找到文件的情况(files为空数组)
             for (PsiFile file : files) {
                 if (file instanceof PropertiesFile || file instanceof YAMLFile) {
                     return file;
@@ -212,10 +215,10 @@ public class ProjectConfigUtil {
 
         // 配置文件全名
         final String[] configurationFileNames = {
-                // properties file
-                configurationPrefix + "." + PropertiesFileType.DEFAULT_EXTENSION,
                 // yaml file
                 configurationPrefix + "." + YAMLFileType.DEFAULT_EXTENSION,
+                // properties file
+                configurationPrefix + "." + PropertiesFileType.DEFAULT_EXTENSION,
         };
 
         for (String configurationFileName : configurationFileNames) {
