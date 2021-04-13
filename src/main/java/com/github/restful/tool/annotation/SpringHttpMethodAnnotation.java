@@ -50,6 +50,11 @@ public enum SpringHttpMethodAnnotation {
     REQUEST_BODY("org.springframework.web.bind.annotation.RequestBody", null),
 
     /**
+     * PathVariable
+     */
+    PATH_VARIABLE("org.springframework.web.bind.annotation.PathVariable", null),
+
+    /**
      * RequestHeader
      */
     REQUEST_HEADER("org.springframework.web.bind.annotation.RequestHeader", null);

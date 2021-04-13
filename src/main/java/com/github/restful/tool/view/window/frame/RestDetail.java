@@ -59,13 +59,10 @@ import java.util.regex.Pattern;
  */
 public class RestDetail extends JPanel {
 
+    public static final FileType DEFAULT_FILE_TYPE = JsonEditor.TEXT_FILE_TYPE;
     private static final int REQUEST_TIMEOUT = 1000 * 10;
-
     private static final String IDENTITY_HEAD = "HEAD";
     private static final String IDENTITY_BODY = "BODY";
-
-    public static final FileType DEFAULT_FILE_TYPE = JsonEditor.TEXT_FILE_TYPE;
-
     private final Project project;
     private final ThreadPoolExecutor poolExecutor;
     private final ParamsConvert convert;
@@ -149,10 +146,24 @@ public class RestDetail extends JPanel {
 
         requestHead = new JsonEditor(project, DEFAULT_FILE_TYPE);
         requestHead.setName(IDENTITY_HEAD);
-
         TabInfo headTab = new TabInfo(requestHead);
         headTab.setText(Bundle.getString("http.tool.tab.head"));
         tabs.addTab(headTab);
+
+        requestBody = new JsonEditor(project, DEFAULT_FILE_TYPE);
+        requestBody.setName(IDENTITY_BODY);
+        bodyTab = new TabInfo(requestBody);
+        bodyTab.setText(Bundle.getString("http.tool.tab.body"));
+        tabs.addTab(bodyTab);
+        // 设置JsonEditor为JPanel的下一个焦点
+        putClientProperty("nextFocus", requestBody);
+
+        responseView = new JsonEditor(project);
+        responseTab = new TabInfo(responseView);
+        responseTab.setText(Bundle.getString("http.tool.tab.response"));
+        tabs.addTab(responseTab);
+
+        add(tabs.getComponent(), BorderLayout.CENTER);
 
         JPanel bodyFileTypePanel = new JPanel(new BorderLayout());
         bodyFileTypePanel.add(new JBLabel(Bundle.message("other.restDetail.chooseBodyFileType")), BorderLayout.WEST);
@@ -165,25 +176,7 @@ public class RestDetail extends JPanel {
         requestBodyFileType.setFocusable(false);
         bodyFileTypePanel.add(requestBodyFileType, BorderLayout.CENTER);
         bodyFileTypePanel.setBorder(JBUI.Borders.emptyLeft(3));
-
-        requestBody = new JsonEditor(project, DEFAULT_FILE_TYPE);
-        requestBody.setName(IDENTITY_BODY);
-
-        JPanel requestBodyPanel = new JPanel(new BorderLayout());
-        requestBodyPanel.add(bodyFileTypePanel, BorderLayout.NORTH);
-        requestBodyPanel.add(requestBody, BorderLayout.CENTER);
-        // 设置JsonEditor为JPanel的下一个焦点
-        requestBodyPanel.putClientProperty("nextFocus", requestBody);
-        bodyTab = new TabInfo(requestBodyPanel);
-        bodyTab.setText(Bundle.getString("http.tool.tab.body"));
-        tabs.addTab(bodyTab);
-
-        responseView = new JsonEditor(project);
-        responseTab = new TabInfo(responseView);
-        responseTab.setText(Bundle.getString("http.tool.tab.response"));
-        tabs.addTab(responseTab);
-
-        add(tabs.getComponent(), BorderLayout.CENTER);
+        // add(bodyFileTypePanel, BorderLayout.SOUTH)
     }
 
     /**
@@ -408,45 +401,59 @@ public class RestDetail extends JPanel {
                 }
                 request.body(bodyData, "application/json");
             }
+            if (formData != null) {
+                for (Map.Entry<String, Object> entry : formData.entrySet()) {
+                    Object value = entry.getValue();
+                    if (value == null) {
+                        continue;
+                    }
+                    url = url.replace("{" + entry.getKey() + "}", String.valueOf(value));
+                }
+                request.setUrl(url);
+            }
         }
         return request;
     }
 
     @NotNull
     private String getCache(@NotNull String name, @NotNull Request request) {
-        boolean enable = Settings.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
-        if (enable) {
-            switch (name) {
-                case IDENTITY_HEAD:
-                    return headCache.getOrDefault(request, "");
-                case IDENTITY_BODY:
-                    return bodyCache.getOrDefault(request, "");
-                default:
-                    break;
-            }
+        switch (name) {
+            case IDENTITY_HEAD:
+                String head = headCache.getOrDefault(request, null);
+                if (head == null) {
+                    headCache.remove(request);
+                    head = "";
+                }
+                return head;
+            case IDENTITY_BODY:
+                String body = bodyCache.getOrDefault(request, null);
+                if (body == null) {
+                    bodyCache.remove(request);
+                    body = "";
+                }
+                return body;
+            default:
+                break;
         }
         return "";
     }
 
     private void setCache(@NotNull String name, @NotNull Request request, @NotNull String cache) {
-        boolean enable = Settings.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
-        if (enable) {
-            switch (name) {
-                case IDENTITY_HEAD:
-                    if (cache.equals(headCache.get(request))) {
-                        return;
-                    }
-                    headCache.put(request, cache);
-                    break;
-                case IDENTITY_BODY:
-                    if (cache.equals(bodyCache.get(request))) {
-                        return;
-                    }
-                    bodyCache.put(request, cache);
-                    break;
-                default:
-                    break;
-            }
+        switch (name) {
+            case IDENTITY_HEAD:
+                if (cache.equals(headCache.get(request))) {
+                    return;
+                }
+                headCache.put(request, cache);
+                break;
+            case IDENTITY_BODY:
+                if (cache.equals(bodyCache.get(request))) {
+                    return;
+                }
+                bodyCache.put(request, cache);
+                break;
+            default:
+                break;
         }
     }
 
@@ -455,21 +462,14 @@ public class RestDetail extends JPanel {
         if (chooseRequest == null) {
             return DEFAULT_FILE_TYPE;
         }
-        boolean enable = Settings.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
-        if (enable) {
-            return bodyTextTypeCache.getOrDefault(chooseRequest, JsonEditor.JSON_FILE_TYPE);
-        }
-        return DEFAULT_FILE_TYPE;
+        return bodyTextTypeCache.getOrDefault(chooseRequest, JsonEditor.JSON_FILE_TYPE);
     }
 
     public void setCacheType(@NotNull FileType fileType) {
         if (chooseRequest == null) {
             return;
         }
-        boolean enable = Settings.HttpToolOptionForm.ENABLE_CACHE_OF_REST_DETAIL.getData();
-        if (enable) {
-            bodyTextTypeCache.put(chooseRequest, fileType);
-        }
+        bodyTextTypeCache.put(chooseRequest, fileType);
     }
 
     @NotNull

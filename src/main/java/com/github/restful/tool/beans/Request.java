@@ -104,38 +104,6 @@ public class Request {
         return request;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        Request request = (Request) o;
-
-        if (!psiElement.equals(request.psiElement)) {
-            return false;
-        }
-        if (method != request.method) {
-            return false;
-        }
-        if (!Objects.equals(path, request.path)) {
-            return false;
-        }
-        return icon.equals(request.icon);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = psiElement.hashCode();
-        result = 31 * result + (method != null ? method.hashCode() : 0);
-        result = 31 * result + (path != null ? path.hashCode() : 0);
-        result = 31 * result + icon.hashCode();
-        return result;
-    }
-
     @NotNull
     public String getIdentity(String... itemIds) {
         HttpMethod method = this.method == null ? HttpMethod.REQUEST : this.method;
@@ -159,5 +127,27 @@ public class Request {
     @Override
     public String toString() {
         return this.getIdentity();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Request request = (Request) o;
+        if (method != request.method) {
+            return false;
+        }
+        return Objects.equals(path, request.path);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = method != null ? method.hashCode() : 0;
+        result = 31 * result + (path != null ? path.hashCode() : 0);
+        return result;
     }
 }

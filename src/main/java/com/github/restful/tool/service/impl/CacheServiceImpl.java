@@ -44,18 +44,12 @@ public class CacheServiceImpl<K, V> implements CacheService<K, V> {
 
     @Override
     public V setCache(@NotNull K name, @NotNull V cache) {
-        if (enableCache(project)) {
-            return this.caches.put(name, cache);
-        }
-        return null;
+        return this.caches.put(name, cache);
     }
 
     @Override
     public V getCache(@NotNull K name) {
-        if (enableCache(project)) {
-            return this.caches.get(name);
-        }
-        return null;
+        return this.caches.get(name);
     }
 
     @NotNull

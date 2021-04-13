@@ -196,11 +196,6 @@ public class Settings {
 
     public static class HttpToolOptionForm extends OptionForm {
 
-        public static final SettingKey<Boolean> ENABLE_CACHE_OF_REST_DETAIL = SettingKey.createCheckBox(
-                Bundle.getString("setting.httpTools.EnableCacheForHttpTool"),
-                true
-        );
-
         public static final SettingKey<Integer> REDIRECT_MAX_COUNT = SettingKey.createComboBox(
                 Bundle.getString("setting.httpTools.TheMaximumNumberOfRedirectsAllowed"),
                 new Integer[]{0, 3, 5, 10},
