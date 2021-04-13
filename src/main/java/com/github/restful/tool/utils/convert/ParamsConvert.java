@@ -164,6 +164,23 @@ public class ParamsConvert {
                 }
             }
 
+            // 如果存在 @PathVariable 注解则获取其注解
+            annotation = parameter.getAnnotation(SpringHttpMethodAnnotation.PATH_VARIABLE.getQualifiedName());
+            if (annotation != null) {
+                PsiAnnotationMemberValue attrValue = annotation.findDeclaredAttributeValue("value");
+                if (attrValue == null) {
+                    attrValue = annotation.findDeclaredAttributeValue("name");
+                }
+                if (attrValue instanceof PsiLiteralExpressionImpl) {
+                    Object value = ((PsiLiteralExpressionImpl) attrValue).getValue();
+                    if (value != null) {
+                        parameterName = value.toString();
+                    }
+                } else {
+                    parameterName = parameter.getName();
+                }
+            }
+
             Object paramDefaultTypeValue = PsiUtil.getDefaultValueOfPsiType(parameterType);
             if (paramDefaultTypeValue != null) {
                 if (paramDefaultTypeValue instanceof Map) {

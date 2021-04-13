@@ -41,11 +41,11 @@ publishPlugin {
 }
 
 group 'cn.cloud.auto.restful.tool'
-version '1.3.1'
+version '1.3.2'
 patchPluginXml {
     changeNotes """
         <ul>
-            <li>Updated to IDEA 2021.1</li>
+            <li>fix some bugs</li>
         </ul>
     """
 }
