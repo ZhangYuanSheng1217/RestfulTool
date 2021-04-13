@@ -16,6 +16,8 @@ import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -74,14 +76,54 @@ public class PsiUtil {
      */
     @Nullable
     public static Object getDefaultValueOfPsiType(@NotNull PsiType psiType) {
-        if (psiType instanceof PsiArrayType) {
-            return Collections.emptyList();
+        final String canonicalText = psiType.getCanonicalText();
+
+        // 基本类型  boolean
+        if (PsiType.BOOLEAN.equals(psiType) || "java.lang.Boolean".equals(canonicalText)) {
+            return false;
         }
-        if (psiType instanceof PsiPrimitiveType) {
-            // int | char | boolean
-            PsiPrimitiveType type = (PsiPrimitiveType) psiType;
-            return getDefaultData(type.getName());
+
+        // 基本类型  String
+        if (canonicalText.endsWith("java.lang.String")) {
+            return "String";
         }
+
+        if (PsiType.LONG.equals(psiType) || "java.lang.Long".equals(canonicalText)) {
+            return 0L;
+        }
+
+        if (PsiType.DOUBLE.equals(psiType) || "java.lang.Double".equals(canonicalText)) {
+            return 0D;
+        }
+
+        if (PsiType.FLOAT.equals(psiType) || "java.lang.Float".equals(canonicalText)) {
+            return 0F;
+        }
+
+        // 基本类型|数字
+        if (PsiType.INT.equals(psiType) || "java.lang.Integer".equals(canonicalText)
+                || PsiType.BYTE.equals(psiType) || "java.lang.Byte".equals(canonicalText)
+                || PsiType.SHORT.equals(psiType) || "java.lang.Short".equals(canonicalText)
+                || BigInteger.class.getName().equals(canonicalText)
+                || BigDecimal.class.getName().equals(canonicalText)) {
+            return 0;
+        }
+
+        // 原生的数组
+        if (canonicalText.contains("[]")) {
+            return new Object[0];
+        }
+
+        // 常见的List 和Map
+        if (canonicalText.startsWith("java.util.")) {
+            if (canonicalText.contains("Map")) {
+                return Collections.emptyMap();
+            }
+            if (canonicalText.contains("List")) {
+                return Collections.emptyList();
+            }
+        }
+
         if (psiType instanceof PsiClassReferenceType) {
             // Object | String | Integer | List<?> | Map<K, V>
             PsiClassReferenceType type = (PsiClassReferenceType) psiType;
@@ -105,14 +147,20 @@ public class PsiUtil {
                     // 如果该 Getter|Setter 方法所对应的Field为空，则跳过
                     continue;
                 }
+                PsiType psiFieldType = psiField.getType();
+                if (psiFieldType.equals(psiType)) {
+                    result.put(fieldMethod.getFieldName(), null);
+                    continue;
+                }
                 result.put(
                         fieldMethod.getFieldName(),
-                        getDefaultValueOfPsiType(psiField.getType())
+                        getDefaultValueOfPsiType(psiFieldType)
                 );
             }
 
             return result;
         }
+
         return null;
     }
 
