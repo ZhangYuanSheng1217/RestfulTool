@@ -152,7 +152,7 @@ public class ServiceTree extends JBScrollPane {
                 if (SwingUtilities.isRightMouseButton(e)) {
                     Request request = getTreeNodeRequest(tree);
                     if (request != null) {
-                        showPopupMenu(e, getRequestItemPopupMenu(request));
+                        showPopupMenu(e, getRequestItemPopupMenu());
                         return;
                     }
 
@@ -179,18 +179,28 @@ public class ServiceTree extends JBScrollPane {
                 return (modulePopupMenu = generatePopupMenu(moduleSetting));
             }
 
-            private JPopupMenu getRequestItemPopupMenu(@NotNull Request request) {
+            private JPopupMenu getRequestItemPopupMenu() {
                 if (requestItemPopupMenu != null) {
                     return requestItemPopupMenu;
                 }
 
                 // navigation
                 JMenuItem navigation = new JBMenuItem(Bundle.getString("action.NavigateToMethod.text"), AllIcons.Nodes.Method);
-                navigation.addActionListener(actionEvent -> request.navigate(true));
+                navigation.addActionListener(actionEvent -> {
+                    Request request = getTreeNodeRequest(tree);
+                    if (request == null) {
+                        return;
+                    }
+                    request.navigate(true);
+                });
 
                 // Copy full url
                 JMenuItem copyFullUrl = new JBMenuItem(Bundle.getString("action.CopyFullPath.text"), AllIcons.Actions.Copy);
                 copyFullUrl.addActionListener(actionEvent -> {
+                    Request request = getTreeNodeRequest(tree);
+                    if (request == null) {
+                        return;
+                    }
                     GlobalSearchScope scope = request.getPsiElement().getResolveScope();
                     String contextPath = RestUtil.scanContextPath(project, scope);
                     SystemUtil.Clipboard.copy(SystemUtil.buildUrl(
@@ -204,6 +214,10 @@ public class ServiceTree extends JBScrollPane {
                 // Copy api path
                 JMenuItem copyApiPath = new JBMenuItem(Bundle.getString("action.CopyApi.text"), AllIcons.Actions.Copy);
                 copyApiPath.addActionListener(actionEvent -> {
+                    Request request = getTreeNodeRequest(tree);
+                    if (request == null) {
+                        return;
+                    }
                     GlobalSearchScope scope = request.getPsiElement().getResolveScope();
                     String contextPath = RestUtil.scanContextPath(project, scope);
                     SystemUtil.Clipboard.copy(
@@ -243,7 +257,7 @@ public class ServiceTree extends JBScrollPane {
         }
         Object userObject = mutableTreeNode.getUserObject();
         if (userObject instanceof Request) {
-            return ((Request) userObject);
+            return (Request) userObject;
         }
         return null;
     }
