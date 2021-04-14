@@ -24,6 +24,8 @@ import javax.swing.*;
  */
 public class Icons {
 
+    public static Icon Plugin = load("/META-INF/pluginIcon.svg");
+
     @NotNull
     public static Icon load(@NotNull String path) {
         return IconManager.getInstance().getIcon(path, Icons.class);

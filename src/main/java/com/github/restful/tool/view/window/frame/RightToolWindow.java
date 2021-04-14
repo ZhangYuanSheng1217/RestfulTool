@@ -11,6 +11,7 @@ import com.github.restful.tool.view.window.RestfulToolWindowFactory;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiMethod;
 import com.intellij.ui.JBSplitter;
 import org.jetbrains.annotations.NotNull;
 
@@ -113,5 +114,9 @@ public class RightToolWindow extends JPanel {
 
         // 清除扫描的pom文件缓存
         PomUtil.clearCaches();
+    }
+
+    public void navigationToView(@NotNull PsiMethod psiMethod) {
+        RestfulToolWindowFactory.showWindow(project, () -> serviceTree.navigationToTree(psiMethod));
     }
 }

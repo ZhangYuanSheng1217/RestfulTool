@@ -158,6 +158,11 @@ public class Settings {
                 false
         );
 
+        public static final SettingKey<Boolean> SHOW_CLASS_SERVICE_TREE = SettingKey.createCheckBox(
+                Bundle.getString("setting.system.ShowClassServiceTreeByDefault"),
+                true
+        );
+
         public SystemOptionForm() {
             super(Bundle.getString("setting.system"), 0);
         }

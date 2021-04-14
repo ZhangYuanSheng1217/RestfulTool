@@ -41,11 +41,13 @@ publishPlugin {
 }
 
 group 'cn.cloud.auto.restful.tool'
-version '1.3.3-fix'
+version '1.3.4'
 patchPluginXml {
     changeNotes """
         <ul>
-            <li>fix some bugs</li>
+            <li>Add method navigation to view</li>
+            <li>Add Class file display</li>
+            <li>fix bugs</li>
         </ul>
     """
 }

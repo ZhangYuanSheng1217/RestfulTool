@@ -10,10 +10,12 @@
  */
 package com.github.restful.tool.view.window;
 
+import com.github.restful.tool.beans.ClassTree;
 import com.github.restful.tool.beans.ModuleTree;
 import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.view.window.frame.ServiceTree;
 import com.intellij.ui.ColoredTreeCellRenderer;
+import com.intellij.ui.SimpleTextAttributes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,6 +43,12 @@ public class RestfulTreeCellRenderer extends ColoredTreeCellRenderer {
             ServiceTree.RequestNode node = (ServiceTree.RequestNode) value;
             Request data = node.getData();
             setMethodTypeAndPath(data, selected);
+        } else if (value instanceof ServiceTree.ControllerNode) {
+            ServiceTree.ControllerNode node = (ServiceTree.ControllerNode) value;
+            ClassTree data = node.getData();
+            setIcon(data.getIcon());
+            append(data.getName());
+            append(" - " + data.getQualifiedName(), SimpleTextAttributes.GRAYED_ATTRIBUTES);
         } else if (value instanceof ServiceTree.TreeNode<?>) {
             ServiceTree.TreeNode<?> node = (ServiceTree.TreeNode<?>) value;
             append(node.toString());
