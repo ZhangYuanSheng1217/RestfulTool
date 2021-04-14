@@ -92,6 +92,8 @@
                class="com.github.restful.tool.actions.copy.OptionForEditorGroups">
             <add-to-group group-id="EditorPopupMenu" anchor="after"
                           relative-to-action="RestfulTool.action.OptionForEditor-CurrentClassTree"/>
+            <action id="RestfulTool.action.OptionForEditor-NavigationServiceTreeAction"
+                    class="com.github.restful.tool.actions.copy.NavigationServiceTreeAction"/>
             <action id="RestfulTool.action.OptionForEditor-CopyApiPath"
                     class="com.github.restful.tool.actions.copy.CopyApiAction"/>
             <action id="RestfulTool.action.OptionForEditor-CopyFullPath"

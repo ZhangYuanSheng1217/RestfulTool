@@ -10,6 +10,7 @@
  */
 package com.github.restful.tool.view.window.frame;
 
+import com.github.restful.tool.beans.ClassTree;
 import com.github.restful.tool.beans.ModuleTree;
 import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.beans.settings.Settings;
@@ -25,6 +26,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ui.configuration.ProjectSettingsService;
 import com.intellij.openapi.ui.JBMenuItem;
 import com.intellij.openapi.ui.JBPopupMenu;
+import com.intellij.psi.NavigatablePsiElement;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.border.CustomLineBorder;
 import com.intellij.ui.components.JBScrollPane;
@@ -43,10 +48,10 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * @author ZhangYuanSheng
@@ -61,11 +66,14 @@ public class ServiceTree extends JBScrollPane {
      */
     private final Tree tree;
 
+    private final Map<PsiMethod, RequestNode> requestNodeMap;
+
     @Nullable
     private ChooseRequestCallback chooseRequestCallback;
 
     public ServiceTree(@NotNull Project project) {
         this.project = project;
+        this.requestNodeMap = new HashMap<>();
         tree = new SimpleTree();
 
         this.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -88,14 +96,55 @@ public class ServiceTree extends JBScrollPane {
         AtomicInteger apiCount = new AtomicInteger();
         TreeNode<String> root = new TreeNode<>(Bundle.getString("service.tree.NotFoundAny"));
 
+        requestNodeMap.clear();
         allRequests.forEach((itemName, requests) -> {
             if (requests == null || requests.isEmpty()) {
                 return;
             }
+            Map<PsiClass, List<Request>> collect = new HashMap<>(1);
+            if (Settings.SystemOptionForm.SHOW_CLASS_SERVICE_TREE.getData()) {
+                collect = requests.stream().collect(Collectors.toMap(
+                        request -> {
+                            NavigatablePsiElement psiElement = request.getPsiElement();
+                            PsiElement parent = psiElement.getParent();
+                            if (parent instanceof PsiClass) {
+                                return ((PsiClass) parent);
+                            }
+                            return null;
+                        },
+                        request -> new ArrayList<>(Collections.singletonList(request)),
+                        (list1, list2) -> {
+                            list1.addAll(list2);
+                            return list1;
+                        }
+                ));
+            } else {
+                collect.put(null, requests);
+            }
+
             ModuleNode moduleNode = new ModuleNode(new ModuleTree(itemName, requests.size()));
-            requests.forEach(request -> {
-                moduleNode.add(new RequestNode(request));
-                apiCount.incrementAndGet();
+            collect.forEach((psiClass, items) -> {
+                if (psiClass != null) {
+                    ControllerNode node = new ControllerNode(new ClassTree(psiClass));
+                    items.forEach(request -> {
+                        RequestNode requestNode = new RequestNode(request);
+                        if (request.getPsiElement() instanceof PsiMethod) {
+                            requestNodeMap.put((PsiMethod) request.getPsiElement(), requestNode);
+                        }
+                        node.add(requestNode);
+                        apiCount.incrementAndGet();
+                    });
+                    moduleNode.add(node);
+                } else {
+                    items.forEach(request -> {
+                        RequestNode requestNode = new RequestNode(request);
+                        if (request.getPsiElement() instanceof PsiMethod) {
+                            requestNodeMap.put((PsiMethod) request.getPsiElement(), requestNode);
+                        }
+                        moduleNode.add(requestNode);
+                        apiCount.incrementAndGet();
+                    });
+                }
             });
             root.add(moduleNode);
         });
@@ -134,6 +183,7 @@ public class ServiceTree extends JBScrollPane {
         tree.addMouseListener(new MouseAdapter() {
 
             private JPopupMenu modulePopupMenu;
+            private JPopupMenu classPopupMenu;
             private JPopupMenu requestItemPopupMenu;
 
             @Override
@@ -156,14 +206,39 @@ public class ServiceTree extends JBScrollPane {
                         return;
                     }
 
+                    ClassTree classTree = getTreeNodeClassTree(tree);
+                    if (classTree != null) {
+                        showPopupMenu(e, getClassPopupMenu());
+                    }
+
                     ModuleTree moduleTree = getTreeNodeModuleTree(tree);
                     if (moduleTree != null) {
-                        showPopupMenu(e, getModulePopupMenu(moduleTree));
+                        showPopupMenu(e, getModulePopupMenu());
                     }
                 }
             }
 
-            private JPopupMenu getModulePopupMenu(@NotNull ModuleTree moduleTree) {
+            private JPopupMenu getClassPopupMenu() {
+                if (classPopupMenu != null) {
+                    return classPopupMenu;
+                }
+                // navigation
+                JMenuItem navigation = new JBMenuItem(Bundle.getString("action.NavigateToClass.text"), AllIcons.Nodes.Class);
+                navigation.addActionListener(actionEvent -> {
+                    ClassTree classTree = getTreeNodeClassTree(tree);
+                    if (classTree == null) {
+                        return;
+                    }
+                    classTree.getPsiClass().navigate(true);
+                });
+                return (classPopupMenu = generatePopupMenu(navigation));
+            }
+
+            private JPopupMenu getModulePopupMenu() {
+                ModuleTree moduleTree = getTreeNodeModuleTree(tree);
+                if (moduleTree == null) {
+                    return null;
+                }
                 if (modulePopupMenu != null) {
                     return modulePopupMenu;
                 }
@@ -275,6 +350,19 @@ public class ServiceTree extends JBScrollPane {
         return (ModuleTree) userObject;
     }
 
+    @Nullable
+    private ClassTree getTreeNodeClassTree(@NotNull JTree tree) {
+        DefaultMutableTreeNode mutableTreeNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+        if (mutableTreeNode == null) {
+            return null;
+        }
+        Object userObject = mutableTreeNode.getUserObject();
+        if (!(userObject instanceof ClassTree)) {
+            return null;
+        }
+        return (ClassTree) userObject;
+    }
+
     /**
      * 展开tree视图
      *
@@ -322,13 +410,30 @@ public class ServiceTree extends JBScrollPane {
     /**
      * 显示右键菜单
      */
-    private void showPopupMenu(@NotNull MouseEvent event, @NotNull JPopupMenu menu) {
+    private void showPopupMenu(@NotNull MouseEvent event, @Nullable JPopupMenu menu) {
+        if (menu == null) {
+            return;
+        }
         TreePath path = tree.getPathForLocation(event.getX(), event.getY());
         tree.setSelectionPath(path);
         Rectangle rectangle = tree.getUI().getPathBounds(tree, path);
         if (rectangle != null && rectangle.contains(event.getX(), event.getY())) {
             menu.show(tree, event.getX(), rectangle.y + rectangle.height);
         }
+    }
+
+    /**
+     * 转到tree
+     */
+    public void navigationToTree(@NotNull PsiMethod psiMethod) {
+        RequestNode requestNode = requestNodeMap.get(psiMethod);
+        if (requestNode == null) {
+            return;
+        }
+        //有节点到根路径数组
+        javax.swing.tree.TreeNode[] nodes = ((DefaultTreeModel) tree.getModel()).getPathToRoot(requestNode);
+        TreePath path = new TreePath(nodes);
+        tree.setSelectionPath(path);
     }
 
     interface ChooseRequestCallback {
@@ -345,11 +450,12 @@ public class ServiceTree extends JBScrollPane {
 
         private final T data;
 
-        public TreeNode(T data) {
+        public TreeNode(@NotNull T data) {
             super(data);
             this.data = data;
         }
 
+        @NotNull
         public T getData() {
             return data;
         }
@@ -357,14 +463,21 @@ public class ServiceTree extends JBScrollPane {
 
     public static class ModuleNode extends TreeNode<ModuleTree> {
 
-        public ModuleNode(ModuleTree data) {
+        public ModuleNode(@NotNull ModuleTree data) {
+            super(data);
+        }
+    }
+
+    public static class ControllerNode extends TreeNode<ClassTree> {
+
+        public ControllerNode(@NotNull ClassTree data) {
             super(data);
         }
     }
 
     public static class RequestNode extends TreeNode<Request> {
 
-        public RequestNode(Request data) {
+        public RequestNode(@NotNull Request data) {
             super(data);
         }
     }

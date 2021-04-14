@@ -18,6 +18,9 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.PropertyKey;
 
+import java.util.Locale;
+import java.util.ResourceBundle;
+
 /**
  * @author ZhangYuanSheng
  * @version 1.0
@@ -26,20 +29,9 @@ public class Bundle extends AbstractBundle {
 
     @NonNls
     public static final String BUNDLE = "messages.RestfulToolBundle";
-    @NonNls
-    public static final String BUNDLE_ZH = "messages.RestfulToolBundleZh";
 
     @NotNull
-    private static final Bundle INSTANCE;
-
-    static {
-        final String chineseLanguagePlugin = "com.intellij.zh";
-        if (PluginManager.isPluginInstalled(PluginId.getId(chineseLanguagePlugin))) {
-            INSTANCE = new Bundle(BUNDLE_ZH);
-        } else {
-            INSTANCE = new Bundle(BUNDLE);
-        }
-    }
+    private static final Bundle INSTANCE = new Bundle(BUNDLE);
 
     private Bundle(@NonNls String resource) {
         super(resource);
@@ -55,5 +47,17 @@ public class Bundle extends AbstractBundle {
     @NotNull
     public static String getString(@PropertyKey(resourceBundle = BUNDLE) String key, Object... params) {
         return message(key, params);
+    }
+
+    @Override
+    protected ResourceBundle findBundle(@NotNull @NonNls String pathToBundle,
+                                        @NotNull ClassLoader loader,
+                                        @NotNull ResourceBundle.Control control) {
+        final String chineseLanguagePlugin = "com.intellij.zh";
+        if (!PluginManager.isPluginInstalled(PluginId.getId(chineseLanguagePlugin))) {
+            // 未安装 IDE中文语言包 插件则使用默认
+            return ResourceBundle.getBundle(pathToBundle, Locale.ROOT, loader, control);
+        }
+        return ResourceBundle.getBundle(pathToBundle, Locale.getDefault(), loader, control);
     }
 }

@@ -41,19 +41,53 @@ public class RestfulToolWindowFactory implements ToolWindowFactory {
      */
     @Nullable
     public static RightToolWindow getToolWindow(@Nullable Project project) {
+        return getToolWindow(project, null);
+    }
+
+    /**
+     * 获取RestfulTool的toolWindow窗口内容
+     *
+     * @param project auto
+     * @return RightToolWindow
+     */
+    @Nullable
+    public static RightToolWindow getToolWindow(@Nullable Project project, Boolean show) {
         if (project == null) {
             return null;
         }
-        ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(TOOL_WINDOW_ID);
-        if (toolWindow == null) {
-            return null;
+        ToolWindow toolWindow = getWindow(project);
+        if (show != null && show) {
+            showWindow(project, null);
         }
-        for (Component component : toolWindow.getComponent().getComponents()) {
-            if (component instanceof RightToolWindow) {
-                return ((RightToolWindow) component);
+        if (toolWindow != null) {
+            for (Component component : toolWindow.getComponent().getComponents()) {
+                if (component instanceof RightToolWindow) {
+                    return ((RightToolWindow) component);
+                }
             }
         }
         return null;
+    }
+
+    @Nullable
+    public static ToolWindow getWindow(@NotNull Project project) {
+        return ToolWindowManager.getInstance(project).getToolWindow(TOOL_WINDOW_ID);
+    }
+
+    public static void showWindow(@NotNull Project project, @Nullable Runnable onShow) {
+        ToolWindow window = getWindow(project);
+        if (window == null) {
+            return;
+        }
+        window.show(onShow);
+    }
+
+    public static void hideWindow(@NotNull Project project, @Nullable Runnable onShow) {
+        ToolWindow window = getWindow(project);
+        if (window == null) {
+            return;
+        }
+        window.hide(onShow);
     }
 
     @Override
