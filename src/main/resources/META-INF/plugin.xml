@@ -16,7 +16,7 @@
                     <li>Double click the URL to jump directly to the corresponding method
                         definition
                     </li>
-                    <li>A simple http request tool</li>
+                    <li>A simple http apiService tool</li>
                     <li>Support Spring system (Spring MVC / Spring Boot)</li>
                     <li>Support JAX-RS</li>
                     <li>Support `Navigate-> Request Service` search Mapping (Ctrl + Alt + /)</li>
@@ -63,7 +63,7 @@
                 serviceImplementation="com.github.restful.tool.view.search.GotoRequestConfiguration"/>
 
         <toolWindow id="RestfulTool" anchor="right"
-                    factoryClass="com.github.restful.tool.view.window.RestfulToolWindowFactory"
+                    factoryClass="com.github.restful.tool.view.window.WindowFactory"
                     order="last"
                     doNotActivateOnStart="true" icon="AllIcons.Toolwindows.WebToolWindow"
                     canCloseContents="true"/>
@@ -111,6 +111,10 @@
             <action class="com.github.restful.tool.actions.ScanFilterAction"/>
 
             <action class="com.github.restful.tool.actions.WithLibraryAction"/>
+
+            <separator text="Separator"/>
+
+            <action class="com.github.restful.tool.actions.ModuleFilterAction"/>
 
         </group>
     </actions>

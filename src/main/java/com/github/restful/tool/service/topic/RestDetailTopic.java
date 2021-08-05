@@ -1,6 +1,6 @@
 package com.github.restful.tool.service.topic;
 
-import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.beans.ApiService;
 import com.intellij.util.messages.Topic;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +15,7 @@ public interface RestDetailTopic extends RestTopic<RestDetailTopic> {
     /**
      * clear Caches
      *
-     * @param request request(key)
+     * @param apiService request(key)
      */
-    void clearCache(@Nullable Request request);
+    void clearCache(@Nullable ApiService apiService);
 }

@@ -10,8 +10,12 @@
  */
 package com.github.restful.tool.beans;
 
-import com.github.restful.tool.view.icon.Icons;
+import com.github.restful.tool.utils.RestUtil;
+import com.github.restful.tool.utils.SystemUtil;
+import com.github.restful.tool.utils.Icons;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.NavigatablePsiElement;
+import com.intellij.psi.search.GlobalSearchScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,7 +26,7 @@ import java.util.Objects;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class Request {
+public class ApiService {
 
     private final NavigatablePsiElement psiElement;
     @Nullable
@@ -32,7 +36,9 @@ public class Request {
     @NotNull
     private Icon icon = Icons.getMethodIcon(null);
 
-    public Request(HttpMethod method, @Nullable String path, @Nullable NavigatablePsiElement psiElement) {
+    private String requestUrl;
+
+    public ApiService(HttpMethod method, @Nullable String path, @Nullable NavigatablePsiElement psiElement) {
         this.setMethod(method);
         if (path != null) {
             this.setPath(path);
@@ -75,15 +81,17 @@ public class Request {
     }
 
     public void setPath(@NotNull String path) {
-        path = path.trim();
-        if (!path.startsWith("/")) {
-            path = "/" + path;
+        final String ignore = "//";
+        final String prefix = "/";
+        path = prefix + path.trim();
+
+        while (path.contains(ignore)) {
+            path = path.replace(ignore, prefix);
         }
-        path = path.replaceAll("//", "/");
         this.path = path;
     }
 
-    public void setParent(@NotNull Request parent) {
+    public void setParent(@NotNull ApiService parent) {
         if ((this.method == null || this.method == HttpMethod.REQUEST) && parent.getMethod() != null) {
             this.setMethod(parent.getMethod());
         }
@@ -96,18 +104,18 @@ public class Request {
     }
 
     @NotNull
-    public Request copyWithParent(@Nullable Request parent) {
-        Request request = new Request(this.method, this.path, this.psiElement);
+    public ApiService copyWithParent(@Nullable ApiService parent) {
+        ApiService apiService = new ApiService(this.method, this.path, this.psiElement);
         if (parent != null) {
-            request.setParent(parent);
+            apiService.setParent(parent);
         }
-        return request;
+        return apiService;
     }
 
     @NotNull
     public String getIdentity(String... itemIds) {
-        HttpMethod method = this.method == null ? HttpMethod.REQUEST : this.method;
-        String path = this.path == null ? "" : this.path;
+        HttpMethod methodTemp = this.method == null ? HttpMethod.REQUEST : this.method;
+        String pathTemp = this.path == null ? "" : this.path;
 
         StringBuilder items = new StringBuilder();
         if (itemIds != null) {
@@ -121,7 +129,21 @@ public class Request {
             items.append("]");
         }
 
-        return String.format("{}[%s]%s(%s)%s", method, path, icon.getClass(), items.toString());
+        return String.format("{}[%s]%s(%s)%s", methodTemp, pathTemp, icon.getClass(), items.toString());
+    }
+
+    public String getRequestUrl() {
+        if (requestUrl == null) {
+            Project project = this.getPsiElement().getProject();
+            GlobalSearchScope scope = this.getPsiElement().getResolveScope();
+            requestUrl = SystemUtil.buildUrl(
+                    RestUtil.scanListenerProtocol(project, scope),
+                    RestUtil.scanListenerPort(project, scope),
+                    RestUtil.scanContextPath(project, scope),
+                    this.getPath()
+            );
+        }
+        return requestUrl;
     }
 
     @Override
@@ -137,11 +159,11 @@ public class Request {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Request request = (Request) o;
-        if (method != request.method) {
+        ApiService apiService = (ApiService) o;
+        if (method != apiService.method) {
             return false;
         }
-        return Objects.equals(path, request.path);
+        return Objects.equals(path, apiService.path);
     }
 
     @Override

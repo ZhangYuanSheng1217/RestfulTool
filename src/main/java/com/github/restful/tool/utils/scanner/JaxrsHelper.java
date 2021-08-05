@@ -12,7 +12,7 @@ package com.github.restful.tool.utils.scanner;
 
 import com.github.restful.tool.annotation.JaxrsHttpMethodAnnotation;
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.utils.ProjectConfigUtil;
 import com.github.restful.tool.utils.RestUtil;
 import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
@@ -38,12 +38,12 @@ import java.util.*;
 public class JaxrsHelper {
 
     @NotNull
-    public static List<Request> getJaxrsRequestByModule(@NotNull Project project, @NotNull Module module) {
-        List<Request> requests = new ArrayList<>();
+    public static List<ApiService> getJaxrsRequestByModule(@NotNull Project project, @NotNull Module module) {
+        List<ApiService> apiServices = new ArrayList<>();
         for (PsiClassBean psiClassBean : scanHasPathFiles(project, module, null)) {
-            requests.addAll(getRequestsFromClass(psiClassBean.rootPath, psiClassBean.psiClass));
+            apiServices.addAll(getRequestsFromClass(psiClassBean.rootPath, psiClassBean.psiClass));
         }
-        return requests;
+        return apiServices;
     }
 
     public static boolean hasRestful(@NotNull PsiClass psiClass) {
@@ -77,17 +77,17 @@ public class JaxrsHelper {
     }
 
     @NotNull
-    public static List<Request> getCurrClassRequests(@NotNull PsiClass psiClass) {
+    public static List<ApiService> getCurrClassRequests(@NotNull PsiClass psiClass) {
         Project project = psiClass.getProject();
         GlobalSearchScope scope = psiClass.getResolveScope();
         ModuleWithDependenciesScope dependenciesScope = scope instanceof ModuleWithDependenciesScope ?
                 ((ModuleWithDependenciesScope) scope) : null;
         if (dependenciesScope != null) {
-            List<Request> requests = new ArrayList<>();
+            List<ApiService> apiServices = new ArrayList<>();
             for (PsiClassBean psiClassBean : scanHasPathFiles(project, dependenciesScope.getModule(), psiClass)) {
-                requests.addAll(getRequestsFromClass(psiClassBean.rootPath, psiClassBean.psiClass));
+                apiServices.addAll(getRequestsFromClass(psiClassBean.rootPath, psiClassBean.psiClass));
             }
-            return requests;
+            return apiServices;
         }
         return Collections.emptyList();
     }
@@ -132,13 +132,13 @@ public class JaxrsHelper {
     }
 
     @NotNull
-    private static List<Request> getRequestsFromClass(@Nullable String rootPath, @NotNull PsiClass psiClass) {
+    private static List<ApiService> getRequestsFromClass(@Nullable String rootPath, @NotNull PsiClass psiClass) {
         String rootPathOfClass = getRootPathOfClass(psiClass);
         if (rootPathOfClass != null) {
             rootPath = rootPathOfClass;
         }
 
-        List<Request> childrenRequests = new ArrayList<>();
+        List<ApiService> childrenApiServices = new ArrayList<>();
 
         PsiMethod[] psiMethods = psiClass.getMethods();
         for (PsiMethod psiMethod : psiMethods) {
@@ -176,11 +176,11 @@ public class JaxrsHelper {
                     }
                     tempPath = tempPath.replaceAll("//", "/");
                 }
-                Request request = new Request(method, tempPath, psiMethod);
-                childrenRequests.add(request);
+                ApiService apiService = new ApiService(method, tempPath, psiMethod);
+                childrenApiServices.add(apiService);
             }
         }
-        return childrenRequests;
+        return childrenApiServices;
     }
 
     @Nullable

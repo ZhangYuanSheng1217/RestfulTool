@@ -12,7 +12,7 @@ package com.github.restful.tool.view.window;
 
 import com.github.restful.tool.service.ToolWindowService;
 import com.github.restful.tool.utils.Constants;
-import com.github.restful.tool.view.window.frame.RightToolWindow;
+import com.github.restful.tool.view.window.frame.Window;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
@@ -26,7 +26,7 @@ import java.awt.*;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class RestfulToolWindowFactory implements ToolWindowFactory {
+public class WindowFactory implements ToolWindowFactory {
 
     /**
      * ToolWindowId
@@ -40,7 +40,7 @@ public class RestfulToolWindowFactory implements ToolWindowFactory {
      * @return RightToolWindow
      */
     @Nullable
-    public static RightToolWindow getToolWindow(@Nullable Project project) {
+    public static Window getToolWindow(@Nullable Project project) {
         return getToolWindow(project, null);
     }
 
@@ -51,7 +51,7 @@ public class RestfulToolWindowFactory implements ToolWindowFactory {
      * @return RightToolWindow
      */
     @Nullable
-    public static RightToolWindow getToolWindow(@Nullable Project project, Boolean show) {
+    public static Window getToolWindow(@Nullable Project project, Boolean show) {
         if (project == null) {
             return null;
         }
@@ -61,8 +61,8 @@ public class RestfulToolWindowFactory implements ToolWindowFactory {
         }
         if (toolWindow != null) {
             for (Component component : toolWindow.getComponent().getComponents()) {
-                if (component instanceof RightToolWindow) {
-                    return ((RightToolWindow) component);
+                if (component instanceof Window) {
+                    return ((Window) component);
                 }
             }
         }

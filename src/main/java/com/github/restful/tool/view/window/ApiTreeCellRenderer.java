@@ -12,8 +12,8 @@ package com.github.restful.tool.view.window;
 
 import com.github.restful.tool.beans.ClassTree;
 import com.github.restful.tool.beans.ModuleTree;
-import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.view.window.frame.ServiceTree;
+import com.github.restful.tool.beans.ApiService;
+import com.github.restful.tool.view.window.frame.ApiServiceListPanel;
 import com.intellij.ui.ColoredTreeCellRenderer;
 import com.intellij.ui.SimpleTextAttributes;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +25,7 @@ import javax.swing.*;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class RestfulTreeCellRenderer extends ColoredTreeCellRenderer {
+public class ApiTreeCellRenderer extends ColoredTreeCellRenderer {
 
     @Override
     public void customizeCellRenderer(
@@ -34,28 +34,28 @@ public class RestfulTreeCellRenderer extends ColoredTreeCellRenderer {
             boolean expanded,
             boolean leaf,
             int row, boolean hasFocus) {
-        if (value instanceof ServiceTree.ModuleNode) {
-            ServiceTree.ModuleNode node = (ServiceTree.ModuleNode) value;
+        if (value instanceof ApiServiceListPanel.ModuleNode) {
+            ApiServiceListPanel.ModuleNode node = (ApiServiceListPanel.ModuleNode) value;
             ModuleTree data = node.getData();
             setIcon(data.getIcon());
             append(data.toString());
-        } else if (value instanceof ServiceTree.RequestNode) {
-            ServiceTree.RequestNode node = (ServiceTree.RequestNode) value;
-            Request data = node.getData();
+        } else if (value instanceof ApiServiceListPanel.RequestNode) {
+            ApiServiceListPanel.RequestNode node = (ApiServiceListPanel.RequestNode) value;
+            ApiService data = node.getData();
             setMethodTypeAndPath(data, selected);
-        } else if (value instanceof ServiceTree.ControllerNode) {
-            ServiceTree.ControllerNode node = (ServiceTree.ControllerNode) value;
+        } else if (value instanceof ApiServiceListPanel.ControllerNode) {
+            ApiServiceListPanel.ControllerNode node = (ApiServiceListPanel.ControllerNode) value;
             ClassTree data = node.getData();
             setIcon(data.getIcon());
             append(data.getName());
             append(" - " + data.getQualifiedName(), SimpleTextAttributes.GRAYED_ATTRIBUTES);
-        } else if (value instanceof ServiceTree.TreeNode<?>) {
-            ServiceTree.TreeNode<?> node = (ServiceTree.TreeNode<?>) value;
+        } else if (value instanceof ApiServiceListPanel.TreeNode<?>) {
+            ApiServiceListPanel.TreeNode<?> node = (ApiServiceListPanel.TreeNode<?>) value;
             append(node.toString());
         }
     }
 
-    private void setMethodTypeAndPath(@Nullable Request node, boolean selected) {
+    private void setMethodTypeAndPath(@Nullable ApiService node, boolean selected) {
         if (node == null) {
             return;
         }

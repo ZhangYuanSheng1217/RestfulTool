@@ -1,7 +1,7 @@
 package com.github.restful.tool.actions.copy;
 
 import com.github.restful.tool.actions.EditorOption;
-import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.service.Notify;
 import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.utils.RestUtil;
@@ -77,12 +77,12 @@ public interface CopyOption extends EditorOption {
     @NotNull
     default List<String> getRequestPath(@NotNull PsiMethod psiMethod) {
         Set<String> paths = new HashSet<>();
-        for (Request request : RestUtil.getCurrClassRequests(psiMethod.getContainingClass())) {
-            if (!(request.getPsiElement() instanceof PsiMethod)) {
+        for (ApiService apiService : RestUtil.getCurrClassRequests(psiMethod.getContainingClass())) {
+            if (!(apiService.getPsiElement() instanceof PsiMethod)) {
                 continue;
             }
-            if (request.getPsiElement().equals(psiMethod)) {
-                paths.add(request.getPath());
+            if (apiService.getPsiElement().equals(psiMethod)) {
+                paths.add(apiService.getPath());
             }
         }
         return new ArrayList<>(paths);

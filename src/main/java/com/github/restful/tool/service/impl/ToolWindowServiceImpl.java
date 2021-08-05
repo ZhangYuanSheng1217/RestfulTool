@@ -1,7 +1,7 @@
 package com.github.restful.tool.service.impl;
 
 import com.github.restful.tool.service.ToolWindowService;
-import com.github.restful.tool.view.window.frame.RightToolWindow;
+import com.github.restful.tool.view.window.frame.Window;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
@@ -20,6 +20,6 @@ public class ToolWindowServiceImpl implements ToolWindowService {
 
     @Override
     public JComponent getContent() {
-        return new RightToolWindow(project);
+        return new Window(project);
     }
 }

@@ -94,6 +94,11 @@ public abstract class IconType {
         return toString().equals(obj.toString());
     }
 
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
     public static class IconComparator implements Comparator<PreviewIcon> {
 
         @Override

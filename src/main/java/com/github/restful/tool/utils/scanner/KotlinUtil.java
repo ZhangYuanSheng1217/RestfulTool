@@ -11,9 +11,9 @@
 package com.github.restful.tool.utils.scanner;
 
 import com.github.restful.tool.annotation.SpringHttpMethodAnnotation;
+import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.PropertiesKey;
-import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.beans.ServiceStub;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
@@ -45,8 +45,8 @@ public class KotlinUtil {
     }
 
     @NotNull
-    public static List<Request> getKotlinRequests(@NotNull Project project, @NotNull Module module) {
-        List<Request> ktRequests = new ArrayList<>();
+    public static List<ApiService> getKotlinRequests(@NotNull Project project, @NotNull Module module) {
+        List<ApiService> ktApiServices = new ArrayList<>();
         KotlinUtil kotlinUtil = create(module);
         List<KtClass> kotlinClasses = kotlinUtil.getRestfulKotlinClasses(PropertiesKey.scanServiceWithLibrary(project));
         for (KtClass kotlinClass : kotlinClasses) {
@@ -71,7 +71,7 @@ public class KotlinUtil {
 
             List<String> parentPaths = new ArrayList<>();
             List<HttpMethod> parentMethods = new ArrayList<>();
-            List<Request> children = new ArrayList<>();
+            List<ApiService> children = new ArrayList<>();
             if (clsStub != null) {
                 parentPaths.addAll(clsStub.getPaths());
                 parentMethods.addAll(clsStub.getMethods());
@@ -79,32 +79,32 @@ public class KotlinUtil {
             for (ServiceStub stub : stubs) {
                 for (HttpMethod method : stub.getMethods()) {
                     for (String path : stub.getPaths()) {
-                        children.add(new Request(method, path, stub.getPsiElement()));
+                        children.add(new ApiService(method, path, stub.getPsiElement()));
                     }
                 }
             }
 
             if (parentPaths.isEmpty()) {
-                ktRequests.addAll(children);
+                ktApiServices.addAll(children);
             } else {
                 parentPaths.forEach(parentPath -> children.forEach(childrenRequest -> {
                     if (childrenRequest.getMethod() != null && childrenRequest.getMethod() != HttpMethod.REQUEST) {
-                        Request request = childrenRequest.copyWithParent(
-                                new Request(null, parentPath, null)
+                        ApiService apiService = childrenRequest.copyWithParent(
+                                new ApiService(null, parentPath, null)
                         );
-                        ktRequests.add(request);
+                        ktApiServices.add(apiService);
                     } else {
                         for (HttpMethod parentMethod : parentMethods) {
-                            Request request = childrenRequest.copyWithParent(
-                                    new Request(parentMethod, parentPath, null)
+                            ApiService apiService = childrenRequest.copyWithParent(
+                                    new ApiService(parentMethod, parentPath, null)
                             );
-                            ktRequests.add(request);
+                            ktApiServices.add(apiService);
                         }
                     }
                 }));
             }
         }
-        return ktRequests;
+        return ktApiServices;
     }
 
     /**

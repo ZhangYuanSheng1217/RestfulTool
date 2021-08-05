@@ -17,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -100,12 +99,16 @@ public class PsiUtil {
             return 0F;
         }
 
+        if (BigDecimal.class.getName().equals(canonicalText)) {
+            return 0F;
+        }
+
         // 基本类型|数字
         if (PsiType.INT.equals(psiType) || "java.lang.Integer".equals(canonicalText)
                 || PsiType.BYTE.equals(psiType) || "java.lang.Byte".equals(canonicalText)
                 || PsiType.SHORT.equals(psiType) || "java.lang.Short".equals(canonicalText)
-                || BigInteger.class.getName().equals(canonicalText)
-                || BigDecimal.class.getName().equals(canonicalText)) {
+                || "java.math.BigInteger".equals(canonicalText)
+                || "java.math.BigDecimal".equals(canonicalText)) {
             return 0;
         }
 

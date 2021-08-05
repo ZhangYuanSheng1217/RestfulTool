@@ -1,9 +1,9 @@
 package com.github.restful.tool.actions.copy;
 
 import com.github.restful.tool.utils.Bundle;
-import com.github.restful.tool.view.icon.Icons;
-import com.github.restful.tool.view.window.RestfulToolWindowFactory;
-import com.github.restful.tool.view.window.frame.RightToolWindow;
+import com.github.restful.tool.utils.Icons;
+import com.github.restful.tool.view.window.WindowFactory;
+import com.github.restful.tool.view.window.frame.Window;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class NavigationServiceTreeAction extends AnAction implements CopyOption {
 
-    private RightToolWindow toolWindow;
+    private Window toolWindow;
 
     public NavigationServiceTreeAction() {
         getTemplatePresentation().setText(Bundle.getString("action.NavigateToView.text"));
@@ -36,10 +36,10 @@ public class NavigationServiceTreeAction extends AnAction implements CopyOption 
         toolWindow.navigationToView(psiMethod);
     }
 
-    private RightToolWindow getToolWindow(@Nullable Project project) {
+    private Window getToolWindow(@Nullable Project project) {
         if (toolWindow != null) {
             return toolWindow;
         }
-        return (toolWindow = RestfulToolWindowFactory.getToolWindow(project, true));
+        return (toolWindow = WindowFactory.getToolWindow(project, true));
     }
 }

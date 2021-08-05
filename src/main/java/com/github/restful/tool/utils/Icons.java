@@ -8,10 +8,11 @@
   <author>          <time>          <version>          <desc>
   作者姓名            修改时间           版本号              描述
  */
-package com.github.restful.tool.view.icon;
+package com.github.restful.tool.utils;
 
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.settings.Settings;
+import com.github.restful.tool.view.icon.IconType;
 import com.intellij.ui.IconManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +25,11 @@ import javax.swing.*;
  */
 public class Icons {
 
-    public static Icon Plugin = load("/META-INF/pluginIcon.svg");
+    public static final Icon Plugin = load("/META-INF/pluginIcon.svg");
+
+    private Icons() {
+        // private
+    }
 
     @NotNull
     public static Icon load(@NotNull String path) {

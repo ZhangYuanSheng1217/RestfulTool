@@ -10,8 +10,8 @@
  */
 package com.github.restful.tool.view.search;
 
-import com.github.restful.tool.beans.Request;
-import com.github.restful.tool.utils.RequestUtil;
+import com.github.restful.tool.beans.ApiService;
+import com.github.restful.tool.utils.ApiServiceUtil;
 import com.intellij.navigation.ChooseByNameContributor;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.module.Module;
@@ -40,17 +40,17 @@ public class GotoRequestContributor implements ChooseByNameContributor {
     public String[] getNames(Project project, boolean includeNonProjectItems) {
         List<String> names;
 
-        List<Request> requests;
+        List<ApiService> apiServices;
         if (includeNonProjectItems && module != null) {
-            requests = RequestUtil.getModuleRequests(project, module);
+            apiServices = ApiServiceUtil.getModuleApis(project, module);
         } else {
-            requests = new ArrayList<>();
-            RequestUtil.getAllRequests(project).forEach((s, rs) -> requests.addAll(rs));
+            apiServices = new ArrayList<>();
+            ApiServiceUtil.getApis(project).forEach((s, rs) -> apiServices.addAll(rs));
         }
-        names = new ArrayList<>(requests.size());
+        names = new ArrayList<>(apiServices.size());
 
-        itemList = new ArrayList<>(requests.size());
-        requests.stream().map(request -> new RestServiceItem(
+        itemList = new ArrayList<>(apiServices.size());
+        apiServices.stream().map(request -> new RestServiceItem(
                 request.getPsiElement(),
                 request.getMethod(),
                 request.getPath()

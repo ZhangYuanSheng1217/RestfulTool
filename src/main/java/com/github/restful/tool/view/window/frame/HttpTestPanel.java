@@ -11,13 +11,12 @@
 package com.github.restful.tool.view.window.frame;
 
 import cn.hutool.http.*;
+import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.service.topic.RestDetailTopic;
+import com.github.restful.tool.utils.Async;
 import com.github.restful.tool.utils.Bundle;
-import com.github.restful.tool.utils.RestUtil;
-import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.utils.convert.ParamsConvert;
 import com.github.restful.tool.view.components.editor.JsonEditor;
 import com.intellij.openapi.application.Application;
@@ -29,7 +28,6 @@ import com.intellij.openapi.fileTypes.impl.FileTypeRenderer;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.psi.PsiInvalidElementAccessException;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.tabs.JBTabs;
@@ -46,18 +44,21 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 /**
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class RestDetail extends JPanel {
+public class HttpTestPanel extends JPanel implements Serializable {
 
     public static final FileType DEFAULT_FILE_TYPE = JsonEditor.TEXT_FILE_TYPE;
     private static final int REQUEST_TIMEOUT = 1000 * 10;
@@ -66,9 +67,9 @@ public class RestDetail extends JPanel {
     private final Project project;
     private final ThreadPoolExecutor poolExecutor;
     private final ParamsConvert convert;
-    private final Map<Request, String> headCache;
-    private final Map<Request, String> bodyCache;
-    private final Map<Request, FileType> bodyTextTypeCache;
+    private final Map<ApiService, String> headCache;
+    private final Map<ApiService, String> bodyCache;
+    private final Map<ApiService, FileType> bodyTextTypeCache;
     /**
      * 下拉框 - 选择选择请求方法
      */
@@ -102,9 +103,9 @@ public class RestDetail extends JPanel {
     /**
      * 选中的Request
      */
-    private Request chooseRequest;
+    private ApiService chooseApiService;
 
-    public RestDetail(@NotNull Project project) {
+    public HttpTestPanel(@NotNull Project project) {
         this.project = project;
         this.poolExecutor = new ThreadPoolExecutor(
                 1,
@@ -224,10 +225,10 @@ public class RestDetail extends JPanel {
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
                 JsonEditor editor = getCurrentTabbedOfRequest();
-                if (editor != null && chooseRequest != null) {
+                if (editor != null && chooseApiService != null) {
                     String name = editor.getName();
                     String text = editor.getText();
-                    setCache(name, chooseRequest, text);
+                    setCache(name, chooseApiService, text);
                 }
             }
         };
@@ -316,65 +317,23 @@ public class RestDetail extends JPanel {
         return null;
     }
 
-    public void chooseRequest(@Nullable Request request) {
-        this.chooseRequest = request;
+    public void chooseRequest(@Nullable ApiService apiService) {
+        this.chooseApiService = apiService;
         this.requestBodyFileType.setSelectedItem(getCacheType());
-        this.requestHead.setFileType(request == null ? DEFAULT_FILE_TYPE : JsonEditor.JSON_FILE_TYPE);
+        this.requestHead.setFileType(apiService == null ? DEFAULT_FILE_TYPE : JsonEditor.JSON_FILE_TYPE);
 
-        HttpMethod selItem = HttpMethod.GET;
-        String reqUrl = null;
-        String reqHead = null;
-        String reqBody = null;
+        Callable<ParseRequest> parseRequestCallable = () -> ParseRequest.wrap(apiService, this);
+        Consumer<ParseRequest> parseRequestConsumer = parseRequest -> {
+            // 选择Body页面
+            tabs.select(bodyTab, false);
 
-        try {
-            if (request != null) {
-                GlobalSearchScope scope = request.getPsiElement().getResolveScope();
-                reqUrl = SystemUtil.buildUrl(
-                        RestUtil.scanListenerProtocol(project, scope),
-                        RestUtil.scanListenerPort(project, scope),
-                        RestUtil.scanContextPath(project, scope),
-                        request.getPath()
-                );
-
-                // 选择Body页面
-                tabs.select(bodyTab, false);
-
-                selItem = request.getMethod() == null || request.getMethod() == HttpMethod.REQUEST ?
-                        HttpMethod.GET : request.getMethod();
-
-                if (headCache.containsKey(request)) {
-                    reqHead = getCache(IDENTITY_HEAD, request);
-                } else {
-                    reqHead = String.format(
-                            "{\n  \"Content-Type\": \"%s\"\n}",
-                            Settings.HttpToolOptionForm.CONTENT_TYPE.getData().getValue()
-                    );
-                    setCache(IDENTITY_HEAD, request, reqHead);
-                }
-
-                if (bodyCache.containsKey(request)) {
-                    reqBody = getCache(IDENTITY_BODY, request);
-                } else {
-                    convert.setPsiElement(request.getPsiElement());
-                    reqBody = convert.formatString();
-                    setCache(IDENTITY_BODY, request, reqBody);
-                }
-            }
-        } catch (PsiInvalidElementAccessException e) {
-            /*
-            @Throws Code: request.getPsiMethod().getResolveScope()
-            @Throws Message: 无效访问，通常代表指向方法已被删除
-             */
-            if (callback != null) {
-                callback.handle();
-            }
-        }
-
-        requestMethod.setSelectedItem(selItem);
-        requestUrl.setText(reqUrl);
-        requestHead.setText(reqHead);
-        requestBody.setText(reqBody);
-        responseView.setText(null);
+            requestMethod.setSelectedItem(parseRequest.getMethod());
+            requestUrl.setText(parseRequest.getUrl());
+            requestHead.setText(parseRequest.getHead());
+            requestBody.setText(parseRequest.getBody());
+            responseView.setText(null);
+        };
+        Async.runRead(project, parseRequestCallable, parseRequestConsumer);
     }
 
     public void setCallback(DetailHandle callback) {
@@ -416,19 +375,19 @@ public class RestDetail extends JPanel {
     }
 
     @NotNull
-    private String getCache(@NotNull String name, @NotNull Request request) {
+    public String getCache(@NotNull String name, @NotNull ApiService apiService) {
         switch (name) {
             case IDENTITY_HEAD:
-                String head = headCache.getOrDefault(request, null);
+                String head = headCache.getOrDefault(apiService, null);
                 if (head == null) {
-                    headCache.remove(request);
+                    headCache.remove(apiService);
                     head = "";
                 }
                 return head;
             case IDENTITY_BODY:
-                String body = bodyCache.getOrDefault(request, null);
+                String body = bodyCache.getOrDefault(apiService, null);
                 if (body == null) {
-                    bodyCache.remove(request);
+                    bodyCache.remove(apiService);
                     body = "";
                 }
                 return body;
@@ -438,19 +397,19 @@ public class RestDetail extends JPanel {
         return "";
     }
 
-    private void setCache(@NotNull String name, @NotNull Request request, @NotNull String cache) {
+    public void setCache(@NotNull String name, @NotNull ApiService apiService, @NotNull String cache) {
         switch (name) {
             case IDENTITY_HEAD:
-                if (cache.equals(headCache.get(request))) {
+                if (cache.equals(headCache.get(apiService))) {
                     return;
                 }
-                headCache.put(request, cache);
+                headCache.put(apiService, cache);
                 break;
             case IDENTITY_BODY:
-                if (cache.equals(bodyCache.get(request))) {
+                if (cache.equals(bodyCache.get(apiService))) {
                     return;
                 }
-                bodyCache.put(request, cache);
+                bodyCache.put(apiService, cache);
                 break;
             default:
                 break;
@@ -459,17 +418,17 @@ public class RestDetail extends JPanel {
 
     @NotNull
     public FileType getCacheType() {
-        if (chooseRequest == null) {
+        if (chooseApiService == null) {
             return DEFAULT_FILE_TYPE;
         }
-        return bodyTextTypeCache.getOrDefault(chooseRequest, JsonEditor.JSON_FILE_TYPE);
+        return bodyTextTypeCache.getOrDefault(chooseApiService, JsonEditor.JSON_FILE_TYPE);
     }
 
     public void setCacheType(@NotNull FileType fileType) {
-        if (chooseRequest == null) {
+        if (chooseApiService == null) {
             return;
         }
-        bodyTextTypeCache.put(chooseRequest, fileType);
+        bodyTextTypeCache.put(chooseApiService, fileType);
     }
 
     @NotNull
@@ -483,5 +442,96 @@ public class RestDetail extends JPanel {
          * 处理逻辑
          */
         void handle();
+    }
+
+    protected static class ParseRequest {
+
+        private HttpMethod method;
+        private String url;
+        private String head;
+        private String body;
+
+        private ParseRequest(HttpMethod method, String url, String head, String body) {
+            this.method = method;
+            this.url = url;
+            this.head = head;
+            this.body = body;
+        }
+
+        public HttpMethod getMethod() {
+            return method;
+        }
+
+        public void setMethod(HttpMethod method) {
+            this.method = method;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getHead() {
+            return head;
+        }
+
+        public void setHead(String head) {
+            this.head = head;
+        }
+
+        public String getBody() {
+            return body;
+        }
+
+        public void setBody(String body) {
+            this.body = body;
+        }
+
+        @NotNull
+        public static ParseRequest wrap(ApiService apiService, HttpTestPanel detail) {
+            HttpMethod selItem = HttpMethod.GET;
+            String reqUrl = null;
+            String reqHead = null;
+            String reqBody = null;
+            try {
+                if (apiService != null) {
+                    reqUrl = apiService.getRequestUrl();
+
+                    selItem = apiService.getMethod() == null || apiService.getMethod() == HttpMethod.REQUEST ?
+                            HttpMethod.GET : apiService.getMethod();
+
+                    if (detail.headCache.containsKey(apiService)) {
+                        reqHead = detail.getCache(IDENTITY_HEAD, apiService);
+                    } else {
+                        reqHead = String.format(
+                                "{%n  \"Content-Type\": \"%s\"%n}",
+                                Settings.HttpToolOptionForm.CONTENT_TYPE.getData().getValue()
+                        );
+                        detail.setCache(IDENTITY_HEAD, apiService, reqHead);
+                    }
+
+                    if (detail.bodyCache.containsKey(apiService)) {
+                        reqBody = detail.getCache(IDENTITY_BODY, apiService);
+                    } else {
+                        detail.convert.setPsiElement(apiService.getPsiElement());
+                        reqBody = detail.convert.formatString();
+                        detail.setCache(IDENTITY_BODY, apiService, reqBody);
+                    }
+                }
+            } catch (PsiInvalidElementAccessException e) {
+                /*
+                @Throws Code: request.getPsiMethod().getResolveScope()
+                @Throws Message: 无效访问，通常代表指向方法已被删除
+                 */
+                if (detail.callback != null) {
+                    detail.callback.handle();
+                }
+            }
+
+            return new ParseRequest(selItem, reqUrl, reqHead, reqBody);
+        }
     }
 }

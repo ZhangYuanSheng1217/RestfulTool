@@ -10,7 +10,7 @@
  */
 package com.github.restful.tool.utils;
 
-import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.utils.scanner.JaxrsHelper;
 import com.github.restful.tool.utils.scanner.SpringHelper;
 import com.intellij.lang.jvm.annotation.*;
@@ -119,16 +119,16 @@ public class RestUtil {
     }
 
     @NotNull
-    public static List<Request> getCurrClassRequests(@Nullable PsiClass psiClass) {
+    public static List<ApiService> getCurrClassRequests(@Nullable PsiClass psiClass) {
         if (psiClass == null) {
             return Collections.emptyList();
         }
-        List<Request> requests;
-        if (!(requests = SpringHelper.getRequests(psiClass)).isEmpty()) {
-            return requests;
+        List<ApiService> apiServices;
+        if (!(apiServices = SpringHelper.getRequests(psiClass)).isEmpty()) {
+            return apiServices;
         }
-        requests = JaxrsHelper.getCurrClassRequests(psiClass);
-        return requests;
+        apiServices = JaxrsHelper.getCurrClassRequests(psiClass);
+        return apiServices;
     }
 
     /**

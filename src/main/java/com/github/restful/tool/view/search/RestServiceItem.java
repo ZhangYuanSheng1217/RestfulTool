@@ -3,7 +3,7 @@ package com.github.restful.tool.view.search;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
-import com.github.restful.tool.view.icon.Icons;
+import com.github.restful.tool.utils.Icons;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.module.Module;

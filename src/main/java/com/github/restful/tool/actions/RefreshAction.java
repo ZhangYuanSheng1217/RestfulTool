@@ -11,8 +11,8 @@
 package com.github.restful.tool.actions;
 
 import com.github.restful.tool.utils.Bundle;
-import com.github.restful.tool.view.window.RestfulToolWindowFactory;
-import com.github.restful.tool.view.window.frame.RightToolWindow;
+import com.github.restful.tool.view.window.WindowFactory;
+import com.github.restful.tool.view.window.frame.Window;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.DumbAwareAction;
@@ -31,7 +31,7 @@ public class RefreshAction extends DumbAwareAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
-        RightToolWindow toolWindow = RestfulToolWindowFactory.getToolWindow(e.getProject());
+        Window toolWindow = WindowFactory.getToolWindow(e.getProject());
         if (toolWindow == null) {
             return;
         }

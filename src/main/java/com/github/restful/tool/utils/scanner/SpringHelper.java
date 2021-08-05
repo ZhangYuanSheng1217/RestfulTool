@@ -11,8 +11,8 @@
 package com.github.restful.tool.utils.scanner;
 
 import com.github.restful.tool.annotation.SpringHttpMethodAnnotation;
+import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.beans.Request;
 import com.github.restful.tool.utils.ProjectConfigUtil;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
@@ -34,8 +34,8 @@ import java.util.*;
 public class SpringHelper {
 
     @NotNull
-    public static List<Request> getSpringRequestByModule(@NotNull Project project, @NotNull Module module) {
-        List<Request> moduleList = new ArrayList<>(0);
+    public static List<ApiService> getSpringRequestByModule(@NotNull Project project, @NotNull Module module) {
+        List<ApiService> moduleList = new ArrayList<>(0);
 
         List<PsiClass> controllers = getAllControllerClass(project, module);
         if (controllers.isEmpty()) {
@@ -52,10 +52,10 @@ public class SpringHelper {
     }
 
     @NotNull
-    public static List<Request> getRequests(@NotNull PsiClass psiClass) {
-        List<Request> requests = new ArrayList<>();
-        List<Request> parentRequests = new ArrayList<>();
-        List<Request> childrenRequests = new ArrayList<>();
+    public static List<ApiService> getRequests(@NotNull PsiClass psiClass) {
+        List<ApiService> apiServices = new ArrayList<>();
+        List<ApiService> parentApiServices = new ArrayList<>();
+        List<ApiService> childrenApiServices = new ArrayList<>();
 
         PsiAnnotation psiAnnotation = RestUtil.getClassAnnotation(
                 psiClass,
@@ -63,22 +63,22 @@ public class SpringHelper {
                 SpringHttpMethodAnnotation.REQUEST_MAPPING.getShortName()
         );
         if (psiAnnotation != null) {
-            parentRequests = getRequests(psiAnnotation, null);
+            parentApiServices = getRequests(psiAnnotation, null);
         }
 
         PsiMethod[] psiMethods = psiClass.getAllMethods();
         for (PsiMethod psiMethod : psiMethods) {
-            childrenRequests.addAll(getRequests(psiMethod));
+            childrenApiServices.addAll(getRequests(psiMethod));
         }
-        if (parentRequests.isEmpty()) {
-            requests.addAll(childrenRequests);
+        if (parentApiServices.isEmpty()) {
+            apiServices.addAll(childrenApiServices);
         } else {
-            parentRequests.forEach(parentRequest -> childrenRequests.forEach(childrenRequest -> {
-                Request request = childrenRequest.copyWithParent(parentRequest);
-                requests.add(request);
+            parentApiServices.forEach(parentRequest -> childrenApiServices.forEach(childrenRequest -> {
+                ApiService apiService = childrenRequest.copyWithParent(parentRequest);
+                apiServices.add(apiService);
             }));
         }
-        return requests;
+        return apiServices;
     }
 
     public static boolean hasRestful(@NotNull PsiClass psiClass) {
@@ -129,7 +129,7 @@ public class SpringHelper {
      * @see SpringHelper#getRequests(PsiMethod)
      */
     @NotNull
-    private static List<Request> getRequests(@NotNull PsiAnnotation annotation, @Nullable PsiMethod psiMethod) {
+    private static List<ApiService> getRequests(@NotNull PsiAnnotation annotation, @Nullable PsiMethod psiMethod) {
         SpringHttpMethodAnnotation spring = SpringHttpMethodAnnotation.getByQualifiedName(
                 annotation.getQualifiedName()
         );
@@ -210,21 +210,21 @@ public class SpringHelper {
             }
         }
 
-        List<Request> requests = new ArrayList<>(paths.size());
+        List<ApiService> apiServices = new ArrayList<>(paths.size());
 
         paths.forEach(path -> {
             for (HttpMethod method : methods) {
                 if (method.equals(HttpMethod.REQUEST) && methods.size() > 1) {
                     continue;
                 }
-                requests.add(new Request(
+                apiServices.add(new ApiService(
                         method,
                         path,
                         psiMethod
                 ));
             }
         });
-        return requests;
+        return apiServices;
     }
 
     /**
@@ -234,13 +234,13 @@ public class SpringHelper {
      * @return list
      */
     @NotNull
-    private static List<Request> getRequests(@NotNull PsiMethod method) {
-        List<Request> requests = new ArrayList<>();
+    private static List<ApiService> getRequests(@NotNull PsiMethod method) {
+        List<ApiService> apiServices = new ArrayList<>();
         for (PsiAnnotation annotation : RestUtil.getMethodAnnotations(method)) {
-            requests.addAll(getRequests(annotation, method));
+            apiServices.addAll(getRequests(annotation, method));
         }
 
-        return requests;
+        return apiServices;
     }
 
     @Nullable

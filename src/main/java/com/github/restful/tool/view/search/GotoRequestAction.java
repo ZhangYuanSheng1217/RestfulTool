@@ -12,7 +12,7 @@ package com.github.restful.tool.view.search;
 
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.utils.Bundle;
-import com.github.restful.tool.view.icon.Icons;
+import com.github.restful.tool.utils.Icons;
 import com.intellij.featureStatistics.FeatureUsageTracker;
 import com.intellij.icons.AllIcons;
 import com.intellij.ide.actions.GotoActionBase;

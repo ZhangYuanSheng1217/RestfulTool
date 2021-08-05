@@ -20,7 +20,7 @@
 > A set of auxiliary tools for Restful service development.
 >> 1. Provides a display window of Services tree;
 >> 2. Click the URL to jump directly to the corresponding method definition;
->> 3. A simple http request tool;
+>> 3. A simple http apiService tool;
 >> 4. Support Spring system (Spring MVC / Spring Boot);
 >> 5. Support `Navigate-> Request Service` search Mapping` Ctrl + Alt + / `;
 

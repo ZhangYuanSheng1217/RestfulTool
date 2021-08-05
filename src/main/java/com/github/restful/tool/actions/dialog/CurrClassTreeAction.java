@@ -10,10 +10,11 @@
  */
 package com.github.restful.tool.actions.dialog;
 
-import com.github.restful.tool.beans.Request;
+import com.github.restful.tool.beans.ApiService;
+import com.github.restful.tool.utils.Async;
 import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.utils.RestUtil;
-import com.github.restful.tool.view.window.frame.ServiceTree;
+import com.github.restful.tool.view.window.frame.ApiServiceListPanel;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
@@ -34,8 +35,8 @@ import java.util.Map;
  */
 public class CurrClassTreeAction extends AnAction implements TreeOption {
 
-    private final Map<String, List<Request>> requests;
-    private ServiceTree serviceTree;
+    private final Map<String, List<ApiService>> requests;
+    private ApiServiceListPanel apiServiceListPanel;
 
     public CurrClassTreeAction() {
         this.requests = new HashMap<>(1);
@@ -50,27 +51,31 @@ public class CurrClassTreeAction extends AnAction implements TreeOption {
         if (project == null || psiClass == null) {
             return;
         }
-        if (serviceTree == null) {
-            this.serviceTree = new ServiceTree(project);
+        if (apiServiceListPanel == null) {
+            this.apiServiceListPanel = new ApiServiceListPanel(project);
         }
-        List<Request> requests = RestUtil.getCurrClassRequests(psiClass);
-        serviceTree.renderRequestTree(format(psiClass, requests));
-        ComponentPopupBuilder popupBuilder = JBPopupFactory.getInstance().createComponentPopupBuilder(serviceTree, null);
+        List<ApiService> apiServices = RestUtil.getCurrClassRequests(psiClass);
+        apiServiceListPanel.renderRequestTree(format(psiClass, apiServices));
+        ComponentPopupBuilder popupBuilder = JBPopupFactory.getInstance().createComponentPopupBuilder(apiServiceListPanel, null);
         JBPopup popup = popupBuilder.createPopup();
-        popup.setMinimumSize(new Dimension(300, serviceTree.getSize().height));
+        popup.setMinimumSize(new Dimension(300, apiServiceListPanel.getSize().height));
         popup.showInFocusCenter();
     }
 
-    private Map<String, List<Request>> format(@NotNull PsiClass psiClass, @NotNull List<Request> requests) {
+    private Map<String, List<ApiService>> format(@NotNull PsiClass psiClass, @NotNull List<ApiService> apiServices) {
         if (!this.requests.isEmpty()) {
             this.requests.clear();
         }
-        this.requests.put(psiClass.getName(), requests);
+        this.requests.put(psiClass.getName(), apiServices);
         return this.requests;
     }
 
     @Override
     public void update(@NotNull AnActionEvent e) {
-        e.getPresentation().setEnabledAndVisible(withPsiClass(e));
+        Project project = e.getProject();
+        if (project == null) {
+            return;
+        }
+        Async.runRead(project, () -> withPsiClass(e), bool -> e.getPresentation().setEnabledAndVisible(bool));
     }
 }

@@ -10,8 +10,10 @@
  */
 package com.github.restful.tool.actions.copy;
 
+import com.github.restful.tool.utils.Async;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -22,6 +24,10 @@ public class OptionForEditorGroups extends DefaultActionGroup implements CopyOpt
 
     @Override
     public void update(@NotNull AnActionEvent e) {
-        e.getPresentation().setEnabledAndVisible(withPsiMethod(e));
+        Project project = e.getProject();
+        if (project == null) {
+            return;
+        }
+        Async.runRead(project, () -> withPsiMethod(e), bool -> e.getPresentation().setEnabledAndVisible(bool));
     }
 }

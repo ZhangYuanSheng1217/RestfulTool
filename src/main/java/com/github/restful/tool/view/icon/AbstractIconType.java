@@ -1,11 +1,12 @@
 package com.github.restful.tool.view.icon;
 
 import com.github.restful.tool.beans.HttpMethod;
+import com.github.restful.tool.utils.Icons;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,8 +27,8 @@ public abstract class AbstractIconType extends IconType {
 
     protected AbstractIconType(@NotNull String name, @NotNull String selectSuffix, @NotNull String suffix) {
         this.name = name;
-        this.defaultIcons = new HashMap<>(HttpMethod.values().length);
-        this.selectIcons = new HashMap<>(HttpMethod.values().length);
+        this.defaultIcons = new EnumMap<>(HttpMethod.class);
+        this.selectIcons = new EnumMap<>(HttpMethod.class);
 
         for (HttpMethod httpMethod : HttpMethod.values()) {
             String iconPath = String.format("/icons/method/%s/%s.%s", name, httpMethod.name(), suffix);
@@ -71,5 +72,26 @@ public abstract class AbstractIconType extends IconType {
     @Override
     public final @NotNull String toString() {
         return this.name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        AbstractIconType that = (AbstractIconType) o;
+
+        if (!name.equals(that.name)) return false;
+        if (!defaultIcons.equals(that.defaultIcons)) return false;
+        return selectIcons.equals(that.selectIcons);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + defaultIcons.hashCode();
+        result = 31 * result + selectIcons.hashCode();
+        return result;
     }
 }
