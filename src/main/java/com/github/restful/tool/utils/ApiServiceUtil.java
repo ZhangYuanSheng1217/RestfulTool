@@ -13,6 +13,7 @@ package com.github.restful.tool.utils;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.utils.scanner.JaxrsHelper;
 import com.github.restful.tool.utils.scanner.SpringHelper;
+import com.github.restful.tool.view.window.frame.ModuleUrlStorageUtil;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
@@ -113,6 +114,13 @@ public class ApiServiceUtil {
         if (!springApiServiceByModule.isEmpty()) {
             apiServices.addAll(springApiServiceByModule);
         }
+
+        // 填充模块url前缀
+        Map<String, String> moduleNameUrlMap = ModuleUrlStorageUtil.getModuleUrlMap(project);
+        if (moduleNameUrlMap.containsKey(module.getName())){
+            apiServices.forEach(api -> api.setPath(moduleNameUrlMap.get(module.getName()) + api.getPath()));
+        }
+
         return apiServices;
     }
 
