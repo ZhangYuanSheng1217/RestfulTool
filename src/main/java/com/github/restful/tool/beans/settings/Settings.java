@@ -90,7 +90,7 @@ public class Settings {
         if (setting == null) {
             return;
         }
-        setting.properties.forEach(this.properties::put);
+        this.properties.putAll(setting.properties);
     }
 
     public <T> T getData(@NotNull SettingKey<T> key) {

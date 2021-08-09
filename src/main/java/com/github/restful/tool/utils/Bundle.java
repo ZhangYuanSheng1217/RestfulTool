@@ -28,10 +28,10 @@ import java.util.ResourceBundle;
 public class Bundle extends AbstractBundle {
 
     @NonNls
-    public static final String BUNDLE = "messages.RestfulToolBundle";
+    public static final String I18N = "messages.RestfulToolBundle";
 
     @NotNull
-    private static final Bundle INSTANCE = new Bundle(BUNDLE);
+    private static final Bundle INSTANCE = new Bundle(I18N);
 
     private Bundle(@NonNls String resource) {
         super(resource);
@@ -39,13 +39,13 @@ public class Bundle extends AbstractBundle {
 
     @Nls
     @NotNull
-    public static String message(@PropertyKey(resourceBundle = BUNDLE) String key, Object... params) {
+    protected static String message(@PropertyKey(resourceBundle = I18N) String key, Object... params) {
         return INSTANCE.getMessage(key, params);
     }
 
     @Nls
     @NotNull
-    public static String getString(@PropertyKey(resourceBundle = BUNDLE) String key, Object... params) {
+    public static String getString(@PropertyKey(resourceBundle = I18N) String key, Object... params) {
         return message(key, params);
     }
 

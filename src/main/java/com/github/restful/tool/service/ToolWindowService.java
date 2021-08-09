@@ -1,6 +1,5 @@
 package com.github.restful.tool.service;
 
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.content.Content;
@@ -22,7 +21,7 @@ public interface ToolWindowService {
      * @return obj
      */
     static ToolWindowService getInstance(@NotNull Project project) {
-        return ServiceManager.getService(project, ToolWindowService.class);
+        return project.getService(ToolWindowService.class);
     }
 
     /**

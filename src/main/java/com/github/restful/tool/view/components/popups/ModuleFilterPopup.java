@@ -1,4 +1,4 @@
-package com.github.restful.tool.view.window.frame;
+package com.github.restful.tool.view.components.popups;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;

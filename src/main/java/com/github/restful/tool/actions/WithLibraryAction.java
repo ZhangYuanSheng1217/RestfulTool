@@ -10,7 +10,7 @@
  */
 package com.github.restful.tool.actions;
 
-import com.github.restful.tool.beans.PropertiesKey;
+import com.github.restful.tool.utils.Storage;
 import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.view.window.WindowFactory;
 import com.github.restful.tool.view.window.frame.Window;
@@ -38,7 +38,7 @@ public class WithLibraryAction extends ToggleAction implements DumbAware {
 
     @Override
     public boolean isSelected(@NotNull AnActionEvent e) {
-        return PropertiesKey.scanServiceWithLibrary(e.getRequiredData(CommonDataKeys.PROJECT));
+        return Storage.scanServiceWithLibrary(e.getRequiredData(CommonDataKeys.PROJECT));
     }
 
     @Override
@@ -47,9 +47,9 @@ public class WithLibraryAction extends ToggleAction implements DumbAware {
         if (project == null) {
             return;
         }
-        PropertiesKey.scanServiceWithLibrary(project, state);
+        Storage.scanServiceWithLibrary(project, state);
         if (getToolWindow(project) != null) {
-            toolWindow.refreshRequestTree();
+            toolWindow.refresh();
         }
     }
 

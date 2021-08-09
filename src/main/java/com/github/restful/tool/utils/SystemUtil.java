@@ -10,6 +10,8 @@
  */
 package com.github.restful.tool.utils;
 
+import com.intellij.openapi.module.Module;
+import com.intellij.psi.search.GlobalSearchScope;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +28,10 @@ import java.awt.datatransfer.Transferable;
 public class SystemUtil {
 
     private static final String SLASH = "/";
+
+    private SystemUtil() {
+        // private
+    }
 
     /**
      * 生成url
@@ -77,10 +83,26 @@ public class SystemUtil {
         return SLASH + currPath;
     }
 
+    public static GlobalSearchScope getModuleScope(@NotNull Module module) {
+        return getModuleScope(module, Storage.scanServiceWithLibrary(module.getProject()));
+    }
+
+    protected static GlobalSearchScope getModuleScope(@NotNull Module module, boolean hasLibrary) {
+        if (hasLibrary) {
+            return module.getModuleWithLibrariesScope();
+        } else {
+            return module.getModuleScope();
+        }
+    }
+
     /**
      * 剪贴板工具
      */
     public static class Clipboard {
+
+        private Clipboard() {
+            // private
+        }
 
         /**
          * 把文本设置到剪贴板（复制）
@@ -122,6 +144,10 @@ public class SystemUtil {
      * 数组工具
      */
     public static class Array {
+
+        private Array() {
+            // private
+        }
 
         /**
          * 获取合法的数组下标

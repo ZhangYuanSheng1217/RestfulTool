@@ -74,7 +74,8 @@
         <projectService serviceInterface="com.github.restful.tool.service.CacheService"
                         serviceImplementation="com.github.restful.tool.service.impl.CacheServiceImpl"/>
 
-        <notificationGroup displayType="BALLOON" id="RestfulTool.Notify" toolWindowId="RestfulTool"/>
+        <notificationGroup displayType="BALLOON" id="RestfulTool.Notify"
+                           toolWindowId="RestfulTool"/>
     </extensions>
 
     <actions>
@@ -108,15 +109,18 @@
 
             <separator text="Separator"/>
 
-            <action class="com.github.restful.tool.actions.ScanFilterAction"/>
+            <action class="com.github.restful.tool.actions.filters.HttpMethodFilterAction"/>
 
-            <action class="com.github.restful.tool.actions.WithLibraryAction"/>
+            <action class="com.github.restful.tool.actions.filters.ModuleFilterAction"/>
 
             <separator text="Separator"/>
 
-            <action class="com.github.restful.tool.actions.ModuleFilterAction"/>
+            <action class="com.github.restful.tool.actions.WithLibraryAction"/>
 
-            <action class="com.github.restful.tool.actions.ModuleUrlActon"/>
+            <action class="com.github.restful.tool.actions.TreeExpandAction"/>
+
+            <action class="com.github.restful.tool.actions.TreeCollapseAction"/>
+
         </group>
     </actions>
 

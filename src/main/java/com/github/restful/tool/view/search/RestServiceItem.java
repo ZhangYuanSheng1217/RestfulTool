@@ -1,20 +1,16 @@
 package com.github.restful.tool.view.search;
 
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.utils.RestUtil;
-import com.github.restful.tool.utils.SystemUtil;
-import com.github.restful.tool.utils.Icons;
+import com.github.restful.tool.view.icon.Icons;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.project.Project;
 import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.codeStyle.MinusculeMatcher;
 import com.intellij.psi.codeStyle.NameUtil;
-import com.intellij.psi.search.GlobalSearchScope;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -162,22 +158,6 @@ public class RestServiceItem implements NavigationItem {
 
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    public String getFullUrl() {
-        if (this.psiMethod != null) {
-            Project project = this.psiMethod.getProject();
-            GlobalSearchScope scope = this.psiMethod.getResolveScope();
-
-            return SystemUtil.buildUrl(
-                    RestUtil.scanListenerProtocol(project, scope),
-                    RestUtil.scanListenerPort(project, scope),
-                    RestUtil.scanContextPath(project, scope),
-                    getUrl()
-            );
-        }
-
-        return getUrl();
     }
 
     public PsiElement getPsiElement() {

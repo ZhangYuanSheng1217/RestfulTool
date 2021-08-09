@@ -13,8 +13,8 @@ package com.github.restful.tool.utils.scanner;
 import com.github.restful.tool.annotation.JaxrsHttpMethodAnnotation;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.ApiService;
-import com.github.restful.tool.utils.ProjectConfigUtil;
 import com.github.restful.tool.utils.RestUtil;
+import com.github.restful.tool.utils.SystemUtil;
 import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
@@ -110,7 +110,7 @@ public class JaxrsHelper {
         Collection<PsiAnnotation> pathList = JavaAnnotationIndex.getInstance().get(
                 Control.Path.getName(),
                 project,
-                ProjectConfigUtil.getModuleScope(module)
+                SystemUtil.getModuleScope(module)
         );
         for (PsiAnnotation psiAnnotation : pathList) {
             PsiElement psiElement = psiAnnotation.getParent().getParent();

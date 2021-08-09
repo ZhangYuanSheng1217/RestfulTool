@@ -27,6 +27,10 @@ import java.util.regex.Pattern;
  */
 public class PsiUtil {
 
+    private PsiUtil() {
+        // private
+    }
+
     /**
      * 获取PsiParameter的PsiClass
      *

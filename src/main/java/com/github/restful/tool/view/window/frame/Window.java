@@ -7,7 +7,6 @@ import com.github.restful.tool.service.topic.RestDetailTopic;
 import com.github.restful.tool.service.topic.ServiceTreeTopic;
 import com.github.restful.tool.utils.ApiServiceUtil;
 import com.github.restful.tool.utils.Async;
-import com.github.restful.tool.utils.PomUtil;
 import com.github.restful.tool.view.window.WindowFactory;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.module.Module;
@@ -48,7 +47,7 @@ public class Window extends JPanel {
     /**
      * 项目对象
      */
-    private final Project project;
+    private final transient Project project;
     private final ApiServiceListPanel apiServiceListPanel;
     private final HttpTestPanel httpTestPanel;
 
@@ -118,10 +117,10 @@ public class Window extends JPanel {
      */
     private void initEvent() {
         this.apiServiceListPanel.setChooseRequestCallback(httpTestPanel::chooseRequest);
-        this.httpTestPanel.setCallback(this::refreshRequestTree);
+        this.httpTestPanel.setCallback(this::refresh);
 
-        project.getMessageBus().connect().subscribe(ServiceTreeTopic.TOPIC, apiServiceListPanel::renderRequestTree);
-        project.getMessageBus().connect().subscribe(RefreshServiceTreeTopic.TOPIC, this::refreshRequestTree);
+        project.getMessageBus().connect().subscribe(ServiceTreeTopic.TOPIC, apiServiceListPanel::renderAll);
+        project.getMessageBus().connect().subscribe(RefreshServiceTreeTopic.TOPIC, this::refresh);
     }
 
     private void firstLoad() {
@@ -130,7 +129,7 @@ public class Window extends JPanel {
         Async.runRead(project, () -> {
             resetModules();
             return this.getRequests();
-        }, apiServiceListPanel::renderRequestTree);
+        }, apiServiceListPanel::renderAll);
     }
 
     private void resetModules() {
@@ -160,29 +159,44 @@ public class Window extends JPanel {
         return this.project;
     }
 
-    public void refreshRequestTree() {
+    public void refresh() {
         Async.runRead(project, this::getRequests, data -> {
             httpTestPanel.reset();
 
-            apiServiceListPanel.renderRequestTree(data);
+            apiServiceListPanel.renderAll(data);
 
             // 清除RestDetail中的Cache缓存
             RestDetailTopic restDetailTopic = project.getMessageBus().syncPublisher(RestDetailTopic.TOPIC);
             restDetailTopic.clearCache(null);
-
-            // 清除扫描的pom文件缓存
-            PomUtil.clearCaches();
 
             // 装载Module列表
             resetModules();
         });
     }
 
-    public void refreshRequestTreeOnFilter() {
-        Async.runRead(project, this::getRequests, apiServiceListPanel::renderRequestTree);
+    public void refreshOnFilter() {
+        Async.runRead(project, this::getRequests, apiServiceListPanel::renderAll);
     }
 
     public void navigationToView(@NotNull PsiMethod psiMethod) {
         WindowFactory.showWindow(project, () -> apiServiceListPanel.navigationToTree(psiMethod));
+    }
+
+    @NotNull
+    public List<ApiService> getModuleServices(@NotNull String moduleName) {
+        return apiServiceListPanel.getModuleServices(moduleName);
+    }
+
+    @NotNull
+    public ApiService getApiService(@NotNull PsiMethod method) {
+        return apiServiceListPanel.getServiceNode(method).getData();
+    }
+
+    public void render(@NotNull String moduleName, @NotNull List<ApiService> apiServices) {
+        apiServiceListPanel.render(moduleName, apiServices);
+    }
+
+    public void expandAll(boolean expand) {
+        apiServiceListPanel.expandAll(expand);
     }
 }

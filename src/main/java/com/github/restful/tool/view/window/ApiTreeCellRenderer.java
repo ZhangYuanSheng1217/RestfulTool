@@ -39,12 +39,12 @@ public class ApiTreeCellRenderer extends ColoredTreeCellRenderer {
             ModuleTree data = node.getData();
             setIcon(data.getIcon());
             append(data.toString());
-        } else if (value instanceof ApiServiceListPanel.RequestNode) {
-            ApiServiceListPanel.RequestNode node = (ApiServiceListPanel.RequestNode) value;
+        } else if (value instanceof ApiServiceListPanel.ServiceNode) {
+            ApiServiceListPanel.ServiceNode node = (ApiServiceListPanel.ServiceNode) value;
             ApiService data = node.getData();
             setMethodTypeAndPath(data, selected);
-        } else if (value instanceof ApiServiceListPanel.ControllerNode) {
-            ApiServiceListPanel.ControllerNode node = (ApiServiceListPanel.ControllerNode) value;
+        } else if (value instanceof ApiServiceListPanel.ClassNode) {
+            ApiServiceListPanel.ClassNode node = (ApiServiceListPanel.ClassNode) value;
             ClassTree data = node.getData();
             setIcon(data.getIcon());
             append(data.getName());

@@ -13,7 +13,6 @@ package com.github.restful.tool.utils.scanner;
 import com.github.restful.tool.annotation.SpringHttpMethodAnnotation;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.utils.ProjectConfigUtil;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
 import com.intellij.lang.jvm.annotation.*;
@@ -96,7 +95,7 @@ public class SpringHelper {
     private static List<PsiClass> getAllControllerClass(@NotNull Project project, @NotNull Module module) {
         List<PsiClass> allControllerClass = new ArrayList<>();
 
-        GlobalSearchScope moduleScope = ProjectConfigUtil.getModuleScope(module);
+        GlobalSearchScope moduleScope = SystemUtil.getModuleScope(module);
         Collection<PsiAnnotation> pathList = JavaAnnotationIndex.getInstance().get(
                 Control.Controller.getName(),
                 project,

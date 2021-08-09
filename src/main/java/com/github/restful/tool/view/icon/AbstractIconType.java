@@ -1,7 +1,6 @@
 package com.github.restful.tool.view.icon;
 
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.utils.Icons;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;

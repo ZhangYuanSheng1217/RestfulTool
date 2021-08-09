@@ -10,23 +10,19 @@
  */
 package com.github.restful.tool.utils;
 
-import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.utils.scanner.JaxrsHelper;
 import com.github.restful.tool.utils.scanner.SpringHelper;
 import com.intellij.lang.jvm.annotation.*;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
-import com.intellij.psi.search.GlobalSearchScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -34,76 +30,6 @@ import java.util.List;
  * @version 1.0
  */
 public class RestUtil {
-
-    /**
-     * 扫描服务端口
-     *
-     * @param project project
-     * @param scope   scope
-     * @return port
-     */
-    public static int scanListenerPort(@NotNull Project project, @NotNull GlobalSearchScope scope) {
-        // listener of default server port
-        int port = 8080;
-
-        try {
-            String value = ProjectConfigUtil.getApplicationConfig(
-                    project, scope,
-                    ProjectConfigUtil.SERVER_PORT
-            );
-            if (value == null || "".equals((value = value.trim()))) {
-                throw new NumberFormatException();
-            }
-            port = Integer.parseInt(value);
-        } catch (NumberFormatException ignore) {
-        }
-        return port;
-    }
-
-    /**
-     * 扫描服务协议
-     *
-     * @param project project
-     * @param scope   scope
-     * @return protocol
-     */
-    @NotNull
-    public static String scanListenerProtocol(@NotNull Project project, @NotNull GlobalSearchScope scope) {
-        // default protocol
-        String protocol = "http";
-
-        try {
-            String value = ProjectConfigUtil.getApplicationConfig(project, scope, "server.ssl.enabled");
-            if (value == null || "".equals((value = value.trim()))) {
-                throw new Exception();
-            }
-            if (Boolean.parseBoolean(value)) {
-                protocol = "https";
-            }
-        } catch (Exception ignore) {
-        }
-        return protocol;
-    }
-
-    /**
-     * 扫描请求路径前缀
-     *
-     * @param project project
-     * @param scope   scope
-     * @return path
-     */
-    @Nullable
-    public static String scanContextPath(@NotNull Project project, @NotNull GlobalSearchScope scope) {
-        try {
-            String contextPath = ProjectConfigUtil.getApplicationConfig(
-                    project, scope,
-                    ProjectConfigUtil.SERVER_SERVLET_CONTEXT_PATH
-            );
-            return PomUtil.getContextPathWithPom(((ModuleWithDependenciesScope) scope).getModule(), contextPath);
-        } catch (Exception ignore) {
-            return null;
-        }
-    }
 
     /**
      * 检测当前 PsiClass 是否含有`RestController` | `Controller` | `Path`
@@ -116,19 +42,6 @@ public class RestUtil {
             return false;
         }
         return SpringHelper.hasRestful(psiClass) || JaxrsHelper.hasRestful(psiClass);
-    }
-
-    @NotNull
-    public static List<ApiService> getCurrClassRequests(@Nullable PsiClass psiClass) {
-        if (psiClass == null) {
-            return Collections.emptyList();
-        }
-        List<ApiService> apiServices;
-        if (!(apiServices = SpringHelper.getRequests(psiClass)).isEmpty()) {
-            return apiServices;
-        }
-        apiServices = JaxrsHelper.getCurrClassRequests(psiClass);
-        return apiServices;
     }
 
     /**

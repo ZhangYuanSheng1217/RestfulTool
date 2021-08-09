@@ -35,6 +35,6 @@ public class RefreshAction extends DumbAwareAction {
         if (toolWindow == null) {
             return;
         }
-        toolWindow.refreshRequestTree();
+        toolWindow.refresh();
     }
 }

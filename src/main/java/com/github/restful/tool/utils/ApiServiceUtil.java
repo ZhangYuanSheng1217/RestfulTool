@@ -13,23 +13,22 @@ package com.github.restful.tool.utils;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.utils.scanner.JaxrsHelper;
 import com.github.restful.tool.utils.scanner.SpringHelper;
-import com.github.restful.tool.view.window.frame.ModuleUrlStorageUtil;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.NavigatablePsiElement;
-import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiClass;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+
+import static com.intellij.openapi.module.ModuleUtil.findModuleForFile;
 
 /**
  * @author ZhangYuanSheng
  * @version 1.0
  */
 public class ApiServiceUtil {
-
-    private static final Map<NavigatablePsiElement, List<ApiService>> REQUEST_CACHE = Custom.REQUEST_CACHE;
 
     private ApiServiceUtil() {
         // private
@@ -69,7 +68,6 @@ public class ApiServiceUtil {
     @NotNull
     public static Map<String, List<ApiService>> getApis(@NotNull Project project, Module @NotNull [] modules, boolean hasEmpty) {
         Map<String, List<ApiService>> map = new HashMap<>();
-        REQUEST_CACHE.clear();
 
         for (Module module : modules) {
             List<ApiService> apiServices = getModuleApis(project, module);
@@ -77,17 +75,6 @@ public class ApiServiceUtil {
                 continue;
             }
             map.put(module.getName(), apiServices);
-
-            apiServices.forEach(request -> {
-                List<ApiService> apiServiceList;
-                if (REQUEST_CACHE.containsKey(request.getPsiElement())) {
-                    apiServiceList = REQUEST_CACHE.get(request.getPsiElement());
-                } else {
-                    apiServiceList = new ArrayList<>();
-                    REQUEST_CACHE.put(request.getPsiElement(), apiServiceList);
-                }
-                apiServiceList.add(request);
-            });
         }
         return map;
     }
@@ -115,26 +102,34 @@ public class ApiServiceUtil {
             apiServices.addAll(springApiServiceByModule);
         }
 
-        // 填充模块url前缀
-        Map<String, String> moduleNameUrlMap = ModuleUrlStorageUtil.getModuleUrlMap(project);
-        if (moduleNameUrlMap.containsKey(module.getName())){
-            apiServices.forEach(api -> api.setPath(moduleNameUrlMap.get(module.getName()) + api.getPath()));
-        }
-
-        return apiServices;
+        return fill(project, module.getName(), apiServices);
     }
 
     @NotNull
-    public static List<ApiService> getApisFromLoaded(@NotNull PsiMethod psiMethod) {
-        if (!REQUEST_CACHE.containsKey(psiMethod)) {
+    public static List<ApiService> getCurrClassRequests(@Nullable PsiClass psiClass) {
+        if (psiClass == null) {
             return Collections.emptyList();
         }
-        List<ApiService> apiServices = REQUEST_CACHE.get(psiMethod);
-        return apiServices == null ? Collections.emptyList() : apiServices;
+        List<ApiService> apiServices = SpringHelper.getRequests(psiClass);
+        if (apiServices.isEmpty()) {
+            apiServices = JaxrsHelper.getCurrClassRequests(psiClass);
+        }
+
+        Project project = psiClass.getProject();
+        Module module = findModuleForFile(psiClass.getContainingFile());
+        if (module == null) {
+            return apiServices;
+        }
+        return fill(project, module.getName(), apiServices);
     }
 
-    private static class Custom {
-
-        private static final Map<NavigatablePsiElement, List<ApiService>> REQUEST_CACHE = new HashMap<>();
+    private static List<ApiService> fill(@NotNull Project project, @NotNull String moduleName,
+                                         @NotNull List<ApiService> apiServices) {
+        // 填充模块url前缀
+        Map<String, String> moduleConfig = ModuleConfigs.getModuleConfig(project, moduleName);
+        if (!moduleConfig.isEmpty()) {
+            apiServices.forEach(api -> ModuleConfigs.Config.apply(moduleConfig, api));
+        }
+        return apiServices;
     }
 }

@@ -1,7 +1,7 @@
 package com.github.restful.tool.actions.copy;
 
 import com.github.restful.tool.utils.Bundle;
-import com.github.restful.tool.utils.Icons;
+import com.github.restful.tool.view.icon.Icons;
 import com.github.restful.tool.view.window.WindowFactory;
 import com.github.restful.tool.view.window.frame.Window;
 import com.intellij.openapi.actionSystem.AnAction;

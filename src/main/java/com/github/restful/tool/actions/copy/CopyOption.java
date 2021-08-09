@@ -3,17 +3,18 @@ package com.github.restful.tool.actions.copy;
 import com.github.restful.tool.actions.EditorOption;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.service.Notify;
+import com.github.restful.tool.utils.ApiServiceUtil;
 import com.github.restful.tool.utils.Bundle;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
+import com.github.restful.tool.view.window.WindowFactory;
+import com.github.restful.tool.view.window.frame.Window;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.search.GlobalSearchScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,6 +22,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static com.intellij.openapi.actionSystem.LangDataKeys.*;
 
 /**
  * @author ZhangYuanSheng
@@ -77,7 +80,7 @@ public interface CopyOption extends EditorOption {
     @NotNull
     default List<String> getRequestPath(@NotNull PsiMethod psiMethod) {
         Set<String> paths = new HashSet<>();
-        for (ApiService apiService : RestUtil.getCurrClassRequests(psiMethod.getContainingClass())) {
+        for (ApiService apiService : ApiServiceUtil.getCurrClassRequests(psiMethod.getContainingClass())) {
             if (!(apiService.getPsiElement() instanceof PsiMethod)) {
                 continue;
             }
@@ -109,7 +112,7 @@ public interface CopyOption extends EditorOption {
      * @param full 全量
      */
     default void copyPath(@NotNull AnActionEvent e, boolean full) {
-        Project project = e.getData(LangDataKeys.PROJECT);
+        Project project = e.getData(PROJECT);
         PsiMethod psiMethod = PSI_METHODS[0];
         if (project == null || psiMethod == null) {
             return;
@@ -141,20 +144,16 @@ public interface CopyOption extends EditorOption {
      */
     default void copyPath(@NotNull PsiMethod psiMethod, @NotNull final String path, boolean fullPath) {
         Project project = psiMethod.getProject();
-        String contextPath = RestUtil.scanContextPath(project, psiMethod.getResolveScope());
         if (!fullPath) {
-            SystemUtil.Clipboard.copy((contextPath == null || "null".equals(contextPath) ? "" : contextPath) + path);
+            SystemUtil.Clipboard.copy(path);
             Notify.getInstance(project).info(Bundle.getString("action.CopyApi.success"));
         } else {
-            GlobalSearchScope scope = psiMethod.getResolveScope();
-            String protocol = RestUtil.scanListenerProtocol(project, scope);
-            int port = RestUtil.scanListenerPort(project, scope);
-            SystemUtil.Clipboard.copy(SystemUtil.buildUrl(
-                    protocol,
-                    port,
-                    contextPath,
-                    path
-            ));
+            Window window = WindowFactory.getToolWindow(project);
+            if (window == null) {
+                return;
+            }
+            ApiService apiService = window.getApiService(psiMethod);
+            SystemUtil.Clipboard.copy(apiService.getRequestUrl());
             Notify.getInstance(project).info(Bundle.getString("action.CopyFullPath.success"));
         }
     }

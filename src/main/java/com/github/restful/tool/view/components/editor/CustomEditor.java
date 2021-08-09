@@ -26,7 +26,7 @@ import javax.swing.border.Border;
 /**
  * @author ZhangYuanSheng
  */
-public class JsonEditor extends EditorTextField {
+public class CustomEditor extends EditorTextField {
 
     /**
      * 文本格式
@@ -45,11 +45,11 @@ public class JsonEditor extends EditorTextField {
      */
     public static final FileType XML_FILE_TYPE = XmlFileType.INSTANCE;
 
-    public JsonEditor(Project project) {
+    public CustomEditor(Project project) {
         this(project, TEXT_FILE_TYPE);
     }
 
-    public JsonEditor(Project project, FileType fileType) {
+    public CustomEditor(Project project, FileType fileType) {
         super(null, project, fileType, false, false);
     }
 

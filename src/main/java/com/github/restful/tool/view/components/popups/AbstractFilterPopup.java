@@ -1,4 +1,4 @@
-package com.github.restful.tool.view.window.frame;
+package com.github.restful.tool.view.components.popups;
 
 import com.github.restful.tool.utils.Bundle;
 import com.intellij.ui.components.JBCheckBox;
@@ -82,12 +82,32 @@ public class AbstractFilterPopup<T> extends JPopupMenu {
         });
         buttonPane.add(selectAll);
 
+        JButton unSelectAll = new JButton(Bundle.getString("other.UnSelectAll"));
+        unSelectAll.addActionListener(e -> {
+            List<T> changes = new ArrayList<>();
+            for (int i = 0; i < checkBoxList.size(); i++) {
+                JCheckBox checkBox = checkBoxList.get(i);
+                if (checkBox.isSelected()) {
+                    checkBox.setSelected(false);
+                    changes.add(this.values[i]);
+                }
+            }
+            if (!changes.isEmpty() && changeAllCallback != null) {
+                changeAllCallback.changed(changes, false);
+            }
+        });
+        buttonPane.add(unSelectAll);
+
         JButton close = new JButton(Bundle.getString("other.Close"));
         close.addActionListener(e -> this.setVisible(false));
         buttonPane.add(close);
 
         this.add(checkboxPane, BorderLayout.CENTER);
         this.add(buttonPane, BorderLayout.SOUTH);
+    }
+
+    public T[] getValues() {
+        return this.values;
     }
 
     private boolean selected(T t) {
@@ -123,22 +143,22 @@ public class AbstractFilterPopup<T> extends JPopupMenu {
         setDefaultValue(getSelectedValues());
     }
 
-    public void setChangeCallback(@Nullable ChangeCallback<T> changeCallback) {
-        this.changeCallback = changeCallback;
-    }
-
-    public void setChangeAllCallback(@Nullable ChangeAllCallback<T> changeAllCallback) {
-        this.changeAllCallback = changeAllCallback;
-    }
-
     @Nullable
     public ChangeCallback<T> getChangeCallback() {
         return changeCallback;
     }
 
+    public void setChangeCallback(@Nullable ChangeCallback<T> changeCallback) {
+        this.changeCallback = changeCallback;
+    }
+
     @Nullable
     public ChangeAllCallback<T> getChangeAllCallback() {
         return changeAllCallback;
+    }
+
+    public void setChangeAllCallback(@Nullable ChangeAllCallback<T> changeAllCallback) {
+        this.changeAllCallback = changeAllCallback;
     }
 
     public interface ChangeCallback<T> {

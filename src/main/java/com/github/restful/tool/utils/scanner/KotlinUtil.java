@@ -13,7 +13,7 @@ package com.github.restful.tool.utils.scanner;
 import com.github.restful.tool.annotation.SpringHttpMethodAnnotation;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.beans.PropertiesKey;
+import com.github.restful.tool.utils.Storage;
 import com.github.restful.tool.beans.ServiceStub;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
@@ -48,7 +48,7 @@ public class KotlinUtil {
     public static List<ApiService> getKotlinRequests(@NotNull Project project, @NotNull Module module) {
         List<ApiService> ktApiServices = new ArrayList<>();
         KotlinUtil kotlinUtil = create(module);
-        List<KtClass> kotlinClasses = kotlinUtil.getRestfulKotlinClasses(PropertiesKey.scanServiceWithLibrary(project));
+        List<KtClass> kotlinClasses = kotlinUtil.getRestfulKotlinClasses(Storage.scanServiceWithLibrary(project));
         for (KtClass kotlinClass : kotlinClasses) {
             ServiceStub clsStub = null;
             for (KtAnnotationEntry annotationEntry : kotlinClass.getAnnotationEntries()) {

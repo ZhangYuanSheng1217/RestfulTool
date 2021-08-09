@@ -17,8 +17,8 @@ import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.service.Notify;
 import com.github.restful.tool.service.topic.RefreshServiceTreeTopic;
 import com.github.restful.tool.utils.Bundle;
-import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
+import com.github.restful.tool.view.components.popups.ModuleConfigPopup;
 import com.github.restful.tool.view.window.ApiTreeCellRenderer;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.module.Module;
@@ -31,7 +31,6 @@ import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.border.CustomLineBorder;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.treeStructure.SimpleTree;
@@ -60,22 +59,24 @@ import java.util.stream.Collectors;
  */
 public class ApiServiceListPanel extends JBScrollPane {
 
-    private final Project project;
+    private final transient Project project;
 
     /**
      * 树 - service列表
      */
     private final Tree tree;
 
-    private final Map<PsiMethod, RequestNode> requestNodeMap;
+    private final Map<PsiMethod, ServiceNode> apiServiceNodes;
 
     @Nullable
-    private ChooseRequestCallback chooseRequestCallback;
+    private transient ChooseRequestCallback chooseRequestCallback;
+
+    private transient Map<String, List<ApiService>> apiServices;
 
     public ApiServiceListPanel(@NotNull Project project) {
         this.project = project;
-        this.requestNodeMap = new HashMap<>();
-        tree = new SimpleTree();
+        this.apiServiceNodes = new HashMap<>();
+        this.tree = new SimpleTree();
 
         this.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         this.setBorder(new CustomLineBorder(JBUI.insetsTop(1)));
@@ -91,19 +92,22 @@ public class ApiServiceListPanel extends JBScrollPane {
     }
 
     /**
-     * 渲染Restful请求列表
+     * 重新渲染列表所有的apiService
      */
-    public void renderRequestTree(@NotNull Map<String, List<ApiService>> allRequests) {
-        AtomicInteger apiCount = new AtomicInteger();
-        TreeNode<String> root = new TreeNode<>(Bundle.getString("service.tree.NotFoundAny"));
+    public void renderAll(@NotNull Map<String, List<ApiService>> apiServices) {
+        this.apiServices = apiServices;
 
-        requestNodeMap.clear();
-        allRequests.forEach((itemName, requests) -> {
+        TreeNode<String> root = new TreeNode<>(Bundle.getString("service.tree.NotFoundAny"));
+        AtomicInteger apiCount = new AtomicInteger();
+
+        apiServiceNodes.clear();
+        apiServices.forEach((itemName, requests) -> {
             if (requests == null || requests.isEmpty()) {
                 return;
             }
             ModuleNode moduleNode = getModuleNode(itemName, requests);
-            apiCount.set(moduleNode.getApiCount());
+            apiCount.addAndGet(moduleNode.getApiCount());
+            apiServiceNodes.putAll(moduleNode.getServiceNodes());
             root.add(moduleNode);
         });
 
@@ -111,13 +115,50 @@ public class ApiServiceListPanel extends JBScrollPane {
 
         Boolean expand = Settings.SystemOptionForm.EXPAND_OF_SERVICE_TREE.getData();
         if (expand != null && expand) {
-            expandAll(new TreePath(tree.getModel().getRoot()), true);
+            expandAll(true);
         }
 
         // api数量小于1才显示根节点
         tree.firePropertyChange(JTree.ROOT_VISIBLE_PROPERTY, tree.isRootVisible(), apiCount.get() < 1);
         // api数量小于1则不可点击
         tree.setEnabled(apiCount.get() > 0);
+    }
+
+    @NotNull
+    public List<ApiService> getModuleServices(@NotNull String moduleName) {
+        if (this.apiServices == null || this.apiServices.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return this.apiServices.getOrDefault(moduleName, Collections.emptyList());
+    }
+
+    /**
+     * 重新渲染apiService
+     */
+    public void render(@NotNull String moduleName, @NotNull List<ApiService> apiServices) {
+        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        @SuppressWarnings("unchecked")
+        TreeNode<String> root = (TreeNode<String>) model.getRoot();
+        Enumeration<javax.swing.tree.TreeNode> children = root.children();
+        ModuleNode moduleNode = null;
+        while (children.hasMoreElements()) {
+            javax.swing.tree.TreeNode treeNode = children.nextElement();
+            if (treeNode instanceof ModuleNode) {
+                ModuleNode node = (ModuleNode) treeNode;
+                ModuleTree moduleTree = node.getData();
+                if (moduleTree.getModuleName().equals(moduleName)) {
+                    moduleNode = node;
+                    break;
+                }
+            }
+        }
+        if (moduleNode == null) {
+            return;
+        }
+        root.remove(moduleNode);
+        // 更新module节点
+        moduleNode = getModuleNode(moduleName, apiServices);
+        root.add(moduleNode);
     }
 
     @NotNull
@@ -145,6 +186,11 @@ public class ApiServiceListPanel extends JBScrollPane {
         }
 
         return new ModuleNode(new ModuleTree(itemName, requests.size()), collect);
+    }
+
+    @NotNull
+    public ServiceNode getServiceNode(@NotNull PsiMethod method) {
+        return apiServiceNodes.get(method);
     }
 
     public void setChooseRequestCallback(@Nullable ChooseRequestCallback chooseRequestCallback) {
@@ -196,6 +242,10 @@ public class ApiServiceListPanel extends JBScrollPane {
         return null;
     }
 
+    public void expandAll(boolean expand) {
+        expandAll(new TreePath(tree.getModel().getRoot()), expand);
+    }
+
     /**
      * 展开tree视图
      *
@@ -203,7 +253,7 @@ public class ApiServiceListPanel extends JBScrollPane {
      * @param expand 是否展开
      */
     private void expandAll(@NotNull TreePath parent, boolean expand) {
-        javax.swing.tree.TreeNode node = (javax.swing.tree.TreeNode) parent.getLastPathComponent();
+        TreeNode<?> node = (TreeNode<?>) parent.getLastPathComponent();
         if (node.getChildCount() >= 0) {
             for (Enumeration<?> e = node.children(); e.hasMoreElements(); ) {
                 javax.swing.tree.TreeNode n = (javax.swing.tree.TreeNode) e.nextElement();
@@ -216,6 +266,9 @@ public class ApiServiceListPanel extends JBScrollPane {
         if (expand) {
             tree.expandPath(parent);
         } else {
+            if (node.isRoot()) {
+                return;
+            }
             tree.collapsePath(parent);
         }
     }
@@ -224,18 +277,18 @@ public class ApiServiceListPanel extends JBScrollPane {
      * 转到tree
      */
     public void navigationToTree(@NotNull PsiMethod psiMethod) {
-        if (requestNodeMap == null || requestNodeMap.isEmpty()) {
+        if (apiServiceNodes == null || apiServiceNodes.isEmpty()) {
             project.getMessageBus()
                     .syncPublisher(RefreshServiceTreeTopic.TOPIC)
                     .refresh();
             return;
         }
-        RequestNode requestNode = requestNodeMap.get(psiMethod);
-        if (requestNode == null) {
+        ServiceNode serviceNode = apiServiceNodes.get(psiMethod);
+        if (serviceNode == null) {
             return;
         }
         //有节点到根路径数组
-        javax.swing.tree.TreeNode[] nodes = ((DefaultTreeModel) tree.getModel()).getPathToRoot(requestNode);
+        javax.swing.tree.TreeNode[] nodes = ((DefaultTreeModel) tree.getModel()).getPathToRoot(serviceNode);
         TreePath path = new TreePath(nodes);
         tree.setSelectionPath(path);
     }
@@ -252,7 +305,7 @@ public class ApiServiceListPanel extends JBScrollPane {
 
     public static class TreeNode<T> extends DefaultMutableTreeNode {
 
-        private final T data;
+        private final transient T data;
 
         public TreeNode(@NotNull T data) {
             super(data);
@@ -265,50 +318,38 @@ public class ApiServiceListPanel extends JBScrollPane {
         }
     }
 
-    public static class ControllerNode extends TreeNode<ClassTree> {
-
-        public ControllerNode(@NotNull ClassTree data) {
-            super(data);
-        }
-    }
-
-    public static class RequestNode extends TreeNode<ApiService> {
-
-        public RequestNode(@NotNull ApiService data) {
-            super(data);
-        }
-    }
-
-    public class ModuleNode extends TreeNode<ModuleTree> {
+    public static class ModuleNode extends TreeNode<ModuleTree> {
 
         private final AtomicInteger count;
+        private final transient Map<PsiMethod, ServiceNode> serviceNodes;
 
         public ModuleNode(@NotNull ModuleTree data, Map<PsiClass, List<ApiService>> collect) {
             super(data);
-            count = new AtomicInteger();
+            this.count = new AtomicInteger();
+            this.serviceNodes = new HashMap<>();
 
             if (collect == null || collect.isEmpty()) {
                 return;
             }
             collect.forEach((psiClass, items) -> {
                 if (psiClass != null) {
-                    ControllerNode node = new ControllerNode(new ClassTree(psiClass));
+                    ClassNode node = new ClassNode(new ClassTree(psiClass));
                     items.forEach(request -> {
-                        RequestNode requestNode = new RequestNode(request);
+                        ServiceNode serviceNode = new ServiceNode(request);
                         if (request.getPsiElement() instanceof PsiMethod) {
-                            requestNodeMap.put((PsiMethod) request.getPsiElement(), requestNode);
+                            serviceNodes.put((PsiMethod) request.getPsiElement(), serviceNode);
                         }
-                        node.add(requestNode);
+                        node.add(serviceNode);
                         count.incrementAndGet();
                     });
                     this.add(node);
                 } else {
                     items.forEach(request -> {
-                        RequestNode requestNode = new RequestNode(request);
+                        ServiceNode serviceNode = new ServiceNode(request);
                         if (request.getPsiElement() instanceof PsiMethod) {
-                            requestNodeMap.put((PsiMethod) request.getPsiElement(), requestNode);
+                            serviceNodes.put((PsiMethod) request.getPsiElement(), serviceNode);
                         }
-                        this.add(requestNode);
+                        this.add(serviceNode);
                         count.incrementAndGet();
                     });
                 }
@@ -318,6 +359,25 @@ public class ApiServiceListPanel extends JBScrollPane {
         @NotNull
         public final Integer getApiCount() {
             return count.get();
+        }
+
+        @NotNull
+        public final Map<PsiMethod, ServiceNode> getServiceNodes() {
+            return serviceNodes;
+        }
+    }
+
+    public static class ClassNode extends TreeNode<ClassTree> {
+
+        public ClassNode(@NotNull ClassTree data) {
+            super(data);
+        }
+    }
+
+    public static class ServiceNode extends TreeNode<ApiService> {
+
+        public ServiceNode(@NotNull ApiService data) {
+            super(data);
         }
     }
 
@@ -415,7 +475,7 @@ public class ApiServiceListPanel extends JBScrollPane {
 
                 ModuleTree moduleTree = getTreeNodeModuleTree(tree);
                 if (moduleTree != null) {
-                    showPopupMenu(e, getModulePopupMenu());
+                    showPopupMenu(e, getModulePopupMenu(e));
                 }
             }
         }
@@ -436,22 +496,31 @@ public class ApiServiceListPanel extends JBScrollPane {
             return classPopupMenu;
         }
 
-        private JPopupMenu getModulePopupMenu() {
+        private JPopupMenu getModulePopupMenu(MouseEvent event) {
             ModuleTree moduleTree = getTreeNodeModuleTree(tree);
             if (moduleTree == null) {
                 return null;
             }
             if (modulePopupMenu == null) {
+                final String moduleName = moduleTree.getModuleName();
+
                 JBMenuItem moduleSetting = new JBMenuItem(Bundle.getString("action.OpenModuleSetting.text"), AllIcons.General.Settings);
                 moduleSetting.addActionListener(action -> {
-                    Module module = ModuleManager.getInstance(project).findModuleByName(moduleTree.getModuleName());
+                    Module module = ModuleManager.getInstance(project).findModuleByName(moduleName);
                     if (module == null) {
                         return;
                     }
                     // 打开当前项目模块设置
                     ProjectSettingsService.getInstance(project).openModuleSettings(module);
                 });
-                modulePopupMenu = generatePopupMenu(moduleSetting);
+
+                JBMenuItem moduleConfig = new JBMenuItem(Bundle.getString("action.OpenModuleProperties.text"));
+                moduleConfig.addActionListener(action -> {
+                    ModuleConfigPopup menu = new ModuleConfigPopup(project, moduleName);
+                    showPopupMenu(event, menu);
+                });
+
+                modulePopupMenu = generatePopupMenu(moduleSetting, moduleConfig);
             }
             return modulePopupMenu;
         }
@@ -476,13 +545,7 @@ public class ApiServiceListPanel extends JBScrollPane {
                     if (apiService == null) {
                         return;
                     }
-                    GlobalSearchScope scope = apiService.getPsiElement().getResolveScope();
-                    String contextPath = RestUtil.scanContextPath(project, scope);
-                    SystemUtil.Clipboard.copy(SystemUtil.buildUrl(
-                            RestUtil.scanListenerProtocol(project, scope),
-                            RestUtil.scanListenerPort(project, scope),
-                            contextPath,
-                            apiService.getPath()));
+                    SystemUtil.Clipboard.copy(apiService.getRequestUrl());
                     Notify.getInstance(project).info(Bundle.getString("action.CopyFullPath.success"));
                 });
 
@@ -493,12 +556,7 @@ public class ApiServiceListPanel extends JBScrollPane {
                     if (apiService == null) {
                         return;
                     }
-                    GlobalSearchScope scope = apiService.getPsiElement().getResolveScope();
-                    String contextPath = RestUtil.scanContextPath(project, scope);
-                    SystemUtil.Clipboard.copy(
-                            (contextPath == null || "null".equals(contextPath) ? "" : contextPath) +
-                                    apiService.getPath()
-                    );
+                    SystemUtil.Clipboard.copy(apiService.getPath());
                     Notify.getInstance(project).info(Bundle.getString("action.CopyApi.success"));
                 });
                 requestItemPopupMenu = generatePopupMenu(

@@ -18,10 +18,14 @@ package com.github.restful.tool.utils;
  */
 public final class Constants {
 
+    private Constants() {
+        // private
+    }
+
     /**
      * 应用
      */
-    public final static class Application {
+    public static final class Application {
 
         /**
          * 插件ID
@@ -32,5 +36,14 @@ public final class Constants {
          * 插件名
          */
         public static final String NAME = Bundle.getString("plugin.name");
+
+        /**
+         * 持久化缓存key前缀
+         */
+        public static final String CONFIG_STORE_PREFIX = "ResultTool:";
+
+        private Application() {
+            // private
+        }
     }
 }
