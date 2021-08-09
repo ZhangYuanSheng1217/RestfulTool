@@ -116,6 +116,7 @@
 
             <action class="com.github.restful.tool.actions.ModuleFilterAction"/>
 
+            <action class="com.github.restful.tool.actions.ModuleUrlActon"/>
         </group>
     </actions>
 
