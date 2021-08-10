@@ -11,12 +11,22 @@
 package com.github.restful.tool.utils;
 
 import com.github.restful.tool.utils.scanner.JaxrsHelper;
+import com.github.restful.tool.utils.scanner.RoseHelper;
 import com.github.restful.tool.utils.scanner.SpringHelper;
-import com.intellij.lang.jvm.annotation.*;
+import com.intellij.lang.jvm.annotation.JvmAnnotationArrayValue;
+import com.intellij.lang.jvm.annotation.JvmAnnotationAttributeValue;
+import com.intellij.lang.jvm.annotation.JvmAnnotationClassValue;
+import com.intellij.lang.jvm.annotation.JvmAnnotationConstantValue;
+import com.intellij.lang.jvm.annotation.JvmAnnotationEnumFieldValue;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiExpression;
+import com.intellij.psi.PsiJavaCodeReferenceElement;
+import com.intellij.psi.PsiMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,7 +51,7 @@ public class RestUtil {
         if (psiClass == null) {
             return false;
         }
-        return SpringHelper.hasRestful(psiClass) || JaxrsHelper.hasRestful(psiClass);
+        return SpringHelper.hasRestful(psiClass) || JaxrsHelper.hasRestful(psiClass) || RoseHelper.hasRestful(psiClass);
     }
 
     /**
@@ -192,7 +202,8 @@ public class RestUtil {
             ModuleManager manager = ModuleManager.getInstance(project);
             for (Module module : manager.getModules()) {
                 if (SpringHelper.isRestfulProject(project, module)
-                        || JaxrsHelper.isRestfulProject(project, module)) {
+                        || JaxrsHelper.isRestfulProject(project, module)
+                        || RoseHelper.isRestfulProject(project, module)) {
                     return true;
                 }
             }

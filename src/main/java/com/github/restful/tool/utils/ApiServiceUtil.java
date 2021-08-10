@@ -12,6 +12,7 @@ package com.github.restful.tool.utils;
 
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.utils.scanner.JaxrsHelper;
+import com.github.restful.tool.utils.scanner.RoseHelper;
 import com.github.restful.tool.utils.scanner.SpringHelper;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -102,6 +103,12 @@ public class ApiServiceUtil {
             apiServices.addAll(springApiServiceByModule);
         }
 
+        // Rose
+        List<ApiService> roseApiServiceByModule = RoseHelper.getRoseRequestByModule(project, module);
+        if (!roseApiServiceByModule.isEmpty()) {
+            apiServices.addAll(roseApiServiceByModule);
+        }
+
         return fill(project, module.getName(), apiServices);
     }
 
@@ -114,7 +121,9 @@ public class ApiServiceUtil {
         if (apiServices.isEmpty()) {
             apiServices = JaxrsHelper.getCurrClassRequests(psiClass);
         }
-
+        if (apiServices.isEmpty()) {
+            apiServices = RoseHelper.getRequests(psiClass);
+        }
         Project project = psiClass.getProject();
         Module module = findModuleForFile(psiClass.getContainingFile());
         if (module == null) {
