@@ -1,20 +1,11 @@
-/*
-  Copyright (C), 2018-2020, ZhangYuanSheng
-  FileName: JaxrsHelper
-  Author:   ZhangYuanSheng
-  Date:     2020/5/28 21:01
-  Description: 
-  History:
-  <author>          <time>          <version>          <desc>
-  作者姓名            修改时间           版本号              描述
- */
-package com.github.restful.tool.utils.scanner;
+package com.github.restful.tool.utils.scanner.framework;
 
 import com.github.restful.tool.annotation.JaxrsHttpMethodAnnotation;
-import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.beans.ApiService;
+import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
+import com.github.restful.tool.utils.scanner.IJavaFramework;
 import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope;
@@ -35,10 +26,22 @@ import java.util.*;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class JaxrsHelper {
+public class Jaxrs implements IJavaFramework {
 
-    @NotNull
-    public static List<ApiService> getJaxrsRequestByModule(@NotNull Project project, @NotNull Module module) {
+    private static final String JAXRS_SERVER = "jaxrs:server";
+
+    private static final Jaxrs INSTANCE = new Jaxrs();
+
+    private Jaxrs() {
+        // private
+    }
+
+    public static Jaxrs getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public Collection<ApiService> getService(@NotNull Project project, @NotNull Module module) {
         List<ApiService> apiServices = new ArrayList<>();
         for (PsiClassBean psiClassBean : scanHasPathFiles(project, module, null)) {
             apiServices.addAll(getRequestsFromClass(psiClassBean.rootPath, psiClassBean.psiClass));
@@ -46,38 +49,8 @@ public class JaxrsHelper {
         return apiServices;
     }
 
-    public static boolean hasRestful(@NotNull PsiClass psiClass) {
-        if (psiClass.hasAnnotation(Control.Path.getQualifiedName())) {
-            return true;
-        }
-        GlobalSearchScope scope = psiClass.getResolveScope();
-        ModuleWithDependenciesScope dependenciesScope = scope instanceof ModuleWithDependenciesScope ?
-                ((ModuleWithDependenciesScope) scope) : null;
-        if (dependenciesScope != null) {
-            Project project = psiClass.getProject();
-            Module module = dependenciesScope.getModule();
-            XmlFile xmlFile = findConfigXmlFile(project, module);
-            if (xmlFile == null || xmlFile.getRootTag() == null) {
-                return false;
-            }
-            for (XmlTag xmlTag : xmlFile.getRootTag().getSubTags()) {
-                if (!"jaxrs:server".equals(xmlTag.getName())) {
-                    continue;
-                }
-                String serviceClass = xmlTag.getAttributeValue("serviceClass");
-                if (serviceClass == null) {
-                    continue;
-                }
-                if (serviceClass.equals(psiClass.getQualifiedName())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    @NotNull
-    public static List<ApiService> getCurrClassRequests(@NotNull PsiClass psiClass) {
+    @Override
+    public Collection<ApiService> getService(@NotNull PsiClass psiClass) {
         Project project = psiClass.getProject();
         GlobalSearchScope scope = psiClass.getResolveScope();
         ModuleWithDependenciesScope dependenciesScope = scope instanceof ModuleWithDependenciesScope ?
@@ -92,8 +65,41 @@ public class JaxrsHelper {
         return Collections.emptyList();
     }
 
+    @Override
+    public boolean hasRestful(@Nullable PsiClass psiClass) {
+        if (psiClass == null) {
+            return false;
+        }
+        if (psiClass.hasAnnotation(Control.Path.getQualifiedName())) {
+            return true;
+        }
+        GlobalSearchScope scope = psiClass.getResolveScope();
+        ModuleWithDependenciesScope dependenciesScope = scope instanceof ModuleWithDependenciesScope ?
+                ((ModuleWithDependenciesScope) scope) : null;
+        if (dependenciesScope != null) {
+            Project project = psiClass.getProject();
+            Module module = dependenciesScope.getModule();
+            XmlFile xmlFile = findConfigXmlFile(project, module);
+            if (xmlFile == null || xmlFile.getRootTag() == null) {
+                return false;
+            }
+            XmlTag[] tags = xmlFile.getRootTag().getSubTags();
+            String qualifiedName = psiClass.getQualifiedName();
+            if (qualifiedName == null) {
+                return false;
+            }
+            for (XmlTag xmlTag : tags) {
+                if (JAXRS_SERVER.equals(xmlTag.getName())
+                        && qualifiedName.equals(xmlTag.getAttributeValue("serviceClass"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @NotNull
-    private static List<PsiClassBean> scanHasPathFiles(@NotNull Project project, @NotNull Module module, @Nullable PsiClass find) {
+    private List<PsiClassBean> scanHasPathFiles(@NotNull Project project, @NotNull Module module, @Nullable PsiClass find) {
         Set<PsiClassBean> classSets = new HashSet<>();
 
         XmlFile applicationContext = findConfigXmlFile(project, module);
@@ -132,7 +138,7 @@ public class JaxrsHelper {
     }
 
     @NotNull
-    private static List<ApiService> getRequestsFromClass(@Nullable String rootPath, @NotNull PsiClass psiClass) {
+    private List<ApiService> getRequestsFromClass(@Nullable String rootPath, @NotNull PsiClass psiClass) {
         String rootPathOfClass = getRootPathOfClass(psiClass);
         if (rootPathOfClass != null) {
             rootPath = rootPathOfClass;
@@ -184,7 +190,7 @@ public class JaxrsHelper {
     }
 
     @Nullable
-    private static String getRootPathOfClass(@NotNull PsiClass psiClass) {
+    private String getRootPathOfClass(@NotNull PsiClass psiClass) {
         PsiAnnotation psiAnnotation = RestUtil.getClassAnnotation(
                 psiClass,
                 Control.Path.getQualifiedName()
@@ -203,7 +209,7 @@ public class JaxrsHelper {
      * @return xmlFile
      */
     @Nullable
-    private static XmlFile findConfigXmlFile(@NotNull Project project, @NotNull Module module) {
+    private XmlFile findConfigXmlFile(@NotNull Project project, @NotNull Module module) {
         PsiFile[] files = FilenameIndex.getFilesByName(project, "applicationContext.xml", module.getModuleScope());
         for (PsiFile file : files) {
             if (file instanceof XmlFile) {
@@ -214,8 +220,8 @@ public class JaxrsHelper {
     }
 
     @NotNull
-    private static List<PsiClassBean> parseApplicationContextXml(@NotNull Project project, @NotNull Module module,
-                                                                 @NotNull XmlFile applicationContext) {
+    private List<PsiClassBean> parseApplicationContextXml(@NotNull Project project, @NotNull Module module,
+                                                          @NotNull XmlFile applicationContext) {
         List<PsiClassBean> list = new ArrayList<>();
         if (applicationContext.getRootTag() == null) {
             return Collections.emptyList();
@@ -238,14 +244,8 @@ public class JaxrsHelper {
         return list;
     }
 
-    /**
-     * 是否是Restful的项目
-     *
-     * @param project project
-     * @param module  module
-     * @return bool
-     */
-    public static boolean isRestfulProject(@NotNull final Project project, @NotNull final Module module) {
+    @Override
+    public boolean isRestfulProject(@NotNull final Project project, @NotNull final Module module) {
         try {
             JavaAnnotationIndex instance = JavaAnnotationIndex.getInstance();
             Collection<PsiAnnotation> collection = instance.get(Control.Path.getName(), project, module.getModuleScope());
@@ -308,11 +308,28 @@ public class JaxrsHelper {
 
     private static class PsiClassBean {
 
-        public String rootPath;
-        public PsiClass psiClass;
+        private String rootPath;
+
+        private PsiClass psiClass;
 
         public PsiClassBean(String rootPath, PsiClass psiClass) {
             this.rootPath = rootPath;
+            this.psiClass = psiClass;
+        }
+
+        public String getRootPath() {
+            return rootPath;
+        }
+
+        public void setRootPath(String rootPath) {
+            this.rootPath = rootPath;
+        }
+
+        public PsiClass getPsiClass() {
+            return psiClass;
+        }
+
+        public void setPsiClass(PsiClass psiClass) {
             this.psiClass = psiClass;
         }
 

@@ -1,6 +1,6 @@
 package com.github.restful.tool.actions.copy;
 
-import com.github.restful.tool.utils.Bundle;
+import com.github.restful.tool.utils.data.Bundle;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import org.jetbrains.annotations.NotNull;

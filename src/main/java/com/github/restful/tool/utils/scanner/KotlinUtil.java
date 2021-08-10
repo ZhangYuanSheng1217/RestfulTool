@@ -13,8 +13,8 @@ package com.github.restful.tool.utils.scanner;
 import com.github.restful.tool.annotation.SpringHttpMethodAnnotation;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.utils.Storage;
 import com.github.restful.tool.beans.ServiceStub;
+import com.github.restful.tool.utils.data.Storage;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
@@ -32,12 +32,12 @@ import java.util.*;
  */
 public class KotlinUtil {
 
-    public final Project PROJECT;
-    public final Module MODULE;
+    public final Project project;
+    public final Module module;
 
     private KotlinUtil(@NotNull Module module) {
-        PROJECT = module.getProject();
-        this.MODULE = module;
+        project = module.getProject();
+        this.module = module;
     }
 
     public static KotlinUtil create(@NotNull Module module) {
@@ -45,10 +45,10 @@ public class KotlinUtil {
     }
 
     @NotNull
-    public static List<ApiService> getKotlinRequests(@NotNull Project project, @NotNull Module module) {
+    public static List<ApiService> getKotlinRequests(@NotNull Project project, @NotNull Module module, @NotNull Qualified[] qualified) {
         List<ApiService> ktApiServices = new ArrayList<>();
         KotlinUtil kotlinUtil = create(module);
-        List<KtClass> kotlinClasses = kotlinUtil.getRestfulKotlinClasses(Storage.scanServiceWithLibrary(project));
+        List<KtClass> kotlinClasses = kotlinUtil.getRestfulKotlinClasses(qualified, Storage.scanServiceWithLibrary(project));
         for (KtClass kotlinClass : kotlinClasses) {
             ServiceStub clsStub = null;
             for (KtAnnotationEntry annotationEntry : kotlinClass.getAnnotationEntries()) {
@@ -208,11 +208,11 @@ public class KotlinUtil {
         return serviceStub;
     }
 
-    public List<KtClass> getRestfulKotlinClasses(boolean withLib) {
+    public List<KtClass> getRestfulKotlinClasses(@NotNull Qualified[] qualified, boolean withLib) {
         List<KtClass> classes = new ArrayList<>();
 
-        for (SpringHelper.Control control : SpringHelper.Control.values()) {
-            String name = withLib ? control.getQualifiedName() : control.getName();
+        for (Qualified item : qualified) {
+            String name = withLib ? item.getQualifiedName() : item.getName();
             List<KtClass> list = findKtClassByAnnotationName(name, withLib);
             if (list.isEmpty()) {
                 continue;
@@ -256,21 +256,38 @@ public class KotlinUtil {
         String temp = name.contains(".") ? name.substring(name.lastIndexOf(".") + 1) : name;
         Set<KtAnnotationEntry> collection = new HashSet<>(KotlinAnnotationsIndex.getInstance().get(
                 temp,
-                PROJECT,
-                MODULE.getModuleScope()
+                project,
+                module.getModuleScope()
         ));
         if (withLib) {
             collection.addAll(KotlinAnnotationsIndex.getInstance().get(
                     name,
-                    PROJECT,
-                    MODULE.getModuleWithLibrariesScope())
+                    project,
+                    module.getModuleWithLibrariesScope())
             );
             collection.addAll(KotlinAnnotationsIndex.getInstance().get(
                     temp,
-                    PROJECT,
-                    MODULE.getModuleWithLibrariesScope())
+                    project,
+                    module.getModuleWithLibrariesScope())
             );
         }
         return collection;
+    }
+
+    public interface Qualified {
+
+        /**
+         * 不包含jar包时扫描的名称
+         *
+         * @return name
+         */
+        String getName();
+
+        /**
+         * 包含jar包时扫描的名称
+         *
+         * @return qualifiedName
+         */
+        String getQualifiedName();
     }
 }

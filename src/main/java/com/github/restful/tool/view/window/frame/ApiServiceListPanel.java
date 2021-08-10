@@ -16,7 +16,7 @@ import com.github.restful.tool.beans.ModuleTree;
 import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.service.Notify;
 import com.github.restful.tool.service.topic.RefreshServiceTreeTopic;
-import com.github.restful.tool.utils.Bundle;
+import com.github.restful.tool.utils.data.Bundle;
 import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.view.components.popups.ModuleConfigPopup;
 import com.github.restful.tool.view.window.ApiTreeCellRenderer;

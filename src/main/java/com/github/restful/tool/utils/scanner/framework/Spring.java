@@ -1,20 +1,12 @@
-/*
-  Copyright (C), 2018-2020, ZhangYuanSheng
-  FileName: SpringHelper
-  Author:   ZhangYuanSheng
-  Date:     2020/5/28 21:08
-  Description: 
-  History:
-  <author>          <time>          <version>          <desc>
-  作者姓名            修改时间           版本号              描述
- */
-package com.github.restful.tool.utils.scanner;
+package com.github.restful.tool.utils.scanner.framework;
 
 import com.github.restful.tool.annotation.SpringHttpMethodAnnotation;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
+import com.github.restful.tool.utils.scanner.IJavaFramework;
+import com.github.restful.tool.utils.scanner.KotlinUtil;
 import com.intellij.lang.jvm.annotation.*;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
@@ -30,10 +22,52 @@ import java.util.*;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class SpringHelper {
+public class Spring implements IJavaFramework {
 
-    @NotNull
-    public static List<ApiService> getSpringRequestByModule(@NotNull Project project, @NotNull Module module) {
+    private static final Spring INSTANCE = new Spring();
+
+    private Spring() {
+        // private
+    }
+
+    public static Spring getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public boolean isRestfulProject(@NotNull final Project project, @NotNull final Module module) {
+        try {
+            JavaAnnotationIndex instance = JavaAnnotationIndex.getInstance();
+            Set<PsiAnnotation> annotations = new HashSet<>(instance.get(Control.Controller.getName(), project, module.getModuleScope()));
+            if (!annotations.isEmpty()) {
+                for (PsiAnnotation annotation : annotations) {
+                    if (annotation == null) {
+                        continue;
+                    }
+                    if (Control.Controller.getQualifiedName().equals(annotation.getQualifiedName())) {
+                        return true;
+                    }
+                }
+            }
+            annotations.clear();
+            annotations.addAll(instance.get(Control.RestController.getName(), project, module.getModuleScope()));
+            if (!annotations.isEmpty()) {
+                for (PsiAnnotation annotation : annotations) {
+                    if (annotation == null) {
+                        continue;
+                    }
+                    if (Control.RestController.getQualifiedName().equals(annotation.getQualifiedName())) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
+        return false;
+    }
+
+    @Override
+    public Collection<ApiService> getService(@NotNull Project project, @NotNull Module module) {
         List<ApiService> moduleList = new ArrayList<>(0);
 
         List<PsiClass> controllers = getAllControllerClass(project, module);
@@ -42,16 +76,16 @@ public class SpringHelper {
         }
 
         for (PsiClass controllerClass : controllers) {
-            moduleList.addAll(getRequests(controllerClass));
+            moduleList.addAll(getService(controllerClass));
         }
 
-        moduleList.addAll(KotlinUtil.getKotlinRequests(project, module));
+        moduleList.addAll(KotlinUtil.getKotlinRequests(project, module, Control.values()));
 
         return moduleList;
     }
 
-    @NotNull
-    public static List<ApiService> getRequests(@NotNull PsiClass psiClass) {
+    @Override
+    public Collection<ApiService> getService(@NotNull PsiClass psiClass) {
         List<ApiService> apiServices = new ArrayList<>();
         List<ApiService> parentApiServices = new ArrayList<>();
         List<ApiService> childrenApiServices = new ArrayList<>();
@@ -80,8 +114,13 @@ public class SpringHelper {
         return apiServices;
     }
 
-    public static boolean hasRestful(@NotNull PsiClass psiClass) {
-        return psiClass.hasAnnotation(Control.Controller.getQualifiedName()) || psiClass.hasAnnotation(Control.RestController.getQualifiedName());
+    @Override
+    public boolean hasRestful(@Nullable PsiClass psiClass) {
+        if (psiClass == null) {
+            return false;
+        }
+        return psiClass.hasAnnotation(Control.Controller.getQualifiedName())
+                || psiClass.hasAnnotation(Control.RestController.getQualifiedName());
     }
 
     /**
@@ -92,7 +131,7 @@ public class SpringHelper {
      * @return Collection<PsiClass>
      */
     @NotNull
-    private static List<PsiClass> getAllControllerClass(@NotNull Project project, @NotNull Module module) {
+    private List<PsiClass> getAllControllerClass(@NotNull Project project, @NotNull Module module) {
         List<PsiClass> allControllerClass = new ArrayList<>();
 
         GlobalSearchScope moduleScope = SystemUtil.getModuleScope(module);
@@ -125,10 +164,10 @@ public class SpringHelper {
      *
      * @param annotation annotation
      * @return list
-     * @see SpringHelper#getRequests(PsiMethod)
+     * @see Spring#getRequests(PsiMethod)
      */
     @NotNull
-    private static List<ApiService> getRequests(@NotNull PsiAnnotation annotation, @Nullable PsiMethod psiMethod) {
+    private List<ApiService> getRequests(@NotNull PsiAnnotation annotation, @Nullable PsiMethod psiMethod) {
         SpringHttpMethodAnnotation spring = SpringHttpMethodAnnotation.getByQualifiedName(
                 annotation.getQualifiedName()
         );
@@ -189,7 +228,7 @@ public class SpringHelper {
                 List<Object> list = (List) value;
                 list.forEach(item -> paths.add(SystemUtil.formatPath(item)));
             } else {
-                throw new RuntimeException(String.format(
+                throw new IllegalArgumentException(String.format(
                         "Scan api: %s\n" +
                                 "Class: %s",
                         value,
@@ -198,14 +237,12 @@ public class SpringHelper {
             }
             hasImplicitPath = false;
         }
-        if (hasImplicitPath) {
-            if (psiMethod != null) {
-                List<String> loopPaths;
-                if (refAnnotation != null && !(loopPaths = refAnnotation.getPaths()).isEmpty()) {
-                    paths.addAll(loopPaths);
-                } else {
-                    paths.add("/");
-                }
+        if (hasImplicitPath && psiMethod != null) {
+            List<String> loopPaths;
+            if (refAnnotation != null && !(loopPaths = refAnnotation.getPaths()).isEmpty()) {
+                paths.addAll(loopPaths);
+            } else {
+                paths.add("/");
             }
         }
 
@@ -233,7 +270,7 @@ public class SpringHelper {
      * @return list
      */
     @NotNull
-    private static List<ApiService> getRequests(@NotNull PsiMethod method) {
+    private List<ApiService> getRequests(@NotNull PsiMethod method) {
         List<ApiService> apiServices = new ArrayList<>();
         for (PsiAnnotation annotation : RestUtil.getMethodAnnotations(method)) {
             apiServices.addAll(getRequests(annotation, method));
@@ -243,7 +280,7 @@ public class SpringHelper {
     }
 
     @Nullable
-    private static CustomRefAnnotation findCustomAnnotation(@NotNull PsiAnnotation psiAnnotation) {
+    private CustomRefAnnotation findCustomAnnotation(@NotNull PsiAnnotation psiAnnotation) {
         PsiAnnotation qualifiedAnnotation = RestUtil.getQualifiedAnnotation(
                 psiAnnotation,
                 SpringHttpMethodAnnotation.REQUEST_MAPPING.getQualifiedName()
@@ -286,7 +323,7 @@ public class SpringHelper {
     }
 
     @Nullable
-    private static Object getAnnotationValue(@NotNull JvmAnnotationAttribute attribute, @NotNull String... attrNames) {
+    private Object getAnnotationValue(@NotNull JvmAnnotationAttribute attribute, @NotNull String... attrNames) {
         String attributeName = attribute.getAttributeName();
         if (attrNames.length < 1) {
             return null;
@@ -305,7 +342,7 @@ public class SpringHelper {
         return getAttributeValue(attributeValue);
     }
 
-    private static Object getAttributeValue(@Nullable JvmAnnotationAttributeValue attributeValue) {
+    private Object getAttributeValue(@Nullable JvmAnnotationAttributeValue attributeValue) {
         if (attributeValue == null) {
             return null;
         }
@@ -324,45 +361,7 @@ public class SpringHelper {
         return null;
     }
 
-    /**
-     * 是否是Restful的项目
-     *
-     * @param project project
-     * @param module  module
-     * @return bool
-     */
-    public static boolean isRestfulProject(@NotNull final Project project, @NotNull final Module module) {
-        try {
-            JavaAnnotationIndex instance = JavaAnnotationIndex.getInstance();
-            Set<PsiAnnotation> annotations = new HashSet<>(instance.get(Control.Controller.getName(), project, module.getModuleScope()));
-            if (!annotations.isEmpty()) {
-                for (PsiAnnotation annotation : annotations) {
-                    if (annotation == null) {
-                        continue;
-                    }
-                    if (Control.Controller.getQualifiedName().equals(annotation.getQualifiedName())) {
-                        return true;
-                    }
-                }
-            }
-            annotations.clear();
-            annotations.addAll(instance.get(Control.RestController.getName(), project, module.getModuleScope()));
-            if (!annotations.isEmpty()) {
-                for (PsiAnnotation annotation : annotations) {
-                    if (annotation == null) {
-                        continue;
-                    }
-                    if (Control.RestController.getQualifiedName().equals(annotation.getQualifiedName())) {
-                        return true;
-                    }
-                }
-            }
-        } catch (Exception ignore) {
-        }
-        return false;
-    }
-
-    enum Control {
+    enum Control implements KotlinUtil.Qualified {
 
         /**
          * <p>@Controller</p>
@@ -382,10 +381,12 @@ public class SpringHelper {
             this.qualifiedName = qualifiedName;
         }
 
+        @Override
         public String getName() {
             return name;
         }
 
+        @Override
         public String getQualifiedName() {
             return qualifiedName;
         }

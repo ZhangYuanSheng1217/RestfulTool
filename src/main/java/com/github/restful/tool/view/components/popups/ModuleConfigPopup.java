@@ -1,7 +1,7 @@
 package com.github.restful.tool.view.components.popups;
 
-import com.github.restful.tool.utils.ModuleConfigs;
-import com.github.restful.tool.utils.Storage;
+import com.github.restful.tool.utils.data.ModuleConfigs;
+import com.github.restful.tool.utils.data.Storage;
 import com.github.restful.tool.view.window.WindowFactory;
 import com.github.restful.tool.view.window.frame.Window;
 import com.intellij.openapi.project.Project;
@@ -17,7 +17,7 @@ import java.util.Map;
 
 import static cn.hutool.core.util.StrUtil.isEmpty;
 import static cn.hutool.core.util.StrUtil.trimToEmpty;
-import static com.github.restful.tool.utils.ModuleConfigs.Config;
+import static com.github.restful.tool.utils.data.ModuleConfigs.Config;
 
 /**
  * 模块请求配置弹窗

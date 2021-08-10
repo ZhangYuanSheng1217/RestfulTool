@@ -3,9 +3,8 @@ package com.github.restful.tool.actions.copy;
 import com.github.restful.tool.actions.EditorOption;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.service.Notify;
-import com.github.restful.tool.utils.ApiServiceUtil;
-import com.github.restful.tool.utils.Bundle;
-import com.github.restful.tool.utils.RestUtil;
+import com.github.restful.tool.utils.ApiServices;
+import com.github.restful.tool.utils.data.Bundle;
 import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.view.window.WindowFactory;
 import com.github.restful.tool.view.window.frame.Window;
@@ -43,7 +42,7 @@ public interface CopyOption extends EditorOption {
         if (psiMethod == null) {
             return false;
         }
-        return RestUtil.hasRestful(psiMethod.getContainingClass());
+        return ApiServices.hasRestful(psiMethod.getContainingClass());
     }
 
     /**
@@ -80,7 +79,7 @@ public interface CopyOption extends EditorOption {
     @NotNull
     default List<String> getRequestPath(@NotNull PsiMethod psiMethod) {
         Set<String> paths = new HashSet<>();
-        for (ApiService apiService : ApiServiceUtil.getCurrClassRequests(psiMethod.getContainingClass())) {
+        for (ApiService apiService : ApiServices.getCurrClassRequests(psiMethod.getContainingClass())) {
             if (!(apiService.getPsiElement() instanceof PsiMethod)) {
                 continue;
             }

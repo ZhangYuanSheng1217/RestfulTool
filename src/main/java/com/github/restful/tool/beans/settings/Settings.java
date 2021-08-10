@@ -12,7 +12,7 @@ package com.github.restful.tool.beans.settings;
 
 import com.github.restful.tool.beans.ContentType;
 import com.github.restful.tool.beans.Key;
-import com.github.restful.tool.utils.Bundle;
+import com.github.restful.tool.utils.data.Bundle;
 import com.github.restful.tool.utils.xml.converter.BaseConverter;
 import com.github.restful.tool.utils.xml.converter.IntegerConverter;
 import com.github.restful.tool.view.icon.IconType;

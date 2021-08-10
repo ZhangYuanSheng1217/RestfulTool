@@ -8,7 +8,7 @@
   <author>          <time>          <version>          <desc>
   作者姓名            修改时间           版本号              描述
  */
-package com.github.restful.tool.utils;
+package com.github.restful.tool.utils.data;
 
 import com.intellij.AbstractBundle;
 import com.intellij.ide.plugins.PluginManager;

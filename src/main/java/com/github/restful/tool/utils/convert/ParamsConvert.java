@@ -1,8 +1,8 @@
 package com.github.restful.tool.utils.convert;
 
 import com.github.restful.tool.annotation.SpringHttpMethodAnnotation;
-import com.github.restful.tool.utils.JsonUtil;
 import com.github.restful.tool.utils.PsiUtil;
+import com.github.restful.tool.utils.data.JsonUtil;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.tree.java.PsiLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
@@ -10,136 +10,41 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.name.Name;
 import org.jetbrains.kotlin.psi.*;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class ParamsConvert implements Serializable {
+public class ParamsConvert {
 
-    private PsiMethod psiMethod;
-    private KtNamedFunction function;
-
-    /**
-     * 是否是基本数据类型
-     */
-    private boolean isBasicDataTypes;
-
-    /**
-     * 是基本数据类型时的参数名
-     */
-    private String basicDataParamName;
-
-    public ParamsConvert() {
-    }
-
-    public ParamsConvert(@NotNull NavigatablePsiElement psiElement) throws PsiUnSupportException {
-        this.setPsiElement(psiElement);
-    }
-
-    public void setPsiElement(@NotNull NavigatablePsiElement psiElement) throws PsiUnSupportException {
-        if (psiElement instanceof PsiMethod) {
-            this.psiMethod = (PsiMethod) psiElement;
-            this.function = null;
-            return;
-        } else if (psiElement instanceof KtNamedFunction) {
-            this.function = (KtNamedFunction) psiElement;
-            this.psiMethod = null;
-            return;
-        }
-        throw new PsiUnSupportException(psiElement);
+    private ParamsConvert() {
     }
 
     /**
-     * 标注了@RequestBody注解则使用application/json格式
-     */
-    public boolean isRaw() {
-        if (psiMethod != null) {
-            return isRawOfPsiMethod();
-        } else if (function != null) {
-            return isRawOfFunction();
-        }
-
-        return false;
-    }
-
-    private boolean isRawOfPsiMethod() {
-        for (PsiParameter parameter : psiMethod.getParameterList().getParameters()) {
-            for (PsiAnnotation annotation : parameter.getAnnotations()) {
-                // 参数标注的注解
-                String qualifiedName = annotation.getQualifiedName();
-                if (SpringHttpMethodAnnotation.REQUEST_BODY.getQualifiedName().equals(qualifiedName)) {
-                    PsiType parameterType = parameter.getType();
-                    this.isBasicDataTypes = PsiUtil.isBasicDataTypes(parameterType.getCanonicalText());
-                    if (this.isBasicDataTypes) {
-                        this.basicDataParamName = parameter.getName();
-                    }
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean isRawOfFunction() {
-        for (KtParameter ktParameter : function.getValueParameters()) {
-            if (isRawOfFunction(ktParameter)) return true;
-        }
-        return false;
-    }
-
-    private boolean isRawOfFunction(KtParameter ktParameter) {
-        for (KtAnnotationEntry annotationEntry : ktParameter.getAnnotationEntries()) {
-            Name shortName = annotationEntry.getShortName();
-            if (shortName == null) {
-                continue;
-            }
-            if (SpringHttpMethodAnnotation.REQUEST_BODY.getShortName().equals(shortName.asString())) {
-                KtTypeReference typeReference = ktParameter.getTypeReference();
-                if (typeReference != null) {
-                    String type = typeReference.getChildren()[0].getChildren()[0].getText();
-                    this.isBasicDataTypes = PsiUtil.isKotlinBasicDataTypes(type);
-                    if (this.isBasicDataTypes) {
-                        this.basicDataParamName = ktParameter.getName();
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean isBasicDataTypes() {
-        return isBasicDataTypes;
-    }
-
-    public String getBasicDataParamName() {
-        return basicDataParamName;
-    }
-
-    /**
-     * parse method param
+     * get method params to convert show String
      *
-     * @return map
+     * @return str
      */
-    @NotNull
-    private Map<String, Object> parseParams() {
-        if (psiMethod != null) {
-            return parsePsiMethodParams();
+    public static String formatString(NavigatablePsiElement psiElement) {
+        Map<String, Object> methodParams = null;
+        if (psiElement instanceof PsiMethod) {
+            methodParams = parsePsiMethodParams(((PsiMethod) psiElement));
+        } else if (psiElement instanceof KtNamedFunction) {
+            methodParams = parseFunctionParams(((KtNamedFunction) psiElement));
         }
-        if (function != null) {
-            return parseFunctionParams();
+        if (methodParams == null) {
+            return "";
         }
-        return Collections.emptyMap();
+        return JsonUtil.formatJson(methodParams);
     }
 
     @NotNull
-    private Map<String, Object> parsePsiMethodParams() {
+    private static Map<String, Object> parsePsiMethodParams(PsiMethod psiMethod) {
         PsiParameterList parameterList = psiMethod.getParameterList();
         if (parameterList.isEmpty()) {
             return Collections.emptyMap();
@@ -152,7 +57,7 @@ public class ParamsConvert implements Serializable {
         return map;
     }
 
-    private void parsePsiMethodParams(Map<String, Object> map, PsiParameter parameter) {
+    private static void parsePsiMethodParams(Map<String, Object> map, PsiParameter parameter) {
         final String nameKey = "name";
         final String valueKey = "value";
 
@@ -165,11 +70,11 @@ public class ParamsConvert implements Serializable {
         }
 
         // 如果存在 @RequestParam 注解则获取其注解
-        PsiAnnotation annotation = parameter.getAnnotation(SpringHttpMethodAnnotation.REQUEST_PARAM.getQualifiedName());
-        if (annotation != null) {
-            PsiAnnotationMemberValue attrValue = annotation.findDeclaredAttributeValue(valueKey);
+        PsiAnnotation requestParam = parameter.getAnnotation(SpringHttpMethodAnnotation.REQUEST_PARAM.getQualifiedName());
+        if (requestParam != null) {
+            PsiAnnotationMemberValue attrValue = requestParam.findDeclaredAttributeValue(valueKey);
             if (attrValue == null) {
-                attrValue = annotation.findDeclaredAttributeValue(nameKey);
+                attrValue = requestParam.findDeclaredAttributeValue(nameKey);
             }
             if (attrValue instanceof PsiLiteralExpressionImpl) {
                 Object value = ((PsiLiteralExpressionImpl) attrValue).getValue();
@@ -180,11 +85,11 @@ public class ParamsConvert implements Serializable {
         }
 
         // 如果存在 @PathVariable 注解则获取其注解
-        annotation = parameter.getAnnotation(SpringHttpMethodAnnotation.PATH_VARIABLE.getQualifiedName());
-        if (annotation != null) {
-            PsiAnnotationMemberValue attrValue = annotation.findDeclaredAttributeValue(valueKey);
+        PsiAnnotation pathVariable = parameter.getAnnotation(SpringHttpMethodAnnotation.PATH_VARIABLE.getQualifiedName());
+        if (pathVariable != null) {
+            PsiAnnotationMemberValue attrValue = pathVariable.findDeclaredAttributeValue(valueKey);
             if (attrValue == null) {
-                attrValue = annotation.findDeclaredAttributeValue(nameKey);
+                attrValue = pathVariable.findDeclaredAttributeValue(nameKey);
             }
             if (attrValue instanceof PsiLiteralExpressionImpl) {
                 Object value = ((PsiLiteralExpressionImpl) attrValue).getValue();
@@ -208,14 +113,14 @@ public class ParamsConvert implements Serializable {
     }
 
     @NotNull
-    private Map<String, Object> parseFunctionParams() {
+    private static Map<String, Object> parseFunctionParams(KtNamedFunction function) {
         List<KtParameter> parameters = function.getValueParameters();
         if (parameters.isEmpty()) {
             return Collections.emptyMap();
         }
         Map<String, Object> params = new LinkedHashMap<>();
-        base:
-        for (KtParameter ktParameter : parameters) {
+
+        parameters.forEach(ktParameter -> {
             String paramName = ktParameter.getName();
             List<KtAnnotationEntry> entries = ktParameter.getAnnotationEntries();
             for (KtAnnotationEntry entry : entries) {
@@ -224,12 +129,12 @@ public class ParamsConvert implements Serializable {
                     continue;
                 }
                 if (SpringHttpMethodAnnotation.REQUEST_HEADER.getShortName().equals(shortName.asString())) {
-                    continue base;
+                    return;
                 }
                 if (SpringHttpMethodAnnotation.REQUEST_PARAM.getShortName().equals(shortName.asString())) {
                     List<? extends ValueArgument> valueArguments = entry.getValueArguments();
                     if (valueArguments.isEmpty()) {
-                        continue base;
+                        return;
                     } else {
                         paramName = parseFunctionParams(paramName, valueArguments);
                     }
@@ -237,27 +142,31 @@ public class ParamsConvert implements Serializable {
             }
 
             params.put(paramName, getDefaultValue(ktParameter.getDefaultValue(), false));
-        }
+        });
+
         return params;
     }
 
-    private String parseFunctionParams(String paramName, List<? extends ValueArgument> valueArguments) {
-        for (ValueArgument valueArgument : valueArguments) {
-            KtValueArgument ktValueArgument;
-            if (!(valueArgument instanceof KtValueArgument)) {
-                continue;
-            }
-            ktValueArgument = (KtValueArgument) valueArgument;
-            if (ktValueArgument.isNamed()) {
-                KtValueArgumentName argumentName = ktValueArgument.getArgumentName();
-                if (argumentName == null) {
-                    continue;
-                }
-                String name = argumentName.getAsName().asString();
-                if (!("name".equals(name) || "value".equals(name))) {
-                    continue;
-                }
-            }
+    private static String parseFunctionParams(String paramName, List<? extends ValueArgument> valueArguments) {
+        if (valueArguments == null || valueArguments.isEmpty()) {
+            return paramName;
+        }
+        List<KtValueArgument> collect = valueArguments.stream()
+                .filter(KtValueArgument.class::isInstance)
+                .map(KtValueArgument.class::cast)
+                .filter(ktValueArgument -> {
+                    if (ktValueArgument.isNamed()) {
+                        KtValueArgumentName argumentName = ktValueArgument.getArgumentName();
+                        if (argumentName == null) {
+                            return false;
+                        }
+                        String name = argumentName.getAsName().asString();
+                        return "name".equals(name) || "value".equals(name);
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+        for (KtValueArgument ktValueArgument : collect) {
             KtExpression expression = ktValueArgument.getArgumentExpression();
             if (expression instanceof KtStringTemplateExpression) {
                 KtStringTemplateExpression stringTemplateExpression = (KtStringTemplateExpression) expression;
@@ -269,7 +178,7 @@ public class ParamsConvert implements Serializable {
     }
 
     @Nullable
-    private Object getDefaultValue(@Nullable KtExpression expression, @SuppressWarnings("SameParameterValue") boolean keep) {
+    private static Object getDefaultValue(@Nullable KtExpression expression, @SuppressWarnings("SameParameterValue") boolean keep) {
         if (expression == null) {
             return keep ? null : "";
         }
@@ -286,36 +195,5 @@ public class ParamsConvert implements Serializable {
             return callExpression.getName();
         }
         return keep ? null : "";
-    }
-
-    /**
-     * get method params to convert show String
-     *
-     * @return str
-     */
-    public String formatString() {
-        Map<String, Object> methodParams = parseParams();
-        return JsonUtil.formatJson(methodParams);
-    }
-
-    /**
-     * get method params to convert show String
-     *
-     * @param form form
-     * @return str
-     */
-    public String formatString(@NotNull Map<String, Object> form) {
-        return JsonUtil.formatJson(form);
-    }
-
-    /**
-     * parse show String to convert Key-Value
-     *
-     * @param paramsStr show string
-     * @return map
-     */
-    public Map<String, Object> formatMap(@NotNull String paramsStr) {
-        //noinspection unchecked
-        return (Map<String, Object>) JsonUtil.formatMap(paramsStr);
     }
 }

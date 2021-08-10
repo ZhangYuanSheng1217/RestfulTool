@@ -5,7 +5,7 @@ import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.service.topic.RefreshServiceTreeTopic;
 import com.github.restful.tool.service.topic.RestDetailTopic;
 import com.github.restful.tool.service.topic.ServiceTreeTopic;
-import com.github.restful.tool.utils.ApiServiceUtil;
+import com.github.restful.tool.utils.ApiServices;
 import com.github.restful.tool.utils.Async;
 import com.github.restful.tool.view.window.WindowFactory;
 import com.intellij.openapi.actionSystem.*;
@@ -146,7 +146,7 @@ public class Window extends JPanel {
         if (MODULES_CHOOSE_MAP.isEmpty()) {
             allRequest = Collections.emptyMap();
         } else {
-            allRequest = ApiServiceUtil.getApis(project, getFilterModules(true), false);
+            allRequest = ApiServices.getApis(project, getFilterModules(true), false);
         }
 
         allRequest.forEach((moduleName, requests) -> requests.removeIf(next -> !METHOD_CHOOSE_MAP.get(next.getMethod())));

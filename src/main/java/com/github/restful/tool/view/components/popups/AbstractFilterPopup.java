@@ -1,6 +1,6 @@
 package com.github.restful.tool.view.components.popups;
 
-import com.github.restful.tool.utils.Bundle;
+import com.github.restful.tool.utils.data.Bundle;
 import com.intellij.ui.components.JBCheckBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

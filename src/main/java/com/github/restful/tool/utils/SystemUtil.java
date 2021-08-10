@@ -10,6 +10,7 @@
  */
 package com.github.restful.tool.utils;
 
+import com.github.restful.tool.utils.data.Storage;
 import com.intellij.openapi.module.Module;
 import com.intellij.psi.search.GlobalSearchScope;
 import org.jetbrains.annotations.Contract;

@@ -11,7 +11,7 @@
 package com.github.restful.tool.view.search;
 
 import com.github.restful.tool.beans.ApiService;
-import com.github.restful.tool.utils.ApiServiceUtil;
+import com.github.restful.tool.utils.ApiServices;
 import com.intellij.navigation.ChooseByNameContributor;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.module.Module;
@@ -42,10 +42,10 @@ public class GotoRequestContributor implements ChooseByNameContributor {
 
         List<ApiService> apiServices;
         if (includeNonProjectItems && module != null) {
-            apiServices = ApiServiceUtil.getModuleApis(project, module);
+            apiServices = ApiServices.getModuleApis(project, module);
         } else {
             apiServices = new ArrayList<>();
-            ApiServiceUtil.getApis(project).forEach((s, rs) -> apiServices.addAll(rs));
+            ApiServices.getApis(project).forEach((s, rs) -> apiServices.addAll(rs));
         }
         names = new ArrayList<>(apiServices.size());
 

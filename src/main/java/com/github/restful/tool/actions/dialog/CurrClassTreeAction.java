@@ -11,9 +11,9 @@
 package com.github.restful.tool.actions.dialog;
 
 import com.github.restful.tool.beans.ApiService;
-import com.github.restful.tool.utils.ApiServiceUtil;
+import com.github.restful.tool.utils.ApiServices;
 import com.github.restful.tool.utils.Async;
-import com.github.restful.tool.utils.Bundle;
+import com.github.restful.tool.utils.data.Bundle;
 import com.github.restful.tool.view.window.frame.ApiServiceListPanel;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -54,7 +54,7 @@ public class CurrClassTreeAction extends AnAction implements TreeOption {
         if (apiServiceListPanel == null) {
             this.apiServiceListPanel = new ApiServiceListPanel(project);
         }
-        List<ApiService> apiServices = ApiServiceUtil.getCurrClassRequests(psiClass);
+        List<ApiService> apiServices = ApiServices.getCurrClassRequests(psiClass);
         apiServiceListPanel.renderAll(format(psiClass, apiServices));
         apiServiceListPanel.expandAll(true);
         ComponentPopupBuilder popupBuilder = JBPopupFactory.getInstance().createComponentPopupBuilder(apiServiceListPanel, null);

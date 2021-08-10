@@ -10,17 +10,16 @@
  */
 package com.github.restful.tool.view.window.frame;
 
-import cn.hutool.http.*;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.service.Notify;
 import com.github.restful.tool.service.topic.RestDetailTopic;
 import com.github.restful.tool.utils.Async;
-import com.github.restful.tool.utils.Bundle;
+import com.github.restful.tool.utils.HttpUtils;
 import com.github.restful.tool.utils.convert.ParamsConvert;
+import com.github.restful.tool.utils.data.Bundle;
+import com.github.restful.tool.utils.data.JsonUtil;
 import com.github.restful.tool.view.components.editor.CustomEditor;
-import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
@@ -33,10 +32,10 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.tabs.JBTabs;
 import com.intellij.ui.tabs.TabInfo;
+import com.intellij.ui.tabs.TabsListener;
 import com.intellij.ui.tabs.impl.JBTabsImpl;
 import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.util.ui.JBUI;
-import org.intellij.lang.annotations.Language;
 import org.jdesktop.swingx.JXButton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,32 +44,27 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 
 /**
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class HttpTestPanel extends JPanel implements Serializable {
+public class HttpTestPanel extends JPanel {
 
     public static final FileType DEFAULT_FILE_TYPE = CustomEditor.TEXT_FILE_TYPE;
-    private static final int REQUEST_TIMEOUT = 1000 * 10;
+
     private static final String IDENTITY_HEAD = "HEAD";
     private static final String IDENTITY_BODY = "BODY";
-    private final transient Project project;
-    private final ThreadPoolExecutor poolExecutor;
-    private final ParamsConvert convert;
 
-    private final Map<ApiService, String> bodyCache;
-    private final Map<ApiService, FileType> bodyTextTypeCache;
+    private final transient Project project;
+
+    private final transient Map<ApiService, String> bodyCache;
+    private final transient Map<ApiService, FileType> bodyTextTypeCache;
+
     /**
      * 下拉框 - 选择选择请求方法
      */
@@ -83,44 +77,40 @@ public class HttpTestPanel extends JPanel implements Serializable {
      * 按钮 - 发送请求
      */
     private JButton sendRequest;
+
     /**
      * 选项卡面板 - 请求信息
      */
-    private JBTabs tabs;
+    private transient JBTabs tabs;
+
     /**
      * 文本域 - 请求头
      */
-    private TabInfo headTab;
+    private transient TabInfo headTab;
     private CustomEditor requestHead;
+
     /**
      * 文本域 - 请求体
      */
-    private TabInfo bodyTab;
+    private transient TabInfo bodyTab;
     private CustomEditor requestBody;
     private ComboBox<FileType> requestBodyFileType;
+
     /**
      * 标签 - 显示返回结果
      */
-    private TabInfo responseTab;
+    private transient TabInfo responseTab;
     private CustomEditor responseView;
 
-    private DetailHandle callback;
+    private transient DetailHandle callback;
+
     /**
      * 选中的Request
      */
-    private ApiService chooseApiService;
+    private transient ApiService chooseApiService;
 
     public HttpTestPanel(@NotNull Project project) {
         this.project = project;
-        this.poolExecutor = new ThreadPoolExecutor(
-                1,
-                1,
-                1000,
-                TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(8),
-                new ThreadPoolExecutor.DiscardOldestPolicy()
-        );
-        this.convert = new ParamsConvert();
 
         this.bodyCache = new HashMap<>();
         this.bodyTextTypeCache = new HashMap<>();
@@ -181,7 +171,20 @@ public class HttpTestPanel extends JPanel implements Serializable {
         requestBodyFileType.setFocusable(false);
         bodyFileTypePanel.add(requestBodyFileType, BorderLayout.CENTER);
         bodyFileTypePanel.setBorder(JBUI.Borders.emptyLeft(3));
-        // add(bodyFileTypePanel, BorderLayout.SOUTH)
+        add(bodyFileTypePanel, BorderLayout.SOUTH);
+        tabs.addListener(new TabsListener() {
+            @Override
+            public void beforeSelectionChanged(TabInfo oldSelection, TabInfo newSelection) {
+                bodyFileTypePanel.setVisible(bodyTab.getText().equalsIgnoreCase(newSelection.getText()));
+            }
+        });
+
+        TabInfo selectedTab = tabs.getSelectedInfo();
+        if (selectedTab == null) {
+            bodyFileTypePanel.setVisible(false);
+        } else {
+            bodyFileTypePanel.setVisible(bodyTab.getText().equalsIgnoreCase(selectedTab.getText()));
+        }
     }
 
     /**
@@ -265,56 +268,32 @@ public class HttpTestPanel extends JPanel implements Serializable {
         if ("".equals(head.trim())) {
             head = "{}";
         }
-        Map<String, Object> headers = convert.formatMap(head);
+        //noinspection unchecked
+        Map<String, Object> headers = (Map<String, Object>) JsonUtil.formatMap(head);
         if (headers == null) {
             // 选择Header页面
             tabs.select(headTab, true);
             Notify.getInstance(project).error("Incorrect request header format!");
             return;
         }
-        HttpRequest httpRequest = generateHttpRequest(method, url, headers, requestBody.getText());
 
-        Runnable command = () -> {
-            Application application = ApplicationManager.getApplication();
-            application.invokeLater(() -> responseView.setPlaceholder(Bundle.getString("http.tool.running.http")));
-            try {
-                HttpResponse execute = httpRequest.execute();
-                // 最大重定向的次数
-                final int redirectMaxCount = Settings.HttpToolOptionForm.REDIRECT_MAX_COUNT.getData();
-                int redirectCount = 0;
-                while (redirectCount++ < redirectMaxCount && execute.getStatus() == HttpStatus.HTTP_MOVED_TEMP) {
-                    String redirect = execute.header(Header.LOCATION);
-                    httpRequest.setUrl(redirect);
-                    execute = httpRequest.execute();
-                }
-
-                @Language("RegExp") final String regJsonContext = "application/json";
-                @Language("RegExp") final String regHtml = "text/html";
-                @Language("RegExp") final String regXml = "text/xml";
-
-                FileType fileType = CustomEditor.TEXT_FILE_TYPE;
-                // Content-Type
-                final String contentType = execute.header(Header.CONTENT_TYPE);
-                if (contentType != null) {
-                    if (compileRegExp(regJsonContext).matcher(contentType).find()) {
-                        fileType = CustomEditor.JSON_FILE_TYPE;
-                    } else if (compileRegExp(regHtml).matcher(contentType).find()) {
-                        fileType = CustomEditor.HTML_FILE_TYPE;
-                    } else if (compileRegExp(regXml).matcher(contentType).find()) {
-                        fileType = CustomEditor.XML_FILE_TYPE;
-                    }
-                }
-                final FileType finalFileType = fileType;
-                final String responseBody = execute.body();
-                application.invokeLater(() -> responseView.setText(responseBody, finalFileType));
-            } catch (Exception e) {
-                final String response = String.format("%s", e);
-                application.invokeLater(() -> responseView.setText(response, CustomEditor.TEXT_FILE_TYPE));
-            }
-            application.invokeLater(() -> responseView.setPlaceholder(null));
-        };
         responseView.setText(null);
-        poolExecutor.execute(command);
+        HttpUtils.run(
+                HttpUtils.newHttpRequest(method, url, headers, requestBody.getText()),
+                response -> {
+                    final FileType fileType = HttpUtils.parseFileType(response);
+                    final String responseBody = response.body();
+                    ApplicationManager.getApplication().invokeLater(
+                            () -> responseView.setText(responseBody, fileType)
+                    );
+                },
+                e -> {
+                    final String response = String.format("%s", e);
+                    ApplicationManager.getApplication().invokeLater(
+                            () -> responseView.setText(response, CustomEditor.TEXT_FILE_TYPE)
+                    );
+                }
+        );
     }
 
     @Nullable
@@ -333,7 +312,6 @@ public class HttpTestPanel extends JPanel implements Serializable {
     public void chooseRequest(@Nullable ApiService apiService) {
         this.chooseApiService = apiService;
         this.requestBodyFileType.setSelectedItem(getCacheType());
-        this.requestHead.setFileType(apiService == null ? DEFAULT_FILE_TYPE : CustomEditor.JSON_FILE_TYPE);
 
         Callable<ParseRequest> parseRequestCallable = () -> ParseRequest.wrap(apiService, this);
         Consumer<ParseRequest> parseRequestConsumer = parseRequest -> {
@@ -355,45 +333,6 @@ public class HttpTestPanel extends JPanel implements Serializable {
 
     public void reset() {
         this.chooseRequest(null);
-    }
-
-    private HttpRequest generateHttpRequest(@NotNull HttpMethod method,
-                                            @NotNull String url,
-                                            Map<String, Object> head,
-                                            String body) {
-        HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url).timeout(REQUEST_TIMEOUT);
-
-        // 添加请求头
-        if (head != null && !head.isEmpty()) {
-            head.forEach((headerName, value) -> request.header(headerName, (String) value));
-        }
-        if (body == null || "".equals(body.trim())) {
-            return request;
-        }
-
-        Map<String, Object> formData = convert.formatMap(body);
-        if (formData != null && !convert.isRaw()) {
-            formData.forEach(request::form);
-        } else {
-            String bodyData = formData != null ? convert.formatString(formData) : body;
-            if (formData != null && convert.isBasicDataTypes()) {
-                bodyData = (String) formData.get(convert.getBasicDataParamName());
-            }
-            request.body(bodyData, "application/json");
-        }
-
-        // 替换url上的变量
-        if (formData != null) {
-            for (Map.Entry<String, Object> entry : formData.entrySet()) {
-                Object value = entry.getValue();
-                if (value == null) {
-                    continue;
-                }
-                url = url.replace("{" + entry.getKey() + "}", String.valueOf(value));
-            }
-            request.setUrl(url);
-        }
-        return request;
     }
 
     @NotNull
@@ -445,11 +384,6 @@ public class HttpTestPanel extends JPanel implements Serializable {
         bodyTextTypeCache.put(chooseApiService, fileType);
     }
 
-    @NotNull
-    private Pattern compileRegExp(@NotNull final String reg) {
-        return Pattern.compile(reg, Pattern.CASE_INSENSITIVE);
-    }
-
     public interface DetailHandle {
 
         /**
@@ -460,10 +394,10 @@ public class HttpTestPanel extends JPanel implements Serializable {
 
     protected static class ParseRequest {
 
-        private HttpMethod method;
-        private String url;
-        private String head;
-        private String body;
+        private final HttpMethod method;
+        private final String url;
+        private final String head;
+        private final String body;
 
         private ParseRequest(HttpMethod method, String url, String head, String body) {
             this.method = method;
@@ -490,8 +424,7 @@ public class HttpTestPanel extends JPanel implements Serializable {
                     if (detail.bodyCache.containsKey(apiService)) {
                         reqBody = detail.getCache(IDENTITY_BODY, apiService);
                     } else {
-                        detail.convert.setPsiElement(apiService.getPsiElement());
-                        reqBody = detail.convert.formatString();
+                        reqBody = ParamsConvert.formatString(apiService.getPsiElement());
                         detail.setCache(IDENTITY_BODY, apiService, reqBody);
                     }
                 }
@@ -512,32 +445,16 @@ public class HttpTestPanel extends JPanel implements Serializable {
             return method;
         }
 
-        public void setMethod(HttpMethod method) {
-            this.method = method;
-        }
-
         public String getUrl() {
             return url;
-        }
-
-        public void setUrl(String url) {
-            this.url = url;
         }
 
         public String getHead() {
             return head;
         }
 
-        public void setHead(String head) {
-            this.head = head;
-        }
-
         public String getBody() {
             return body;
-        }
-
-        public void setBody(String body) {
-            this.body = body;
         }
     }
 }

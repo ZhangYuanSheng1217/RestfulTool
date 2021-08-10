@@ -10,7 +10,7 @@
  */
 package com.github.restful.tool.configuration;
 
-import com.github.restful.tool.utils.Bundle;
+import com.github.restful.tool.utils.data.Bundle;
 import com.github.restful.tool.view.window.options.RestfulSettingWindow;
 import com.intellij.openapi.options.Configurable;
 import org.jetbrains.annotations.Nullable;

@@ -1,40 +1,60 @@
-package com.github.restful.tool.utils.scanner;
+package com.github.restful.tool.utils.scanner.framework;
 
 import com.github.restful.tool.annotation.RoseHttpMethodAnnotation;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.utils.RestUtil;
 import com.github.restful.tool.utils.SystemUtil;
-import com.intellij.lang.jvm.annotation.JvmAnnotationArrayValue;
+import com.github.restful.tool.utils.scanner.IJavaFramework;
+import com.github.restful.tool.utils.scanner.KotlinUtil;
 import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
-import com.intellij.lang.jvm.annotation.JvmAnnotationAttributeValue;
-import com.intellij.lang.jvm.annotation.JvmAnnotationConstantValue;
-import com.intellij.lang.jvm.annotation.JvmAnnotationEnumFieldValue;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiModifierList;
+import com.intellij.psi.*;
 import com.intellij.psi.impl.java.stubs.index.JavaAnnotationIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author wangkai
  */
-public class RoseHelper {
+public class Rose implements IJavaFramework {
 
-    @NotNull
-    public static List<ApiService> getRoseRequestByModule(@NotNull Project project, @NotNull Module module) {
+    private static final Rose INSTANCE = new Rose();
+
+    private Rose() {
+        // private
+    }
+
+    public static Rose getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public boolean isRestfulProject(@NotNull final Project project, @NotNull final Module module) {
+        try {
+            JavaAnnotationIndex instance = JavaAnnotationIndex.getInstance();
+            Set<PsiAnnotation> annotations = new HashSet<>(instance.get(Control.Path.getName(), project, module.getModuleScope()));
+            if (!annotations.isEmpty()) {
+                for (PsiAnnotation annotation : annotations) {
+                    if (annotation == null) {
+                        continue;
+                    }
+                    if (Control.Path.getQualifiedName().equals(annotation.getQualifiedName())) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
+        return false;
+    }
+
+    @Override
+    public Collection<ApiService> getService(@NotNull Project project, @NotNull Module module) {
         List<ApiService> moduleList = new ArrayList<>(0);
 
         List<PsiClass> controllers = getAllControllerClass(project, module);
@@ -43,16 +63,16 @@ public class RoseHelper {
         }
 
         for (PsiClass controllerClass : controllers) {
-            moduleList.addAll(getRequests(controllerClass));
+            moduleList.addAll(getService(controllerClass));
         }
 
-        moduleList.addAll(KotlinUtil.getKotlinRequests(project, module));
+        moduleList.addAll(KotlinUtil.getKotlinRequests(project, module, Control.values()));
 
         return moduleList;
     }
 
-    @NotNull
-    public static List<ApiService> getRequests(@NotNull PsiClass psiClass) {
+    @Override
+    public Collection<ApiService> getService(@NotNull PsiClass psiClass) {
         List<ApiService> requests = new ArrayList<>();
         List<ApiService> parentRequests = new ArrayList<>();
         List<ApiService> childrenRequests = new ArrayList<>();
@@ -74,14 +94,17 @@ public class RoseHelper {
             requests.addAll(childrenRequests);
         } else {
             parentRequests.forEach(parentRequest -> childrenRequests.forEach(childrenRequest -> {
-                ApiService ApiService = childrenRequest.copyWithParent(parentRequest);
-                requests.add(ApiService);
+                requests.add(childrenRequest.copyWithParent(parentRequest));
             }));
         }
         return requests;
     }
 
-    public static boolean hasRestful(@NotNull PsiClass psiClass) {
+    @Override
+    public boolean hasRestful(@Nullable PsiClass psiClass) {
+        if (psiClass == null) {
+            return false;
+        }
         return psiClass.hasAnnotation(Control.Path.getQualifiedName());
     }
 
@@ -93,7 +116,7 @@ public class RoseHelper {
      * @return Collection<PsiClass>
      */
     @NotNull
-    private static List<PsiClass> getAllControllerClass(@NotNull Project project, @NotNull Module module) {
+    private List<PsiClass> getAllControllerClass(@NotNull Project project, @NotNull Module module) {
         List<PsiClass> allControllerClass = new ArrayList<>();
 
         GlobalSearchScope moduleScope = SystemUtil.getModuleScope(module);
@@ -121,10 +144,10 @@ public class RoseHelper {
      *
      * @param annotation annotation
      * @return list
-     * @see RoseHelper#getRequests(PsiMethod)
+     * @see Rose#getRequests(PsiMethod)
      */
     @NotNull
-    private static List<ApiService> getRequests(@NotNull PsiAnnotation annotation, @Nullable PsiMethod psiMethod) {
+    private List<ApiService> getRequests(@NotNull PsiAnnotation annotation, @Nullable PsiMethod psiMethod) {
         RoseHttpMethodAnnotation rose = RoseHttpMethodAnnotation.getByQualifiedName(
                 annotation.getQualifiedName()
         );
@@ -178,7 +201,7 @@ public class RoseHelper {
                 List<Object> list = (List) value;
                 list.forEach(item -> paths.add(SystemUtil.formatPath(item)));
             } else {
-                throw new RuntimeException(String.format(
+                throw new IllegalArgumentException(String.format(
                         "Scan api: %s\n" +
                                 "Class: %s",
                         value,
@@ -217,7 +240,7 @@ public class RoseHelper {
      * @return list
      */
     @NotNull
-    private static List<ApiService> getRequests(@NotNull PsiMethod method) {
+    private List<ApiService> getRequests(@NotNull PsiMethod method) {
         List<ApiService> requests = new ArrayList<>();
         for (PsiAnnotation annotation : RestUtil.getMethodAnnotations(method)) {
             requests.addAll(getRequests(annotation, method));
@@ -226,72 +249,7 @@ public class RoseHelper {
         return requests;
     }
 
-    @Nullable
-    private static Object getAnnotationValue(@NotNull JvmAnnotationAttribute attribute, @NotNull String... attrNames) {
-        String attributeName = attribute.getAttributeName();
-        if (attrNames.length < 1) {
-            return null;
-        }
-        boolean matchAttrName = false;
-        for (String attrName : attrNames) {
-            if (attributeName.equals(attrName)) {
-                matchAttrName = true;
-                break;
-            }
-        }
-        if (!matchAttrName) {
-            return null;
-        }
-        JvmAnnotationAttributeValue attributeValue = attribute.getAttributeValue();
-        return getAttributeValue(attributeValue);
-    }
-
-    private static Object getAttributeValue(@Nullable JvmAnnotationAttributeValue attributeValue) {
-        if (attributeValue == null) {
-            return null;
-        }
-        if (attributeValue instanceof JvmAnnotationConstantValue) {
-            Object constantValue = ((JvmAnnotationConstantValue) attributeValue).getConstantValue();
-            return constantValue == null ? null : constantValue.toString();
-        } else if (attributeValue instanceof JvmAnnotationEnumFieldValue) {
-            return ((JvmAnnotationEnumFieldValue) attributeValue).getFieldName();
-        } else if (attributeValue instanceof JvmAnnotationArrayValue) {
-            List<String> values = new ArrayList<>();
-            for (JvmAnnotationAttributeValue value : ((JvmAnnotationArrayValue) attributeValue).getValues()) {
-                values.add((String) getAttributeValue(value));
-            }
-            return values;
-        }
-        return null;
-    }
-
-    /**
-     * 是否是Restful的项目
-     *
-     * @param project project
-     * @param module  module
-     * @return bool
-     */
-    public static boolean isRestfulProject(@NotNull final Project project, @NotNull final Module module) {
-        try {
-            JavaAnnotationIndex instance = JavaAnnotationIndex.getInstance();
-            Set<PsiAnnotation> annotations = new HashSet<>(instance.get(Control.Path.getName(), project, module.getModuleScope()));
-            if (!annotations.isEmpty()) {
-                for (PsiAnnotation annotation : annotations) {
-                    if (annotation == null) {
-                        continue;
-                    }
-                    if (Control.Path.getQualifiedName().equals(annotation.getQualifiedName())) {
-                        return true;
-                    }
-                }
-            }
-        } catch (Exception ignore) {
-        }
-        return false;
-    }
-
-    enum Control {
+    enum Control implements KotlinUtil.Qualified {
 
         /**
          * <p>@Path</p>
@@ -306,10 +264,12 @@ public class RoseHelper {
             this.qualifiedName = qualifiedName;
         }
 
+        @Override
         public String getName() {
             return name;
         }
 
+        @Override
         public String getQualifiedName() {
             return qualifiedName;
         }

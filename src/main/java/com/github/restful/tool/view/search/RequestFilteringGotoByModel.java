@@ -11,7 +11,7 @@
 package com.github.restful.tool.view.search;
 
 import com.github.restful.tool.beans.HttpMethod;
-import com.github.restful.tool.utils.Bundle;
+import com.github.restful.tool.utils.data.Bundle;
 import com.intellij.ide.IdeBundle;
 import com.intellij.ide.util.gotoByName.CustomMatcherModel;
 import com.intellij.ide.util.gotoByName.FilteringGotoByModel;

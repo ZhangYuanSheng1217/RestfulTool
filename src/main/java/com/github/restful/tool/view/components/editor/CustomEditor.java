@@ -1,6 +1,6 @@
 package com.github.restful.tool.view.components.editor;
 
-import com.github.restful.tool.utils.Constants;
+import com.github.restful.tool.utils.data.Constants;
 import com.intellij.ide.highlighter.HtmlFileType;
 import com.intellij.ide.highlighter.XmlFileType;
 import com.intellij.json.JsonFileType;
@@ -68,12 +68,16 @@ public class CustomEditor extends EditorTextField {
         setDocument(document);
         PsiFile psiFile = PsiDocumentManager.getInstance(getProject()).getPsiFile(document);
         if (psiFile != null) {
-            WriteCommandAction.runWriteCommandAction(
-                    getProject(),
-                    () -> {
-                        CodeStyleManager.getInstance(getProject()).reformat(psiFile);
-                    }
-            );
+            try {
+                WriteCommandAction.runWriteCommandAction(
+                        getProject(),
+                        () -> {
+                            CodeStyleManager.getInstance(getProject()).reformat(psiFile);
+                        }
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -87,16 +91,17 @@ public class CustomEditor extends EditorTextField {
         return createDocument(null, getFileType());
     }
 
-    private void initOneLineMode(@NotNull final EditorEx editor) {
+    private void initOneLineModePre(@NotNull final EditorEx editor) {
         editor.setOneLineMode(false);
         editor.setColorsScheme(editor.createBoundColorSchemeDelegate(null));
         editor.getSettings().setCaretRowShown(false);
     }
 
+    @NotNull
     @Override
     protected EditorEx createEditor() {
         EditorEx editor = super.createEditor();
-        initOneLineMode(editor);
+        initOneLineModePre(editor);
         setupTextFieldEditor(editor);
         return editor;
     }
@@ -105,7 +110,7 @@ public class CustomEditor extends EditorTextField {
     public void repaint(long tm, int x, int y, int width, int height) {
         super.repaint(tm, x, y, width, height);
         if (getEditor() instanceof EditorEx) {
-            initOneLineMode(((EditorEx) getEditor()));
+            initOneLineModePre(((EditorEx) getEditor()));
         }
     }
 

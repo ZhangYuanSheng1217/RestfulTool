@@ -10,8 +10,8 @@
  */
 package com.github.restful.tool.actions;
 
-import com.github.restful.tool.utils.Storage;
-import com.github.restful.tool.utils.Bundle;
+import com.github.restful.tool.utils.data.Storage;
+import com.github.restful.tool.utils.data.Bundle;
 import com.github.restful.tool.view.window.WindowFactory;
 import com.github.restful.tool.view.window.frame.Window;
 import com.intellij.icons.AllIcons;

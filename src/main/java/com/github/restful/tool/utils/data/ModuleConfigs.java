@@ -1,6 +1,7 @@
-package com.github.restful.tool.utils;
+package com.github.restful.tool.utils.data;
 
 import com.github.restful.tool.beans.ApiService;
+import com.github.restful.tool.utils.data.Storage;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 

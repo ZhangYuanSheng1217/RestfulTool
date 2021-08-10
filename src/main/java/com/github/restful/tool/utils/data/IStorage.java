@@ -1,4 +1,4 @@
-package com.github.restful.tool.utils;
+package com.github.restful.tool.utils.data;
 
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;

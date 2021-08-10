@@ -1,4 +1,4 @@
-package com.github.restful.tool.utils;
+package com.github.restful.tool.utils.data;
 
 import com.github.restful.tool.beans.settings.Settings;
 import com.intellij.openapi.project.Project;

@@ -11,9 +11,9 @@
 package com.github.restful.tool.utils;
 
 import com.github.restful.tool.beans.ApiService;
-import com.github.restful.tool.utils.scanner.JaxrsHelper;
-import com.github.restful.tool.utils.scanner.RoseHelper;
-import com.github.restful.tool.utils.scanner.SpringHelper;
+import com.github.restful.tool.utils.data.ModuleConfigs;
+import com.github.restful.tool.utils.scanner.IFrameworkHelper;
+import com.github.restful.tool.utils.scanner.IJavaFramework;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
@@ -29,9 +29,9 @@ import static com.intellij.openapi.module.ModuleUtil.findModuleForFile;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class ApiServiceUtil {
+public class ApiServices {
 
-    private ApiServiceUtil() {
+    private ApiServices() {
         // private
     }
 
@@ -80,6 +80,16 @@ public class ApiServiceUtil {
         return map;
     }
 
+    private static List<ApiService> fill(@NotNull Project project, @NotNull String moduleName,
+                                         @NotNull List<ApiService> apiServices) {
+        // 填充模块url前缀
+        Map<String, String> moduleConfig = ModuleConfigs.getModuleConfig(project, moduleName);
+        if (!moduleConfig.isEmpty()) {
+            apiServices.forEach(api -> ModuleConfigs.Config.apply(moduleConfig, api));
+        }
+        return apiServices;
+    }
+
     /**
      * 获取选中module的所有Request
      *
@@ -91,22 +101,12 @@ public class ApiServiceUtil {
     public static List<ApiService> getModuleApis(@NotNull Project project, @NotNull Module module) {
         List<ApiService> apiServices = new ArrayList<>();
 
-        // JAX-RS方式
-        List<ApiService> jaxrsApiServiceByModule = JaxrsHelper.getJaxrsRequestByModule(project, module);
-        if (!jaxrsApiServiceByModule.isEmpty()) {
-            apiServices.addAll(jaxrsApiServiceByModule);
-        }
-
-        // Spring RESTFul方式
-        List<ApiService> springApiServiceByModule = SpringHelper.getSpringRequestByModule(project, module);
-        if (!springApiServiceByModule.isEmpty()) {
-            apiServices.addAll(springApiServiceByModule);
-        }
-
-        // Rose
-        List<ApiService> roseApiServiceByModule = RoseHelper.getRoseRequestByModule(project, module);
-        if (!roseApiServiceByModule.isEmpty()) {
-            apiServices.addAll(roseApiServiceByModule);
+        for (IJavaFramework helper : IFrameworkHelper.getJavaHelpers()) {
+            Collection<ApiService> service = helper.getService(project, module);
+            if (service.isEmpty()) {
+                continue;
+            }
+            apiServices.addAll(service);
         }
 
         return fill(project, module.getName(), apiServices);
@@ -117,13 +117,17 @@ public class ApiServiceUtil {
         if (psiClass == null) {
             return Collections.emptyList();
         }
-        List<ApiService> apiServices = SpringHelper.getRequests(psiClass);
-        if (apiServices.isEmpty()) {
-            apiServices = JaxrsHelper.getCurrClassRequests(psiClass);
+
+        List<ApiService> apiServices = new ArrayList<>();
+
+        for (IJavaFramework helper : IFrameworkHelper.getJavaHelpers()) {
+            Collection<ApiService> service = helper.getService(psiClass);
+            if (service.isEmpty()) {
+                continue;
+            }
+            apiServices.addAll(service);
         }
-        if (apiServices.isEmpty()) {
-            apiServices = RoseHelper.getRequests(psiClass);
-        }
+
         Project project = psiClass.getProject();
         Module module = findModuleForFile(psiClass.getContainingFile());
         if (module == null) {
@@ -132,13 +136,39 @@ public class ApiServiceUtil {
         return fill(project, module.getName(), apiServices);
     }
 
-    private static List<ApiService> fill(@NotNull Project project, @NotNull String moduleName,
-                                         @NotNull List<ApiService> apiServices) {
-        // 填充模块url前缀
-        Map<String, String> moduleConfig = ModuleConfigs.getModuleConfig(project, moduleName);
-        if (!moduleConfig.isEmpty()) {
-            apiServices.forEach(api -> ModuleConfigs.Config.apply(moduleConfig, api));
+    /**
+     * 是否是Restful的项目
+     *
+     * @param project project
+     * @return bool
+     */
+    public static boolean isRestfulProject(@NotNull Project project) {
+        ModuleManager manager = ModuleManager.getInstance(project);
+        for (Module module : manager.getModules()) {
+            for (IJavaFramework helper : IFrameworkHelper.getJavaHelpers()) {
+                if (helper.isRestfulProject(project, module)) {
+                    return true;
+                }
+            }
         }
-        return apiServices;
+        return false;
+    }
+
+    /**
+     * 检测当前 PsiClass 是否含有`RestController` | `Controller` | `Path`
+     *
+     * @param psiClass psiClass
+     * @return bool
+     */
+    public static boolean hasRestful(@Nullable PsiClass psiClass) {
+        if (psiClass == null) {
+            return false;
+        }
+        for (IJavaFramework helper : IFrameworkHelper.getJavaHelpers()) {
+            if (helper.hasRestful(psiClass)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

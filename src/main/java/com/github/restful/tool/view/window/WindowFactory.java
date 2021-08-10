@@ -11,7 +11,7 @@
 package com.github.restful.tool.view.window;
 
 import com.github.restful.tool.service.ToolWindowService;
-import com.github.restful.tool.utils.Constants;
+import com.github.restful.tool.utils.data.Constants;
 import com.github.restful.tool.view.window.frame.Window;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
