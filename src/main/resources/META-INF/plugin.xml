@@ -65,8 +65,7 @@
         <toolWindow id="RestfulTool" anchor="right"
                     factoryClass="com.github.restful.tool.view.window.WindowFactory"
                     order="last"
-                    doNotActivateOnStart="true" icon="AllIcons.Toolwindows.WebToolWindow"
-                    canCloseContents="true"/>
+                    doNotActivateOnStart="true" icon="AllIcons.Toolwindows.WebToolWindow"/>
 
         <projectService serviceInterface="com.github.restful.tool.service.Notify"
                         serviceImplementation="com.github.restful.tool.service.impl.NotificationImpl"/>
@@ -76,6 +75,12 @@
 
         <notificationGroup displayType="BALLOON" id="RestfulTool.Notify"
                            toolWindowId="RestfulTool"/>
+
+        <intentionAction>
+            <!-- className 中不允许换行，否则会保 ClassNotFountException -->
+            <className>com.github.restful.tool.actions.intention.NavigationApiServiceIntentionAction</className>
+            <category>Java/RestfulTool</category>
+        </intentionAction>
     </extensions>
 
     <actions>
@@ -85,42 +90,21 @@
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt SLASH"/>
         </action>
 
-        <action id="RestfulTool.action.OptionForEditor-CurrentClassTree"
-                class="com.github.restful.tool.actions.dialog.CurrClassTreeAction">
-            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
-        </action>
         <group id="RestfulTool.action.OptionForEditors"
-               class="com.github.restful.tool.actions.copy.OptionForEditorGroups">
-            <add-to-group group-id="EditorPopupMenu" anchor="after"
-                          relative-to-action="RestfulTool.action.OptionForEditor-CurrentClassTree"/>
+               class="com.github.restful.tool.actions.editor.OptionForEditorGroups">
+            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="$Paste"/>
+
             <action id="RestfulTool.action.OptionForEditor-NavigationServiceTreeAction"
-                    class="com.github.restful.tool.actions.copy.NavigationServiceTreeAction"/>
+                    class="com.github.restful.tool.actions.editor.NavigationApiServiceAction"/>
+
+            <action id="RestfulTool.action.OptionForEditor-CurrentClassTree"
+                    class="com.github.restful.tool.actions.dialog.CurrClassTreeAction"/>
+
             <action id="RestfulTool.action.OptionForEditor-CopyApiPath"
-                    class="com.github.restful.tool.actions.copy.CopyApiAction"/>
+                    class="com.github.restful.tool.actions.editor.CopyApiAction"/>
+
             <action id="RestfulTool.action.OptionForEditor-CopyFullPath"
-                    class="com.github.restful.tool.actions.copy.CopyFullAction"/>
-        </group>
-
-        <group id="RestfulTool.Toolbar">
-
-            <action class="com.github.restful.tool.actions.RefreshAction"/>
-
-            <reference ref="Tool.GotoRequestService"/>
-
-            <separator text="Separator"/>
-
-            <action class="com.github.restful.tool.actions.filters.HttpMethodFilterAction"/>
-
-            <action class="com.github.restful.tool.actions.filters.ModuleFilterAction"/>
-
-            <separator text="Separator"/>
-
-            <action class="com.github.restful.tool.actions.WithLibraryAction"/>
-
-            <action class="com.github.restful.tool.actions.TreeExpandAction"/>
-
-            <action class="com.github.restful.tool.actions.TreeCollapseAction"/>
-
+                    class="com.github.restful.tool.actions.editor.CopyFullAction"/>
         </group>
     </actions>
 

@@ -1,38 +1,70 @@
 package com.github.restful.tool.view.window.frame;
 
+import com.github.restful.tool.actions.RefreshAction;
+import com.github.restful.tool.actions.WithLibraryAction;
+import com.github.restful.tool.actions.filters.HttpMethodFilterAction;
+import com.github.restful.tool.actions.filters.ModuleFilterAction;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
+import com.github.restful.tool.beans.ModuleTree;
+import com.github.restful.tool.beans.settings.Settings;
+import com.github.restful.tool.service.Notify;
 import com.github.restful.tool.service.topic.RefreshServiceTreeTopic;
 import com.github.restful.tool.service.topic.RestDetailTopic;
 import com.github.restful.tool.service.topic.ServiceTreeTopic;
 import com.github.restful.tool.utils.ApiServices;
 import com.github.restful.tool.utils.Async;
+import com.github.restful.tool.view.components.tree.BaseNode;
 import com.github.restful.tool.view.window.WindowFactory;
-import com.intellij.openapi.actionSystem.*;
+import com.github.restful.tool.view.components.tree.node.ModuleNode;
+import com.github.restful.tool.view.components.tree.node.RootNode;
+import com.github.restful.tool.view.components.tree.node.ServiceNode;
+import com.intellij.ide.CommonActionsManager;
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.ActionPlaces;
+import com.intellij.openapi.actionSystem.ActionToolbar;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.SimpleToolWindowPanel;
+import com.intellij.openapi.util.Disposer;
+import com.intellij.psi.NavigatablePsiElement;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.ui.JBSplitter;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
-import java.awt.*;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * @author ZhangYuanSheng
  */
-public class Window extends JPanel {
+public class Window extends SimpleToolWindowPanel implements Disposable {
+
+    /**
+     * 限制同时运行的任务数量。提交的任务数量没有限制
+     */
+    private static final ExecutorService EXECUTOR_TASK_BOUNDED = new ThreadPoolExecutor(
+            1,
+            1,
+            5L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>()
+    );
 
     private static final Map<HttpMethod, Boolean> METHOD_CHOOSE_MAP;
     private static final Map<Module, Boolean> MODULES_CHOOSE_MAP;
-    private static final float DEFAULT_PROPORTION = 0.5F;
 
     static {
         MODULES_CHOOSE_MAP = new HashMap<>();
@@ -55,27 +87,27 @@ public class Window extends JPanel {
      * Create the panel.
      */
     public Window(@NotNull Project project) {
-        super(new BorderLayout());
+        super(false, false);
         this.project = project;
 
         this.apiServiceListPanel = new ApiServiceListPanel(project);
         this.httpTestPanel = new HttpTestPanel(project);
 
-        AnAction action = ActionManager.getInstance().getAction(WindowFactory.TOOL_WINDOW_ID + ".Toolbar");
-        ActionToolbar actionToolbar = ActionManager.getInstance().createActionToolbar(
-                ActionPlaces.TOOLBAR,
-                action instanceof ActionGroup ? ((ActionGroup) action) : new DefaultActionGroup(),
-                true
+        ActionToolbar toolbar = initToolbar();
+        setToolbar(toolbar.getComponent());
+
+        JBSplitter content = initContent();
+        setContent(content);
+
+        initEvent();
+        DumbService.getInstance(project).smartInvokeLater(
+                () -> Async.runRead(project, () -> {
+                    resetModules();
+                    return this.getRequests();
+                }, this::renderApiServiceTree)
         );
-        actionToolbar.setTargetComponent(this);
-        this.add(actionToolbar.getComponent(), BorderLayout.NORTH);
 
-        JBSplitter splitter = new JBSplitter(true, Window.class.getName(), DEFAULT_PROPORTION);
-        splitter.setFirstComponent(this.apiServiceListPanel);
-        splitter.setSecondComponent(this.httpTestPanel);
-        this.add(splitter, BorderLayout.CENTER);
-
-        DumbService.getInstance(project).smartInvokeLater(this::firstLoad);
+        Disposer.register(project, this);
     }
 
     public static void setMethodFilterStatus(@NotNull HttpMethod method, @NotNull Boolean selected) {
@@ -112,24 +144,79 @@ public class Window extends JPanel {
         return MODULES_CHOOSE_MAP.getOrDefault(module, null);
     }
 
-    /**
-     * 初始化事件
-     */
-    private void initEvent() {
-        this.apiServiceListPanel.setChooseRequestCallback(httpTestPanel::chooseRequest);
-        this.httpTestPanel.setCallback(this::refresh);
+    public void refresh() {
+        Async.runRead(project, this::getRequests, data -> {
+            httpTestPanel.reset();
 
-        project.getMessageBus().connect().subscribe(ServiceTreeTopic.TOPIC, apiServiceListPanel::renderAll);
-        project.getMessageBus().connect().subscribe(RefreshServiceTreeTopic.TOPIC, this::refresh);
+            renderApiServiceTree(data);
+
+            // 清除RestDetail中的Cache缓存
+            RestDetailTopic restDetailTopic = project.getMessageBus().syncPublisher(RestDetailTopic.TOPIC);
+            restDetailTopic.clearCache(null);
+
+            // 装载Module列表
+            resetModules();
+        });
     }
 
-    private void firstLoad() {
-        initEvent();
+    public void refreshOnFilter() {
+        Async.runRead(project, this::getRequests, this::renderApiServiceTree);
+    }
 
-        Async.runRead(project, () -> {
-            resetModules();
-            return this.getRequests();
-        }, apiServiceListPanel::renderAll);
+    public void navigationToView(@NotNull PsiMethod psiMethod) {
+        WindowFactory.showWindow(project, () -> apiServiceListPanel.navigationToTree(psiMethod));
+    }
+
+    @NotNull
+    private ActionToolbar initToolbar() {
+        DefaultActionGroup group = new DefaultActionGroup();
+
+        group.add(new RefreshAction());
+        group.add(ActionManager.getInstance().getAction("Tool.GotoRequestService"));
+
+        group.addSeparator();
+
+        group.add(new HttpMethodFilterAction());
+        group.add(new ModuleFilterAction());
+
+        group.addSeparator();
+
+        group.add(new WithLibraryAction());
+        group.add(CommonActionsManager.getInstance().createExpandAllAction(apiServiceListPanel, this));
+        group.add(CommonActionsManager.getInstance().createCollapseAllAction(apiServiceListPanel, this));
+
+        ActionToolbar toolbar = ActionManager.getInstance().createActionToolbar(
+                ActionPlaces.TOOLBAR,
+                group,
+                true
+        );
+        toolbar.setTargetComponent(this);
+
+        return toolbar;
+    }
+
+    @NotNull
+    private JBSplitter initContent() {
+        JBSplitter contentView = new JBSplitter(true, Window.class.getName(), 0.5F);
+        contentView.setFirstComponent(this.apiServiceListPanel);
+        contentView.setSecondComponent(this.httpTestPanel);
+        return contentView;
+    }
+
+    private void initEvent() {
+        this.apiServiceListPanel.setChooseCallback(apiService -> {
+            try {
+                httpTestPanel.chooseRequest(apiService);
+            } catch (NullPointerException e) {
+                // IdeaEventQueue 调用异常情况(极少数情况)
+                refresh();
+                Notify.getInstance(project).warning("Call exception for `com.intellij.ide.IdeEventQueue`");
+            }
+        });
+        this.httpTestPanel.setCallback(this::refresh);
+
+        project.getMessageBus().connect().subscribe(ServiceTreeTopic.TOPIC, this::renderApiServiceTree);
+        project.getMessageBus().connect().subscribe(RefreshServiceTreeTopic.TOPIC, this::refresh);
     }
 
     private void resetModules() {
@@ -154,49 +241,88 @@ public class Window extends JPanel {
         return allRequest;
     }
 
-    @NotNull
-    public Project getProject() {
-        return this.project;
-    }
+    private void renderApiServiceTree(Map<String, List<ApiService>> apiServices) {
+        ProgressManager.getInstance().run(new Task.Backgroundable(project, "Reload restful apis", false) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                indicator.setIndeterminate(false);
 
-    public void refresh() {
-        Async.runRead(project, this::getRequests, data -> {
-            httpTestPanel.reset();
+                Map<PsiMethod, ServiceNode> serviceNodes = new HashMap<>();
+                Callable<RootNode> producer = () -> {
+                    if (indicator.isCanceled()) {
+                        return null;
+                    }
+                    RootNode root = new RootNode("Find empty");
+                    indicator.setText("Initialize");
 
-            apiServiceListPanel.renderAll(data);
+                    apiServices.entrySet().stream()
+                            .map(entry -> {
+                                String itemName = entry.getKey();
+                                List<ApiService> requests = entry.getValue();
+                                if (requests == null || requests.isEmpty()) {
+                                    return null;
+                                }
+                                ModuleNode moduleNode = new ModuleNode(new ModuleTree(itemName));
+                                Boolean showClass = Settings.SystemOptionForm.SHOW_CLASS_SERVICE_TREE.getData();
+                                if (showClass != null && showClass) {
+                                    Map<PsiClass, List<ApiService>> listMap = requests.stream().collect(
+                                            Collectors.toMap(
+                                                    // key: PsiClass
+                                                    apiService -> {
+                                                        NavigatablePsiElement psiElement = apiService.getPsiElement();
+                                                        PsiElement parent = psiElement.getParent();
+                                                        if (parent instanceof PsiClass) {
+                                                            return ((PsiClass) parent);
+                                                        }
+                                                        return null;
+                                                    },
+                                                    // value: List<ApiService>
+                                                    apiService -> new ArrayList<>(Collections.singletonList(apiService)),
+                                                    // key冲突时的操作
+                                                    (list1, list2) -> {
+                                                        list1.addAll(list2);
+                                                        return list1;
+                                                    }
+                                            )
+                                    );
+                                    List<BaseNode<?>> children = ModuleNode.Util.getChildren(serviceNodes, listMap, showClass);
+                                    children.forEach(moduleNode::add);
+                                } else {
+                                    List<BaseNode<?>> children = ModuleNode.Util.getChildren(serviceNodes, requests);
+                                    children.forEach(moduleNode::add);
+                                }
+                                return moduleNode;
+                            })
+                            .filter(Objects::nonNull)
+                            .sorted(Comparator.comparing(moduleNode -> moduleNode.getSource().getModuleName()))
+                            .forEach(root::add);
+                    indicator.setText("Waiting to re-render");
+                    return root;
+                };
+                Consumer<RootNode> consumer = root -> {
+                    if (root == null) {
+                        return;
+                    }
 
-            // 清除RestDetail中的Cache缓存
-            RestDetailTopic restDetailTopic = project.getMessageBus().syncPublisher(RestDetailTopic.TOPIC);
-            restDetailTopic.clearCache(null);
-
-            // 装载Module列表
-            resetModules();
+                    if (!serviceNodes.isEmpty()) {
+                        root.setSource("Find " + serviceNodes.size() + " apis");
+                    }
+                    apiServiceListPanel.renderAll(
+                            root,
+                            serviceNodes,
+                            Settings.SystemOptionForm.EXPAND_OF_SERVICE_TREE.getData()
+                    );
+                };
+                ReadAction
+                        .nonBlocking(producer)
+                        .finishOnUiThread(ModalityState.defaultModalityState(), consumer)
+                        .submit(EXECUTOR_TASK_BOUNDED);
+            }
         });
     }
 
-    public void refreshOnFilter() {
-        Async.runRead(project, this::getRequests, apiServiceListPanel::renderAll);
-    }
-
-    public void navigationToView(@NotNull PsiMethod psiMethod) {
-        WindowFactory.showWindow(project, () -> apiServiceListPanel.navigationToTree(psiMethod));
-    }
-
-    @NotNull
-    public List<ApiService> getModuleServices(@NotNull String moduleName) {
-        return apiServiceListPanel.getModuleServices(moduleName);
-    }
-
-    @NotNull
-    public ApiService getApiService(@NotNull PsiMethod method) {
-        return apiServiceListPanel.getServiceNode(method).getData();
-    }
-
-    public void render(@NotNull String moduleName, @NotNull List<ApiService> apiServices) {
-        apiServiceListPanel.render(moduleName, apiServices);
-    }
-
-    public void expandAll(boolean expand) {
-        apiServiceListPanel.expandAll(expand);
+    @Override
+    public void dispose() {
+        EXECUTOR_TASK_BOUNDED.shutdown();
     }
 }

@@ -2,21 +2,19 @@ package com.github.restful.tool.view.components.popups;
 
 import com.github.restful.tool.utils.data.ModuleConfigs;
 import com.github.restful.tool.utils.data.Storage;
+import com.github.restful.tool.view.components.CustomTableModel;
 import com.github.restful.tool.view.window.WindowFactory;
 import com.github.restful.tool.view.window.frame.Window;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.ui.table.JBTable;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
-import java.util.HashMap;
 import java.util.Map;
 
-import static cn.hutool.core.util.StrUtil.isEmpty;
-import static cn.hutool.core.util.StrUtil.trimToEmpty;
 import static com.github.restful.tool.utils.data.ModuleConfigs.Config;
 
 /**
@@ -27,14 +25,14 @@ import static com.github.restful.tool.utils.data.ModuleConfigs.Config;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class ModuleConfigPopup extends JPopupMenu {
+public class ModuleConfigPopup extends JBPopupMenu {
 
     private final transient Project project;
     private final String moduleName;
 
     private final JButton saveButton;
     private final JButton resetButton;
-    private final transient CustomTableModel tableModel;
+    private final transient ConfigTableModel tableModel;
 
     public ModuleConfigPopup(@NotNull Project project, @NotNull String moduleName) {
         this.project = project;
@@ -46,7 +44,7 @@ public class ModuleConfigPopup extends JPopupMenu {
         this.resetButton = new JButton("Reset");
 
         // 构造table
-        this.tableModel = new CustomTableModel();
+        this.tableModel = new ConfigTableModel();
 
         initLayout();
         initEvent();
@@ -75,15 +73,8 @@ public class ModuleConfigPopup extends JPopupMenu {
 
     private void initEvent() {
         this.saveButton.addActionListener(e -> {
-            Map<String, String> config = new HashMap<>();
-            for (int row = 0; row < tableModel.getRowCount(); row++) {
-                String value = tableModel.getValue(row);
-                if (value == null || isEmpty(value)) {
-                    continue;
-                }
-                config.put(tableModel.getName(row), value);
-                setVisible(false);
-            }
+            Map<String, String> config = tableModel.getMap();
+            setVisible(false);
             // 保存
             ModuleConfigs.setModuleConfig(project, moduleName, config);
             refreshDocument();
@@ -113,32 +104,16 @@ public class ModuleConfigPopup extends JPopupMenu {
         toolWindow.refresh();
     }
 
-    private static class CustomTableModel extends DefaultTableModel {
+    private static class ConfigTableModel extends CustomTableModel {
 
-        public CustomTableModel() {
-            super(new Object[Config.values().length][2], new Object[]{"Config", "Value"});
+        public ConfigTableModel() {
+            super(Config.values().length, "Config", "Value");
         }
 
         @Override
         public boolean isCellEditable(int row, int column) {
             // 首列为配置名 不能修改
             return column == 1;
-        }
-
-        public String getName(int row) {
-            return (String) this.getValueAt(row, 0);
-        }
-
-        public String getValue(int row) {
-            return trimToEmpty((String) this.getValueAt(row, 1));
-        }
-
-        public void setName(int row, @NotNull String name) {
-            this.setValueAt(name, row, 0);
-        }
-
-        public void setValue(int row, @NotNull String value) {
-            this.setValueAt(value, row, 1);
         }
     }
 }

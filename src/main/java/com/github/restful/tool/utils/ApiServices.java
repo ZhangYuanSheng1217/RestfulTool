@@ -12,6 +12,7 @@ package com.github.restful.tool.utils;
 
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.utils.data.ModuleConfigs;
+import com.github.restful.tool.utils.data.ModuleHeaders;
 import com.github.restful.tool.utils.scanner.IFrameworkHelper;
 import com.github.restful.tool.utils.scanner.IJavaFramework;
 import com.intellij.openapi.module.Module;
@@ -84,9 +85,18 @@ public class ApiServices {
                                          @NotNull List<ApiService> apiServices) {
         // 填充模块url前缀
         Map<String, String> moduleConfig = ModuleConfigs.getModuleConfig(project, moduleName);
-        if (!moduleConfig.isEmpty()) {
-            apiServices.forEach(api -> ModuleConfigs.Config.apply(moduleConfig, api));
-        }
+
+        // 填充HttpHeader
+        Map<String, String> moduleHeader = ModuleHeaders.getModuleHeader(project, moduleName);
+
+        apiServices.forEach(api -> {
+            if (!moduleConfig.isEmpty()) {
+                ModuleConfigs.Config.apply(moduleConfig, api);
+            }
+            if (!moduleHeader.isEmpty()) {
+                ModuleHeaders.apply(moduleHeader, api);
+            }
+        });
         return apiServices;
     }
 

@@ -11,6 +11,7 @@
 package com.github.restful.tool.utils;
 
 import com.intellij.psi.*;
+import com.intellij.psi.impl.PsiClassImplUtil;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +21,8 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author ZhangYuanSheng
@@ -29,6 +32,45 @@ public class PsiUtil {
 
     private PsiUtil() {
         // private
+    }
+
+    /**
+     * 获取所有的PsiClass
+     */
+    @NotNull
+    public static List<PsiClass> getAllPsiClass(@NotNull PsiClass psiClass) {
+        if (psiClass.isAnnotationType()) {
+            return Collections.emptyList();
+        }
+        List<PsiClass> list = new ArrayList<>();
+        list.add(psiClass);
+        list.addAll(
+                Stream.of(PsiClassImplUtil.getAllInnerClasses(psiClass))
+                        // 忽略注解
+                        .filter(item -> !item.isAnnotationType())
+                        .collect(Collectors.toList())
+        );
+        return list;
+    }
+
+    /**
+     * 获取所有的PsiClass
+     */
+    @NotNull
+    public static List<PsiClass> getAllPsiClass(@NotNull PsiFile psiFile) {
+        PsiElement[] elements = psiFile.getChildren();
+        if (elements.length < 1) {
+            return Collections.emptyList();
+        }
+
+        return Stream.of(elements)
+                .filter(PsiClass.class::isInstance)
+                .map(PsiClass.class::cast)
+                .map(PsiUtil::getAllPsiClass)
+                .flatMap(Collection::stream)
+                // 忽略注解
+                .filter(item -> !item.isAnnotationType())
+                .collect(Collectors.toList());
     }
 
     /**

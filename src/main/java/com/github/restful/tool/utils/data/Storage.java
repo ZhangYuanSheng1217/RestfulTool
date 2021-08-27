@@ -29,6 +29,11 @@ public enum Storage implements IStorage {
      */
     MODULE_HTTP_CONFIG("MODULE_HTTP_CONFIG"),
 
+    /**
+     * 模块的header配置
+     */
+    MODULE_HTTP_HEADER("MODULE_HTTP_HEADER"),
+
     ;
 
     private final String name;

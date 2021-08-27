@@ -10,6 +10,8 @@
  */
 package com.github.restful.tool.view.window.frame;
 
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.github.restful.tool.beans.ApiService;
 import com.github.restful.tool.beans.HttpMethod;
 import com.github.restful.tool.service.Notify;
@@ -206,10 +208,18 @@ public class HttpTestPanel extends JPanel {
 
         requestBodyFileType.setSelectedItem(getCacheType());
         requestBodyFileType.setRenderer(new FileTypeRenderer());
-        requestBodyFileType.addItemListener(e -> {
-            Object selectedObject = e.getItemSelectable().getSelectedObjects()[0];
-            if (selectedObject instanceof FileType) {
-                FileType fileType = (FileType) selectedObject;
+        requestBodyFileType.addItemListener(event -> {
+            ItemSelectable selectable = event.getItemSelectable();
+            if (selectable == null) {
+                return;
+            }
+            Object[] selects = selectable.getSelectedObjects();
+            if (selects == null || selects.length < 1) {
+                return;
+            }
+            Object select = selects[0];
+            if (select instanceof FileType) {
+                FileType fileType = (FileType) select;
                 requestBody.setFileType(fileType);
                 setCacheType(fileType);
             }
@@ -419,7 +429,16 @@ public class HttpTestPanel extends JPanel {
                     selItem = apiService.getMethod() == null || apiService.getMethod() == HttpMethod.REQUEST ?
                             HttpMethod.GET : apiService.getMethod();
 
-                    reqHead = apiService.getHeaders();
+                    JSONObject json = new JSONObject(apiService.getModuleHeaders());
+                    try {
+                        String header = apiService.getHeaders();
+                        JSONObject parse = JSONUtil.parseObj(header);
+                        if (!parse.isEmpty()) {
+                            json.putAll(parse);
+                        }
+                    } catch (Exception ignore) {
+                    }
+                    reqHead = json.toStringPretty();
 
                     if (detail.bodyCache.containsKey(apiService)) {
                         reqBody = detail.getCache(IDENTITY_BODY, apiService);

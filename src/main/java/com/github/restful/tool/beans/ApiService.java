@@ -10,7 +10,6 @@
  */
 package com.github.restful.tool.beans;
 
-import com.github.restful.tool.beans.settings.Settings;
 import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.view.icon.Icons;
 import com.intellij.psi.NavigatablePsiElement;
@@ -18,8 +17,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
+import static cn.hutool.core.text.CharSequenceUtil.trimToEmpty;
 import static cn.hutool.core.util.StrUtil.trimToNull;
 
 /**
@@ -40,6 +42,7 @@ public class ApiService {
     private String port;
 
     private String headers;
+    private Map<String, String> moduleHeaders;
 
     public ApiService(HttpMethod method, @Nullable String path, @Nullable NavigatablePsiElement psiElement) {
         this(method, null, path, psiElement);
@@ -53,19 +56,25 @@ public class ApiService {
         }
         this.psiElement = psiElement;
 
-        this.headers = String.format(
-                "{%n  \"Content-Type\": \"%s\"%n}",
-                Settings.HttpToolOptionForm.CONTENT_TYPE.getData().getValue()
-        );
+        this.moduleHeaders = new HashMap<>();
+        this.headers = "";
     }
 
-    public void setHeaders(@NotNull String headers) {
-        this.headers = headers;
+    public Map<String, String> getModuleHeaders() {
+        return moduleHeaders;
+    }
+
+    public void setModuleHeaders(Map<String, String> moduleHeaders) {
+        this.moduleHeaders = moduleHeaders;
     }
 
     @NotNull
     public String getHeaders() {
         return headers;
+    }
+
+    public void setHeaders(@NotNull String headers) {
+        this.headers = headers;
     }
 
     public NavigatablePsiElement getPsiElement() {
@@ -150,7 +159,6 @@ public class ApiService {
     @NotNull
     public String getIdentity(String... itemIds) {
         HttpMethod methodTemp = this.method == null ? HttpMethod.REQUEST : this.method;
-        String pathTemp = this.path == null ? "" : this.path;
 
         StringBuilder items = new StringBuilder();
         if (itemIds != null) {
@@ -164,7 +172,7 @@ public class ApiService {
             items.append("]");
         }
 
-        return String.format("{}[%s]%s(%s)%s", methodTemp, pathTemp, icon.getClass(), items.toString());
+        return String.format("[%s] %s %s", methodTemp, trimToEmpty(this.path), items);
     }
 
     public String getRequestUrl() {
