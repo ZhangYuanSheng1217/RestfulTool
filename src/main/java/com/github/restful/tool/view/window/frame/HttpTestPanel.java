@@ -141,7 +141,7 @@ public class HttpTestPanel extends JPanel {
 
         tabs = new JBTabsImpl(project);
 
-        requestHead = new CustomEditor(project, DEFAULT_FILE_TYPE);
+        requestHead = new CustomEditor(project, CustomEditor.JSON_FILE_TYPE);
         requestHead.setName(IDENTITY_HEAD);
         headTab = new TabInfo(requestHead);
         headTab.setText(Bundle.getString("http.tool.tab.head"));
