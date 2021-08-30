@@ -40,13 +40,12 @@ publishPlugin {
 }
 
 group 'cn.cloud.auto.restful.tool'
-version '1.4.2'
+version '1.4.3'
 patchPluginXml {
     changeNotes """
         <ul>
-            <li>Add Module Config (Supply https://gitee.com/wyulong/RestfulTool/tree/dev)</li>
-            <li>Add Tree Collapse|Expand</li>
-            <li>Add Filter UnSelectAll</li>
+            <li>Add Module Http Config (Headers)</li>
+            <li>Fix bugs</li>
         </ul>
     """
 }

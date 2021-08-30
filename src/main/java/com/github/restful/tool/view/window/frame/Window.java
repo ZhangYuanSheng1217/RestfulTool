@@ -15,10 +15,10 @@ import com.github.restful.tool.service.topic.ServiceTreeTopic;
 import com.github.restful.tool.utils.ApiServices;
 import com.github.restful.tool.utils.Async;
 import com.github.restful.tool.view.components.tree.BaseNode;
-import com.github.restful.tool.view.window.WindowFactory;
 import com.github.restful.tool.view.components.tree.node.ModuleNode;
 import com.github.restful.tool.view.components.tree.node.RootNode;
 import com.github.restful.tool.view.components.tree.node.ServiceNode;
+import com.github.restful.tool.view.window.WindowFactory;
 import com.intellij.ide.CommonActionsManager;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.ActionManager;
@@ -53,16 +53,6 @@ import java.util.stream.Collectors;
  */
 public class Window extends SimpleToolWindowPanel implements Disposable {
 
-    /**
-     * 限制同时运行的任务数量。提交的任务数量没有限制
-     */
-    private static final ExecutorService EXECUTOR_TASK_BOUNDED = new ThreadPoolExecutor(
-            1,
-            1,
-            5L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>()
-    );
-
     private static final Map<HttpMethod, Boolean> METHOD_CHOOSE_MAP;
     private static final Map<Module, Boolean> MODULES_CHOOSE_MAP;
 
@@ -84,11 +74,26 @@ public class Window extends SimpleToolWindowPanel implements Disposable {
     private final HttpTestPanel httpTestPanel;
 
     /**
+     * 限制同时运行的任务数量。提交的任务数量没有限制
+     */
+    private final ExecutorService executorTaskBounded;
+
+    /**
      * Create the panel.
      */
     public Window(@NotNull Project project) {
         super(false, false);
+        System.out.println("Window.Window: " + this.hashCode());
         this.project = project;
+
+        this.executorTaskBounded = new ThreadPoolExecutor(
+                1,
+                1,
+                5L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.DiscardOldestPolicy()
+        );
 
         this.apiServiceListPanel = new ApiServiceListPanel(project);
         this.httpTestPanel = new HttpTestPanel(project);
@@ -316,13 +321,13 @@ public class Window extends SimpleToolWindowPanel implements Disposable {
                 ReadAction
                         .nonBlocking(producer)
                         .finishOnUiThread(ModalityState.defaultModalityState(), consumer)
-                        .submit(EXECUTOR_TASK_BOUNDED);
+                        .submit(executorTaskBounded);
             }
         });
     }
 
     @Override
     public void dispose() {
-        EXECUTOR_TASK_BOUNDED.shutdown();
+        executorTaskBounded.shutdown();
     }
 }
