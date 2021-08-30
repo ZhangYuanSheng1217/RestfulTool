@@ -45,6 +45,7 @@ patchPluginXml {
     changeNotes """
         <ul>
             <li>Add Module Http Config (Headers)</li>
+            <li>Add Import Class field from JSON, and add Getter&Setter（Alt + Enter）</li>
             <li>Fix bugs</li>
         </ul>
     """

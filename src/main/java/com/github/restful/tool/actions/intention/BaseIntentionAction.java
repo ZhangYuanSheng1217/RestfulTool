@@ -2,6 +2,7 @@ package com.github.restful.tool.actions.intention;
 
 import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction;
 import com.intellij.codeInspection.util.IntentionFamilyName;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import org.jetbrains.annotations.NonNls;
@@ -28,11 +29,27 @@ public abstract class BaseIntentionAction extends PsiElementBaseIntentionAction 
         return true;
     }
 
-    protected final boolean isPsiMethod(@Nullable PsiElement element) {
+    @Nullable
+    protected final PsiMethod findMethod(@Nullable PsiElement element) {
         if (element == null) {
-            return false;
+            return null;
         }
-        final PsiElement parent = element.getParent();
-        return parent instanceof PsiMethod;
+        PsiElement parent = element.getParent();
+        if (parent instanceof PsiMethod) {
+            return ((PsiMethod) parent);
+        }
+        return null;
+    }
+
+    @Nullable
+    protected final PsiClass findClass(@Nullable PsiElement element) {
+        if (element == null) {
+            return null;
+        }
+        PsiElement parent = element.getParent();
+        if (parent instanceof PsiClass) {
+            return ((PsiClass) parent);
+        }
+        return null;
     }
 }

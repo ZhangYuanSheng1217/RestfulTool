@@ -21,17 +21,17 @@ public class NavigationApiServiceIntentionAction extends BaseIntentionAction {
 
     @Override
     public void invoke(@NotNull Project project, Editor editor, @NotNull PsiElement element) throws IncorrectOperationException {
-        element = element.getParent();
-        if (!(element instanceof PsiMethod)) {
+        PsiMethod method = findMethod(element);
+        if (method == null) {
             HintManager.getInstance().showErrorHint(editor, "Can only choose method.");
             return;
         }
-        Actions.gotoApiServiceTree(((PsiMethod) element));
+        Actions.gotoApiServiceTree(method);
     }
 
     @Override
     public boolean isAvailable(@NotNull Project project, Editor editor, @NotNull PsiElement element) {
-        return isPsiMethod(element);
+        return findMethod(element) != null;
     }
 
     @Override
