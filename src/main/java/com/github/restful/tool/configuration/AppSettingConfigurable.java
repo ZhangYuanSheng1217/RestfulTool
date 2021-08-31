@@ -11,7 +11,7 @@
 package com.github.restful.tool.configuration;
 
 import com.github.restful.tool.utils.data.Bundle;
-import com.github.restful.tool.view.window.options.RestfulSettingWindow;
+import com.github.restful.tool.view.window.options.AppSettingWindow;
 import com.intellij.openapi.options.Configurable;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,9 +21,9 @@ import javax.swing.*;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class RestfulSettingConfigurable implements Configurable {
+public class AppSettingConfigurable implements Configurable {
 
-    private RestfulSettingWindow settingsComponent;
+    private AppSettingWindow settingsComponent;
 
     /**
      * issue: 导入Kotlin插件后编译错误, Nls位置不在org.jetbrains.annotations
@@ -42,23 +42,23 @@ public class RestfulSettingConfigurable implements Configurable {
     @Nullable
     @Override
     public JComponent createComponent() {
-        settingsComponent = new RestfulSettingWindow();
+        settingsComponent = new AppSettingWindow();
         return settingsComponent.getContent();
     }
 
     @Override
     public boolean isModified() {
-        return RestfulSetting.getInstance().isModified(settingsComponent.getAppSetting());
+        return AppSetting.getInstance().isModified(settingsComponent.getAppSetting());
     }
 
     @Override
     public void apply() {
-        RestfulSetting.getInstance().setAppSetting(settingsComponent.getAppSetting());
+        AppSetting.getInstance().setAppSetting(settingsComponent.getAppSetting());
     }
 
     @Override
     public void reset() {
-        RestfulSetting settings = RestfulSetting.getInstance();
+        AppSetting settings = AppSetting.getInstance();
         settingsComponent.setAppSetting(settings.getAppSetting());
     }
 

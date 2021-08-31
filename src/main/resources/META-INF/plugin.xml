@@ -47,11 +47,11 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService
-                serviceImplementation="com.github.restful.tool.configuration.RestfulSetting"/>
+                serviceImplementation="com.github.restful.tool.configuration.AppSetting"/>
 
         <applicationConfigurable parentId="tools"
-                                 instance="com.github.restful.tool.configuration.RestfulSettingConfigurable"
-                                 id="com.github.restful.tool.configuration.RestfulSettingConfigurable"
+                                 instance="com.github.restful.tool.configuration.AppSettingConfigurable"
+                                 id="com.github.restful.tool.configuration.AppSettingConfigurable"
                                  dynamic="true"
                                  bundle="messages.RestfulToolBundle"
                                  key="setting.configurable.displayName"/>
@@ -78,11 +78,14 @@
 
         <intentionAction>
             <!-- className 中不允许换行，否则会报 ClassNotFountException -->
-            <className>com.github.restful.tool.actions.intention.NavigationApiServiceIntentionAction</className>
+            <className>
+                com.github.restful.tool.actions.intention.NavigationApiServiceIntentionAction
+            </className>
             <category>Java/RestfulTool</category>
         </intentionAction>
         <intentionAction>
-            <className>com.github.restful.tool.actions.intention.Json2ClassIntentionAction</className>
+            <className>com.github.restful.tool.actions.intention.Json2ClassIntentionAction
+            </className>
             <category>Java/RestfulTool</category>
         </intentionAction>
     </extensions>

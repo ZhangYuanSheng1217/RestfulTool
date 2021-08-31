@@ -11,8 +11,8 @@
 package com.github.restful.tool.configuration;
 
 import com.github.restful.tool.beans.settings.Settings;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
@@ -23,20 +23,20 @@ import org.jetbrains.annotations.Nullable;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-@State(name = "RestfulSetting", storages = @Storage(RestfulSetting.IDE))
-public class RestfulSetting implements PersistentStateComponent<RestfulSetting> {
+@State(name = "RestfulSetting", storages = @Storage(AppSetting.IDE))
+public class AppSetting implements PersistentStateComponent<AppSetting> {
 
     public static final String IDE = "RestfulToolSetting.xml";
 
     private final Settings setting;
 
-    public RestfulSetting() {
+    public AppSetting() {
         this.setting = new Settings();
         this.setting.initValue();
     }
 
-    public static RestfulSetting getInstance() {
-        return ServiceManager.getService(RestfulSetting.class);
+    public static AppSetting getInstance() {
+        return ApplicationManager.getApplication().getService(AppSetting.class);
     }
 
     public boolean isModified(Settings changedSetting) {
@@ -48,12 +48,12 @@ public class RestfulSetting implements PersistentStateComponent<RestfulSetting> 
 
     @Nullable
     @Override
-    public RestfulSetting getState() {
+    public AppSetting getState() {
         return this;
     }
 
     @Override
-    public void loadState(@NotNull RestfulSetting state) {
+    public void loadState(@NotNull AppSetting state) {
         XmlSerializerUtil.copyBean(state, this);
     }
 

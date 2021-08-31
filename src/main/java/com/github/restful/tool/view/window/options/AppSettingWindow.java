@@ -22,14 +22,14 @@ import java.util.List;
  * @author ZhangYuanSheng
  * @version 1.0
  */
-public class RestfulSettingWindow {
+public class AppSettingWindow {
 
     public static final int VERTICAL_CLEARANCE = 30;
 
     private final JPanel content;
     private final List<Option> optionList;
 
-    public RestfulSettingWindow() {
+    public AppSettingWindow() {
         optionList = new ArrayList<>();
         FormBuilder builder = FormBuilder.createFormBuilder();
 

@@ -20,7 +20,7 @@ public interface Notify {
      * @return this
      */
     static Notify getInstance(@NotNull Project project) {
-        return ServiceManager.getService(project, Notify.class);
+        return project.getService(Notify.class);
     }
 
     /**

@@ -21,7 +21,7 @@ public interface CacheService<K, V> {
      * @return CacheService
      */
     static CacheService<?, ?> getInstance(@NotNull Project project) {
-        return ServiceManager.getService(project, CacheService.class);
+        return project.getService(CacheService.class);
     }
 
     /**

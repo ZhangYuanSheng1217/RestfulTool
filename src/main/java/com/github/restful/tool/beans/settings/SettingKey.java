@@ -11,7 +11,7 @@
 package com.github.restful.tool.beans.settings;
 
 import com.github.restful.tool.beans.Key;
-import com.github.restful.tool.configuration.RestfulSetting;
+import com.github.restful.tool.configuration.AppSetting;
 import com.github.restful.tool.utils.SystemUtil;
 import com.github.restful.tool.utils.xml.converter.BooleanConverter;
 import com.github.restful.tool.utils.xml.converter.IntegerConverter;
@@ -88,12 +88,12 @@ public class SettingKey<T> extends Key<T> {
     }
 
     public T getData() {
-        Settings appSetting = RestfulSetting.getInstance().getAppSetting();
+        Settings appSetting = AppSetting.getInstance().getAppSetting();
         return appSetting.getData(this);
     }
 
     public void setData(@NotNull T data) {
-        Settings appSetting = RestfulSetting.getInstance().getAppSetting();
+        Settings appSetting = AppSetting.getInstance().getAppSetting();
         appSetting.putData(this, data);
     }
 

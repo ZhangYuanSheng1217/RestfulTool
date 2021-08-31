@@ -10,7 +10,7 @@
  */
 package com.github.restful.tool.beans;
 
-import com.intellij.util.containers.ContainerUtil;
+import com.intellij.concurrency.ConcurrentCollectionFactory;
 import com.intellij.util.containers.IntObjectMap;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Key<T> {
 
     private static final AtomicInteger OUR_KEYS_COUNTER = new AtomicInteger();
-    private static final IntObjectMap<Key<?>> ALL_KEYS = ContainerUtil.createConcurrentIntObjectWeakValueMap();
+    private static final IntObjectMap<Key<?>> ALL_KEYS = ConcurrentCollectionFactory.createConcurrentIntObjectWeakValueMap();
 
     private final int index = OUR_KEYS_COUNTER.getAndIncrement();
 
