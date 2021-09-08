@@ -78,14 +78,11 @@
 
         <intentionAction>
             <!-- className 中不允许换行，否则会报 ClassNotFountException -->
-            <className>
-                com.github.restful.tool.actions.intention.NavigationApiServiceIntentionAction
-            </className>
+            <className>com.github.restful.tool.actions.intention.NavigationApiServiceIntentionAction</className>
             <category>Java/RestfulTool</category>
         </intentionAction>
         <intentionAction>
-            <className>com.github.restful.tool.actions.intention.Json2ClassIntentionAction
-            </className>
+            <className>com.github.restful.tool.actions.intention.Json2ClassIntentionAction</className>
             <category>Java/RestfulTool</category>
         </intentionAction>
     </extensions>
