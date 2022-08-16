@@ -38,6 +38,10 @@ public class WithLibraryAction extends ToggleAction implements DumbAware {
 
     @Override
     public boolean isSelected(@NotNull AnActionEvent e) {
+        Project data = e.getData(CommonDataKeys.PROJECT);
+        if (null == data) {
+            return false;
+        }
         return Storage.scanServiceWithLibrary(e.getRequiredData(CommonDataKeys.PROJECT));
     }
 
