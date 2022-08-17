@@ -37,7 +37,7 @@ public interface ToolWindowService {
      * @param toolWindow toolWindow
      */
     default void init(@NotNull ToolWindow toolWindow) {
-        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+        ContentFactory contentFactory = ContentFactory.getInstance();
         Content content = contentFactory.createContent(getContent(), "", false);
 
         toolWindow.getContentManager().addContent(content);

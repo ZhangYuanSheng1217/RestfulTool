@@ -16,7 +16,7 @@
                     <li>Double click the URL to jump directly to the corresponding method
                         definition
                     </li>
-                    <li>A simple http apiService tool</li>
+                    <li>A simple http request tool</li>
                     <li>Support Spring system (Spring MVC / Spring Boot)</li>
                     <li>Support JAX-RS</li>
                     <li>Support `Navigate-> Request Service` search Mapping (Ctrl + Alt + /)</li>
@@ -37,7 +37,7 @@
         </ul>
         ]]></description>
 
-    <idea-version since-build="212.0"/>
+    <idea-version since-build="222.0"/>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
