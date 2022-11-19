@@ -1,5 +1,6 @@
 package com.github.restful.tool.view.window.frame;
 
+import com.github.restful.tool.actions.OutPutAction;
 import com.github.restful.tool.actions.RefreshAction;
 import com.github.restful.tool.actions.WithLibraryAction;
 import com.github.restful.tool.actions.filters.HttpMethodFilterAction;
@@ -177,6 +178,7 @@ public class Window extends SimpleToolWindowPanel implements Disposable {
         DefaultActionGroup group = new DefaultActionGroup();
 
         group.add(new RefreshAction());
+        group.add(new OutPutAction());
         group.add(ActionManager.getInstance().getAction("Tool.GotoRequestService"));
 
         group.addSeparator();
