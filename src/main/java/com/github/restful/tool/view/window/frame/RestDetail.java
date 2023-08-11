@@ -60,7 +60,6 @@ import java.util.regex.Pattern;
 public class RestDetail extends JPanel {
 
     public static final FileType DEFAULT_FILE_TYPE = JsonEditor.TEXT_FILE_TYPE;
-    private static final int REQUEST_TIMEOUT = 1000 * 10;
     private static final String IDENTITY_HEAD = "HEAD";
     private static final String IDENTITY_BODY = "BODY";
     private final Project project;
@@ -386,7 +385,10 @@ public class RestDetail extends JPanel {
     }
 
     private HttpRequest getHttpRequest(@NotNull HttpMethod method, @NotNull String url, String head, String body) {
-        HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url).timeout(REQUEST_TIMEOUT);
+
+        HttpRequest request = HttpUtil.createRequest(Method.valueOf(method.name()), url)
+                .setConnectionTimeout(Settings.HttpToolOptionForm.CONNECTION_TIMEOUT.getData() * 1000)
+                .setReadTimeout(Settings.HttpToolOptionForm.READ_TIMEOUT.getData() * 1000);
         if (head != null && !"".equals(head.trim())) {
             convert.formatMap(head).forEach((s, o) -> request.header(s, (String) o));
         }

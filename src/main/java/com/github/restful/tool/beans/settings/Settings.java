@@ -251,6 +251,28 @@ public class Settings {
                 }
         );
 
+        public static final SettingKey<Integer> CONNECTION_TIMEOUT = SettingKey.createInputNumber(
+                Bundle.getString("setting.httpTools.DefaultConnectionTimeout"),
+                3,
+                data -> {
+                    if (data == null) {
+                        return false;
+                    }
+                    return true;
+                }
+        );
+
+        public static final SettingKey<Integer> READ_TIMEOUT = SettingKey.createInputNumber(
+                Bundle.getString("setting.httpTools.DefaultReadTimeout"),
+                60,
+                data -> {
+                    if (data == null) {
+                        return false;
+                    }
+                    return true;
+                }
+        );
+
         public HttpToolOptionForm() {
             super(Bundle.getString("setting.httpTools"), 2);
         }
